@@ -1,0 +1,138 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: CAR_Body
+  m_Shader: {fileID: 4, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 5
+  m_CustomRenderQueue: 2000
+  stringTagMap: {}
+  m_SavedProperties:
+    serializedVersion: 2
+    m_TexEnvs:
+      data:
+        first:
+          name: _MainTex
+        second:
+          m_Texture: {fileID: 2800000, guid: 65f165fbd92e5dc4295307fd351e6eb7, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _BumpMap
+        second:
+          m_Texture: {fileID: 2800000, guid: ad8aa54b3e68f2b4a849f0573c070e11, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Cube
+        second:
+          m_Texture: {fileID: 8900000, guid: b63e23ffa82a943df9a20c7622ebc0ca, type: 2}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _LightMap
+        second:
+          m_Texture: {fileID: 2800000, guid: 168020b7e713163458a123ebe0fcdf37, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _2DReflection
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _SparkleTex
+        second:
+          m_Texture: {fileID: 2800000, guid: 341e9d5ef734744609946d8097d97f95, type: 3}
+          m_Scale: {x: 150, y: 150}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _Decal
+        second:
+          m_Texture: {fileID: 2800000, guid: 9bf2bf3d9508847008371528a26ce523, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _FresnelRamp
+        second:
+          m_Texture: {fileID: 2800000, guid: f019a2a5734a44d11ab4b3c7e46d1064, type: 3}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+    m_Floats:
+      data:
+        first:
+          name: _Shininess
+        second: .19633396
+      data:
+        first:
+          name: _LightmapDensity
+        second: .547169805
+      data:
+        first:
+          name: _ReflectInShadow
+        second: .188679248
+      data:
+        first:
+          name: _Sparkle
+        second: .152830198
+      data:
+        first:
+          name: _DecalColoring
+        second: 0
+      data:
+        first:
+          name: _SparkleDensity
+        second: .113830194
+      data:
+        first:
+          name: _SparkleHardness
+        second: 67.9870377
+      data:
+        first:
+          name: _HardEdge
+        second: 2.41509438
+    m_Colors:
+      data:
+        first:
+          name: _Color
+        second: {r: 1, g: 1, b: 1, a: 1}
+      data:
+        first:
+          name: _SpecColor
+        second: {r: 1, g: 1, b: 1, a: 1}
+      data:
+        first:
+          name: _ReflectColor
+        second: {r: .4627451, g: .4627451, b: .4627451, a: .372549027}
+      data:
+        first:
+          name: _SpecularColor
+        second: {r: .750011444, g: .750011444, b: .750011444, a: 1}
+      data:
+        first:
+          name: _HighlightColor
+        second: {r: .500022888, g: .500022888, b: .500022888, a: 1}
+      data:
+        first:
+          name: _SparkleColor
+        second: {r: .771739125, g: .739263237, b: 0, a: 1}
+      data:
+        first:
+          name: _FresnelColor
+        second: {r: .826530576, g: .00890672859, b: .0358189009, a: 1}
+--- !u!1002 &2100001
+EditorExtensionImpl:
+  serializedVersion: 6
