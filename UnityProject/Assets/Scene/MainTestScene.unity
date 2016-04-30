@@ -179,9 +179,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 23558472}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &34160489
 GameObject:
   m_ObjectHideFlags: 0
@@ -293,9 +312,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 81253784}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &83702743
 GameObject:
   m_ObjectHideFlags: 0
@@ -928,9 +966,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 388670855}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &430179446
 GameObject:
   m_ObjectHideFlags: 0
@@ -967,9 +1024,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 430179446}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &442673673
 GameObject:
   m_ObjectHideFlags: 0
@@ -1156,9 +1232,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 523982183}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &547604424
 GameObject:
   m_ObjectHideFlags: 0
@@ -1195,9 +1290,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 547604424}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &617458321
 GameObject:
   m_ObjectHideFlags: 0
@@ -1356,9 +1470,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 640970436}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &641315723
 GameObject:
   m_ObjectHideFlags: 0
@@ -1545,9 +1678,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 688503529}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &702610586
 GameObject:
   m_ObjectHideFlags: 0
@@ -2326,7 +2478,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!54 &1051418325
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2581,9 +2733,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1238176491}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &1272550555
 GameObject:
   m_ObjectHideFlags: 0
@@ -3133,9 +3304,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1516392474}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!4 &1516392476
 Transform:
   m_ObjectHideFlags: 0
@@ -3184,9 +3374,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1533054040}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &1564703894
 GameObject:
   m_ObjectHideFlags: 0
@@ -3448,9 +3657,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1667338146}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &1711721083
 GameObject:
   m_ObjectHideFlags: 0
@@ -3487,9 +3715,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1711721083}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &1769334105
 GameObject:
   m_ObjectHideFlags: 0
@@ -3580,7 +3827,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!54 &1780344874
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3664,9 +3911,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1789538471}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &1792337766
 GameObject:
   m_ObjectHideFlags: 0
@@ -3778,9 +4044,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1892902989}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &1938011382
 GameObject:
   m_ObjectHideFlags: 0
@@ -3817,9 +4102,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1938011382}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 1
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &2027500639
 GameObject:
   m_ObjectHideFlags: 0
@@ -3856,9 +4160,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 2027500639}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &2028185610
 GameObject:
   m_ObjectHideFlags: 0
@@ -4339,9 +4662,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 2099132366}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigidBody: {fileID: 1780344874}
+  steeringTransform: {fileID: 0}
+  suspensionTransform: {fileID: 0}
+  wheelTransform: {fileID: 0}
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 15
+  damper: 350
+  motorTorque: 5
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 1
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
 --- !u!1 &2128533975
 GameObject:
   m_ObjectHideFlags: 0
