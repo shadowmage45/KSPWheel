@@ -381,6 +381,43 @@ Camera:
   m_StereoConvergence: 10
   m_StereoSeparation: .0219999999
   m_StereoMirrorMode: 0
+--- !u!1 &156598199 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 100024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
+--- !u!114 &156598201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 156598199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rigidBody: {fileID: 935625360}
+  steeringTransform: {fileID: 1111423717}
+  suspensionTransform: {fileID: 1111423717}
+  wheelTransform: {fileID: 331766284}
+  wheelRadius: .402999997
+  wheelMass: 1
+  suspensionLength: .300000012
+  target: .75
+  spring: 50
+  damper: 250
+  motorTorque: 0
+  brakeTorque: 0
+  maxSteerAngle: 20
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 0
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
+  totalWorldForce: {x: 0, y: 0, z: 0}
+  totalLocalForce: {x: 0, y: 0, z: 0}
+  hitNormal: {x: 0, y: 0, z: 0}
 --- !u!1 &163258624
 GameObject:
   m_ObjectHideFlags: 0
@@ -531,6 +568,10 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 191296913}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &331766284 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400026, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
 --- !u!1 &335410784
 GameObject:
   m_ObjectHideFlags: 0
@@ -655,7 +696,7 @@ MonoBehaviour:
   target: 0
   spring: 50
   damper: 250
-  motorTorque: 0
+  motorTorque: 5
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
@@ -664,6 +705,13 @@ MonoBehaviour:
   invertSteer: 0
   debug: 1
   currentSteerAngle: 0
+  totalWorldForce: {x: 0, y: 0, z: 0}
+  totalLocalForce: {x: 0, y: 0, z: 0}
+  hitNormal: {x: 0, y: 0, z: 0}
+--- !u!4 &384190473 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400012, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
 --- !u!1 &470373641
 GameObject:
   m_ObjectHideFlags: 0
@@ -739,6 +787,10 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 470373641}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &481857598 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400022, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
 --- !u!1 &577709260
 GameObject:
   m_ObjectHideFlags: 0
@@ -788,7 +840,7 @@ MonoBehaviour:
   target: 0
   spring: 50
   damper: 250
-  motorTorque: 0
+  motorTorque: 5
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
@@ -797,6 +849,9 @@ MonoBehaviour:
   invertSteer: 0
   debug: 1
   currentSteerAngle: 0
+  totalWorldForce: {x: 0, y: 0, z: 0}
+  totalLocalForce: {x: 0, y: 0, z: 0}
+  hitNormal: {x: 0, y: 0, z: 0}
 --- !u!1 &617458321
 GameObject:
   m_ObjectHideFlags: 0
@@ -983,6 +1038,22 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 672084433}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &685928098 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 100010, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
+--- !u!64 &685928100
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 685928098}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300004, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
 --- !u!1 &711476088
 GameObject:
   m_ObjectHideFlags: 0
@@ -1058,6 +1129,43 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 711476088}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &721302731 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 100028, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
+--- !u!114 &721302733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 721302731}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rigidBody: {fileID: 935625360}
+  steeringTransform: {fileID: 1834502816}
+  suspensionTransform: {fileID: 1834502816}
+  wheelTransform: {fileID: 992039842}
+  wheelRadius: .402999997
+  wheelMass: 1
+  suspensionLength: .300000012
+  target: .75
+  spring: 50
+  damper: 250
+  motorTorque: 15
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 0
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
+  totalWorldForce: {x: 0, y: 0, z: 0}
+  totalLocalForce: {x: 0, y: 0, z: 0}
+  hitNormal: {x: 0, y: 0, z: 0}
 --- !u!1 &783147720
 GameObject:
   m_ObjectHideFlags: 0
@@ -1497,6 +1605,29 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 933400985}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &935625357 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 100006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
+--- !u!54 &935625360
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 935625357}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: .0500000007
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!4 &992039842 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400030, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
 --- !u!1 &1005703196
 GameObject:
   m_ObjectHideFlags: 0
@@ -1550,7 +1681,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1017201675}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 3.54999995, z: 0}
+  m_LocalPosition: {x: -27.2999992, y: 3.54999995, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 108120125}
@@ -1686,6 +1817,10 @@ Transform:
   - {fileID: 1381462347}
   m_Father: {fileID: 1564703897}
   m_RootOrder: 4
+--- !u!4 &1111423717 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400014, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
 --- !u!1 &1150879878
 GameObject:
   m_ObjectHideFlags: 0
@@ -1836,6 +1971,43 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1165243933}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1220902100 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 100020, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
+--- !u!114 &1220902102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1220902100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rigidBody: {fileID: 935625360}
+  steeringTransform: {fileID: 384190473}
+  suspensionTransform: {fileID: 384190473}
+  wheelTransform: {fileID: 481857598}
+  wheelRadius: .402999997
+  wheelMass: 1
+  suspensionLength: .300000012
+  target: .75
+  spring: 50
+  damper: 250
+  motorTorque: 0
+  brakeTorque: 0
+  maxSteerAngle: 20
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 0
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
+  totalWorldForce: {x: 0, y: 0, z: 0}
+  totalLocalForce: {x: 0, y: 0, z: 0}
+  hitNormal: {x: 0, y: 0, z: 0}
 --- !u!1 &1272550555
 GameObject:
   m_ObjectHideFlags: 0
@@ -1962,13 +2134,16 @@ MonoBehaviour:
   damper: 250
   motorTorque: 0
   brakeTorque: 0
-  maxSteerAngle: 0
+  maxSteerAngle: 25
   fwdFrictionConst: .00100000005
   sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 0
   debug: 1
   currentSteerAngle: 0
+  totalWorldForce: {x: 0, y: 0, z: 0}
+  totalLocalForce: {x: 0, y: 0, z: 0}
+  hitNormal: {x: 0, y: 0, z: 0}
 --- !u!1 &1365321866
 GameObject:
   m_ObjectHideFlags: 0
@@ -2269,6 +2444,43 @@ Transform:
   m_Children: []
   m_Father: {fileID: 617458322}
   m_RootOrder: 4
+--- !u!1 &1476682401 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 100032, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
+--- !u!114 &1476682403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1476682401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0cd808594bf0634d86a2b6e0b527258, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rigidBody: {fileID: 935625360}
+  steeringTransform: {fileID: 1528331070}
+  suspensionTransform: {fileID: 1528331070}
+  wheelTransform: {fileID: 1788187030}
+  wheelRadius: .402999997
+  wheelMass: 1
+  suspensionLength: .300000012
+  target: .75
+  spring: 50
+  damper: 250
+  motorTorque: 15
+  brakeTorque: 0
+  maxSteerAngle: 0
+  fwdFrictionConst: .00100000005
+  sideFrictionConst: 1
+  tankSteer: 0
+  invertSteer: 0
+  debug: 1
+  currentSteerAngle: 0
+  totalWorldForce: {x: 0, y: 0, z: 0}
+  totalLocalForce: {x: 0, y: 0, z: 0}
+  hitNormal: {x: 0, y: 0, z: 0}
 --- !u!1 &1511013439
 GameObject:
   m_ObjectHideFlags: 0
@@ -2344,6 +2556,10 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1511013439}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1528331070 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
 --- !u!1 &1564703894
 GameObject:
   m_ObjectHideFlags: 0
@@ -2569,6 +2785,118 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1598403850}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1622448514 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 100008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
+--- !u!64 &1622448516
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1622448514}
+  m_Material: {fileID: 13400000, guid: eb51d9267e2dec9409b8af2e4b19a2b9, type: 2}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300002, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+--- !u!1001 &1644797909
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -7.4000001
+      objectReference: {fileID: 0}
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3.04999995
+      objectReference: {fileID: 0}
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_RootOrder
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2300020, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300016, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300012, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300022, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300014, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300002, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300010, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: ed7dacba007bebf4199831dec0644038, type: 2}
+    - target: {fileID: 2300000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 546c82bccbfe5e142a6aa25debb30b76, type: 2}
+    - target: {fileID: 2300004, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 546c82bccbfe5e142a6aa25debb30b76, type: 2}
+    - target: {fileID: 2300000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Materials.Array.data[1]
+      value: 
+      objectReference: {fileID: 2100000, guid: 546c82bccbfe5e142a6aa25debb30b76, type: 2}
+    - target: {fileID: 100006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 2300008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+    - {fileID: 2300006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_ParentPrefab: {fileID: 100100000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_IsPrefabParent: 0
 --- !u!1 &1769334105
 GameObject:
   m_ObjectHideFlags: 0
@@ -2644,6 +2972,10 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1769334105}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1788187030 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400034, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
 --- !u!1 &1792337766
 GameObject:
   m_ObjectHideFlags: 0
@@ -2719,6 +3051,10 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1792337766}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1834502816 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400016, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+  m_PrefabInternal: {fileID: 1644797909}
 --- !u!1 &1978791977
 GameObject:
   m_ObjectHideFlags: 0
@@ -2770,13 +3106,16 @@ MonoBehaviour:
   damper: 250
   motorTorque: 0
   brakeTorque: 0
-  maxSteerAngle: 0
+  maxSteerAngle: 25
   fwdFrictionConst: .00100000005
   sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 0
   debug: 1
   currentSteerAngle: 0
+  totalWorldForce: {x: 0, y: 0, z: 0}
+  totalLocalForce: {x: 0, y: 0, z: 0}
+  hitNormal: {x: 0, y: 0, z: 0}
 --- !u!1 &2038602079
 GameObject:
   m_ObjectHideFlags: 0
