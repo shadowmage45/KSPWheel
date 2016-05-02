@@ -161,9 +161,10 @@ namespace KSPWheel
         public Vector3 wheelRight;
         public Vector3 wheelUp;
         public GameObject hitObject;
+        public float currentSteerAngle;
         private float fwdInput = 0;
         private float rotInput = 0;
-        public float currentSteerAngle;
+        private KSPFrictionCurve frictionCurve;
         #endregion ENDREGION - Private working variables
 
         public KSPWheelCollider(GameObject wheel, Rigidbody rigidBody)
@@ -174,6 +175,7 @@ namespace KSPWheel
             hitObject.transform.parent = this.wheel.transform;
             hitObject.transform.position = this.wheel.transform.position;
             hitObject.transform.rotation = this.wheel.transform.rotation;
+            frictionCurve = new KSPFrictionCurve();
         }
 
         public void setInputState(float fwd, float rot)
@@ -256,11 +258,12 @@ namespace KSPWheel
 
         private float calculateSideFriction(float downForce, float slipVelocity)
         {
-            float friction = 0;
-            float slipForce = downForce * -slipVelocity;
-            if (Mathf.Abs(slipForce) > downForce) { slipForce = slipForce < 0 ? -downForce : downForce; }
-            sideFrictionForce = friction = sideFrictionConst * slipForce;
-            return friction;
+            float val = -frictionCurve.Evaluate(slipVelocity) * slipVelocity;
+            if (val != 0)
+            {
+                MonoBehaviour.print("slipVal: " + val);
+            }            
+            return val;
         }
         
         private float calculateForwardInput(float downForce)

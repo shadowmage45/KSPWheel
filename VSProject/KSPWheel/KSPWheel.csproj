@@ -86,6 +86,7 @@
     <Compile Include="Component\KSPWheelComponent.cs" />
     <Compile Include="PartModule\KSPWheelAnimationState.cs" />
     <Compile Include="PartModule\KSPWheelInfo.cs" />
+    <Compile Include="PhysicsModel\KSPFrictionCurve.cs" />
     <Compile Include="PhysicsModel\KSPWheelDefaultFrictionModel.cs" />
     <Compile Include="PhysicsModel\KSPWheelPhysicsModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
