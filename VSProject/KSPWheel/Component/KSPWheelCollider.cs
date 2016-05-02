@@ -157,9 +157,9 @@ namespace KSPWheel
         #endregion ENDREGION - Public editor-display variables
 
         #region REGION - Private working variables
-        private Vector3 wheelForward;
-        private Vector3 wheelRight;
-        private Vector3 wheelUp;
+        public Vector3 wheelForward;
+        public Vector3 wheelRight;
+        public Vector3 wheelUp;
         public GameObject hitObject;
         private float fwdInput = 0;
         private float rotInput = 0;
@@ -201,9 +201,10 @@ namespace KSPWheel
             wheelForward = Quaternion.AngleAxis(currentSteerAngle, wheel.transform.up) * wheel.transform.forward;
             wheelUp = wheel.transform.up;
             wheelRight = Vector3.Cross(wheelForward, wheelUp);
-
+            grounded = false;
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance))
             {
+                grounded = true;
                 prevCompressionDistance = compressionDistance;
 
                 wheelMeshPosition = hit.point + (wheel.transform.up * wheelRadius);
@@ -228,7 +229,7 @@ namespace KSPWheel
                 springForce = (compressionDistance - (suspensionLength * target)) * spring;
                 springForce += dampForce;
 
-                forceToApply = hitObject.transform.up * springForce;
+                forceToApply = hit.normal * springForce;
                 forceToApply += calculateForwardFriction(springForce) * hitObject.transform.forward;
                 forceToApply += calculateSideFriction(springForce, wheelLocalVelocity.x) * hitObject.transform.right;
                 forceToApply += calculateForwardInput(springForce) * hitObject.transform.forward;

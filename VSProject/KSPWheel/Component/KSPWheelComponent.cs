@@ -104,6 +104,9 @@ namespace KSPWheel
         //used merely to display some info while in the editor
 
         public float currentSteerAngle;
+        public Vector3 totalWorldForce;
+        public Vector3 totalLocalForce;
+        public Vector3 hitNormal;
 
         #endregion ENDREGION - Unity Editor Display Variables
 
@@ -156,6 +159,9 @@ namespace KSPWheel
             {
                 wheelTransform.Rotate(wheelTransform.right, wheelCollider.wheelRPM, Space.World);
             }
+            totalWorldForce = wheelCollider.forceToApply;
+            totalLocalForce = gameObject.transform.InverseTransformDirection(totalWorldForce);
+            hitNormal = wheelCollider.hit.normal;
         }
 
         public void OnValidate()
@@ -194,34 +200,34 @@ namespace KSPWheel
 
             if (wheelCollider.grounded)
             {
-                //rayStart = hitObject.transform.position + velocity;
-                //rayEnd = rayStart + (hitObject.transform.up * 10);
-                //Debug.DrawLine(rayStart, rayEnd, Color.magenta);
+                rayStart = wheelCollider.hitObject.transform.position + velocity;
+                rayEnd = rayStart + (wheelCollider.hitObject.transform.up * 10);
+                Debug.DrawLine(rayStart, rayEnd, Color.magenta);
 
-                //rayEnd = wheelCollider.hit.point + velocity + (hitObject.transform.forward * 10);
-                //Debug.DrawLine(rayStart, rayEnd, Color.magenta);
+                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.hitObject.transform.forward * 10);
+                Debug.DrawLine(rayStart, rayEnd, Color.magenta);
 
-                //rayEnd = wheelCollider.hit.point + velocity + (hitObject.transform.right * 10);
-                //Debug.DrawLine(rayStart, rayEnd, Color.magenta);
+                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.hitObject.transform.right * 10);
+                Debug.DrawLine(rayStart, rayEnd, Color.magenta);
 
-                //rayEnd = wheelCollider.hit.point + velocity + (forceToApply);
-                //Debug.DrawLine(rayStart, rayEnd, Color.gray);
+                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.forceToApply);
+                Debug.DrawLine(rayStart, rayEnd, Color.gray);
 
-                //rayStart = rigidBody.position + velocity;
-                //rayEnd = rayStart + rigidBody.velocity.normalized * 10f;
-                //Debug.DrawLine(rayStart, rayEnd, Color.red);
+                rayStart = rigidBody.position + velocity;
+                rayEnd = rayStart + rigidBody.velocity.normalized * 10f;
+                Debug.DrawLine(rayStart, rayEnd, Color.blue);
 
-                //rayStart = hitObject.transform.position + velocity;
-                //rayEnd = rayStart + wheelForward * 100f;
-                //Debug.DrawLine(rayStart, rayEnd, Color.red);
+                rayStart = wheelCollider.hitObject.transform.position + velocity;
+                rayEnd = rayStart + wheelCollider.wheelForward * 100f;
+                Debug.DrawLine(rayStart, rayEnd, Color.red);
 
-                //rayStart = hitObject.transform.position + velocity;
-                //rayEnd = rayStart + wheelUp * 100f;
-                //Debug.DrawLine(rayStart, rayEnd, Color.red);
+                rayStart = wheelCollider.hitObject.transform.position + velocity;
+                rayEnd = rayStart + wheelCollider.wheelUp * 100f;
+                Debug.DrawLine(rayStart, rayEnd, Color.red);
 
-                //rayStart = hitObject.transform.position + velocity;
-                //rayEnd = rayStart + wheelRight * 100f;
-                //Debug.DrawLine(rayStart, rayEnd, Color.red);
+                rayStart = wheelCollider.hitObject.transform.position + velocity;
+                rayEnd = rayStart + wheelCollider.wheelRight * 100f;
+                Debug.DrawLine(rayStart, rayEnd, Color.red);
             }
 
             drawDebugWheel();
@@ -231,7 +237,7 @@ namespace KSPWheel
         {
             //Draw the wheel
             Vector3 velocity = rigidBody.velocity * Time.deltaTime;
-            Vector3 diff = -gameObject.transform.up * (wheelCollider.suspensionLength - wheelCollider.compressionDistance) + velocity;
+            Vector3 diff = -gameObject.transform.up * (suspensionLength - wheelCollider.compressionDistance) + velocity;
             float radius = wheelRadius;
             Vector3 point1;
             Vector3 point0 = gameObject.transform.TransformPoint(radius * new Vector3(0, Mathf.Sin(0), Mathf.Cos(0))) + diff;
