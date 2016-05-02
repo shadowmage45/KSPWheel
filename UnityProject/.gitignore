@@ -1,12 +1,6 @@
 [Tt]emp/
 [Oo]bj/
 [Bb]uild
-/Library/FailedAssetImports.txt
-/Library/CrashedAssetImports.txt
-/Library/cache/
-/Library/previews/
-/Library/ScriptAssemblies
-/Library/ShaderCache
-/Library/UnityAssemblies
+[Ll]ibrary
 sysinfo.txt
 *.stackdump
