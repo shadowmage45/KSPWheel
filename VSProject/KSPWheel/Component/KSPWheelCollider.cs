@@ -154,17 +154,18 @@ namespace KSPWheel
         public float springVelocity;
         public float compressionPercentInverse;
 
-        #endregion ENDREGION - Public editor-display variables
-
-        #region REGION - Private working variables
         public Vector3 wheelForward;
         public Vector3 wheelRight;
         public Vector3 wheelUp;
         public GameObject hitObject;
         public float currentSteerAngle;
+        public float sideSlip;
+        #endregion ENDREGION - Public editor-display variables
+
+        #region REGION - Private working variables
         private float fwdInput = 0;
         private float rotInput = 0;
-        private KSPFrictionCurve frictionCurve;
+        private KSPFrictionCurve frictionCurve;        
         #endregion ENDREGION - Private working variables
 
         public KSPWheelCollider(GameObject wheel, Rigidbody rigidBody)
@@ -233,7 +234,7 @@ namespace KSPWheel
 
                 forceToApply = hit.normal * springForce;
                 forceToApply += calculateForwardFriction(springForce) * hitObject.transform.forward;
-                forceToApply += calculateSideFriction(springForce, wheelLocalVelocity.x) * hitObject.transform.right;
+                forceToApply += calculateSideFriction(springForce, worldVelocityAtHit) * hitObject.transform.right;
                 forceToApply += calculateForwardInput(springForce) * hitObject.transform.forward;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
                 calculateWheelRPM(springForce);
@@ -241,8 +242,9 @@ namespace KSPWheel
             else
             {
                 springForce = dampForce = 0;
-                wheelMountLocalVelocity = Vector3.zero;
-                wheelLocalVelocity = Vector3.zero;
+                //worldVelocityAtHit = Vector3.zero;
+                //wheelMountLocalVelocity = Vector3.zero;
+                //wheelLocalVelocity = Vector3.zero;
                 wheelMeshPosition = wheel.transform.position + (-wheel.transform.up * suspensionLength * (1f - target));
             }
         }
@@ -256,13 +258,11 @@ namespace KSPWheel
             return friction;
         }
 
-        private float calculateSideFriction(float downForce, float slipVelocity)
+        private float calculateSideFriction(float downForce, Vector3 velocity)
         {
-            float val = -frictionCurve.Evaluate(slipVelocity) * slipVelocity;
-            if (val != 0)
-            {
-                MonoBehaviour.print("slipVal: " + val);
-            }            
+            Vector3 localVelocity = wheelLocalVelocity;
+            sideSlip = -frictionCurve.Evaluate(localVelocity.normalized.x) * localVelocity.x * downForce * 0.00005f;
+            float val = sideSlip * sideFrictionConst;
             return val;
         }
         

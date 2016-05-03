@@ -84,15 +84,18 @@
   <ItemGroup>
     <Compile Include="Component\KSPWheelCollider.cs" />
     <Compile Include="Component\KSPWheelComponent.cs" />
+    <Compile Include="Component\WheelColliderSource.cs" />
+    <Compile Include="Component\WheelHitSource.cs" />
     <Compile Include="PartModule\KSPWheelAnimationState.cs" />
     <Compile Include="PartModule\KSPWheelInfo.cs" />
     <Compile Include="PhysicsModel\KSPFrictionCurve.cs" />
     <Compile Include="PhysicsModel\KSPWheelDefaultFrictionModel.cs" />
     <Compile Include="PhysicsModel\KSPWheelPhysicsModel.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PartModule\KSPWheelModule.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(TargetPath) $(SolutionDir)\..\GameData\KSPWheel\Plugin\$(TargetFileName)

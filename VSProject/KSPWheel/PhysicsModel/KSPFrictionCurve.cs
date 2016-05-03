@@ -20,7 +20,7 @@ namespace KSPWheel
      * You are free to use, modify or distribute these classes however you wish, 
      * I only ask that you make mention of their use in your project credits.
     */
-    /**
+    /***
      * Adapted slightly for KSP use by Shadowmage 
      */
 

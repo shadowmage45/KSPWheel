@@ -20,7 +20,7 @@ namespace KSPWheel
      * You are free to use, modify or distribute these classes however you wish, 
      * I only ask that you make mention of their use in your project credits.
     */
-    /**
+    /***
      * Adapted slightly for KSP use by Shadowmage 
      */
 
@@ -115,10 +115,10 @@ namespace KSPWheel
 
             UpdateArrays();
 
-            for (int i = 0; i < 100; i++)
-            {
-                MonoBehaviour.print(Evaluate((float)i * 0.01f));
-            }
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    MonoBehaviour.print(Evaluate((float)i * 0.01f));
+            //}
         }
 
         private void UpdateArrays()

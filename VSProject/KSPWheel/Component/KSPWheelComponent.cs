@@ -5,7 +5,7 @@ namespace KSPWheel
     /// <summary>
     /// This class is a wrapper around the KSPWheelCollider class to allow for easier use while in the Unity Editor.<para/>
     /// It will merely instantiate a KSPWheelCollider object and update its internal variables with the ones entered into the Editor Inspector panel.<para/>
-    /// Also includes a few display-only variables for
+    /// Also includes a few display-only variables for debugging in the editor
     /// </summary>
     [AddComponentMenu("Physics/KSPWheel")]
     public class KSPWheelComponent : MonoBehaviour
@@ -102,11 +102,15 @@ namespace KSPWheel
         #region REGION - Unity Editor Display Variables
         //these variables are updated every fixed-tick after the wheel has been updated
         //used merely to display some info while in the editor
-
+                
         public float currentSteerAngle;
+        public Vector3 worldVelocity;
+        public Vector3 localVelocity;
         public Vector3 totalWorldForce;
         public Vector3 totalLocalForce;
         public Vector3 hitNormal;
+        public float sideSlipForce;
+        public float sideFrictionForce;
 
         #endregion ENDREGION - Unity Editor Display Variables
 
@@ -162,6 +166,9 @@ namespace KSPWheel
             totalWorldForce = wheelCollider.forceToApply;
             totalLocalForce = gameObject.transform.InverseTransformDirection(totalWorldForce);
             hitNormal = wheelCollider.hit.normal;
+            worldVelocity = wheelCollider.worldVelocityAtHit;
+            localVelocity = wheelCollider.wheelLocalVelocity;
+            sideSlipForce = wheelCollider.sideSlip;
         }
 
         public void OnValidate()
