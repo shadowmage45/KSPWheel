@@ -102,7 +102,9 @@ namespace KSPWheel
         #region REGION - Unity Editor Display Variables
         //these variables are updated every fixed-tick after the wheel has been updated
         //used merely to display some info while in the editor
-                
+
+        public float springForce;
+        public float dampForce;
         public float currentSteerAngle;
         public Vector3 worldVelocity;
         public Vector3 localVelocity;
@@ -169,11 +171,12 @@ namespace KSPWheel
             worldVelocity = wheelCollider.worldVelocityAtHit;
             localVelocity = wheelCollider.wheelLocalVelocity;
             sideSlipForce = wheelCollider.sideSlip;
+            springForce = wheelCollider.springForce;
+            dampForce = wheelCollider.dampForce;
         }
 
         public void OnValidate()
         {
-            MonoBehaviour.print("OnValidate()");
             if (wheelCollider != null)
             {
                 wheelCollider.wheelRadius = wheelRadius;
@@ -207,14 +210,14 @@ namespace KSPWheel
 
             if (wheelCollider.grounded)
             {
-                rayStart = wheelCollider.hitObject.transform.position + velocity;
-                rayEnd = rayStart + (wheelCollider.hitObject.transform.up * 10);
+                rayStart = wheelCollider.wheel.transform.position + velocity;
+                rayEnd = rayStart + (wheelCollider.wheelUp * 10);
                 Debug.DrawLine(rayStart, rayEnd, Color.magenta);
 
-                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.hitObject.transform.forward * 10);
+                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.wheelForward * 10);
                 Debug.DrawLine(rayStart, rayEnd, Color.magenta);
 
-                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.hitObject.transform.right * 10);
+                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.wheelRight * 10);
                 Debug.DrawLine(rayStart, rayEnd, Color.magenta);
 
                 rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.forceToApply);
@@ -223,18 +226,6 @@ namespace KSPWheel
                 rayStart = rigidBody.position + velocity;
                 rayEnd = rayStart + rigidBody.velocity.normalized * 10f;
                 Debug.DrawLine(rayStart, rayEnd, Color.blue);
-
-                rayStart = wheelCollider.hitObject.transform.position + velocity;
-                rayEnd = rayStart + wheelCollider.wheelForward * 100f;
-                Debug.DrawLine(rayStart, rayEnd, Color.red);
-
-                rayStart = wheelCollider.hitObject.transform.position + velocity;
-                rayEnd = rayStart + wheelCollider.wheelUp * 100f;
-                Debug.DrawLine(rayStart, rayEnd, Color.red);
-
-                rayStart = wheelCollider.hitObject.transform.position + velocity;
-                rayEnd = rayStart + wheelCollider.wheelRight * 100f;
-                Debug.DrawLine(rayStart, rayEnd, Color.red);
             }
 
             drawDebugWheel();
@@ -255,5 +246,6 @@ namespace KSPWheel
                 point0 = point1;
             }
         }
+
     }
 }

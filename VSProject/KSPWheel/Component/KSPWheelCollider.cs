@@ -146,9 +146,6 @@ namespace KSPWheel
 
         public float fwdFrictionForce;
         public float sideFrictionForce;
-        public float dotX;
-        public float dotZ;
-        public float dotY;
 
         public float prevCompressionDistance;
         public float springVelocity;
@@ -157,7 +154,7 @@ namespace KSPWheel
         public Vector3 wheelForward;
         public Vector3 wheelRight;
         public Vector3 wheelUp;
-        public GameObject hitObject;
+        //public GameObject hitObject;
         public float currentSteerAngle;
         public float sideSlip;
         #endregion ENDREGION - Public editor-display variables
@@ -172,10 +169,6 @@ namespace KSPWheel
         {
             this.wheel = wheel;
             this.rigidBody = rigidBody;
-            hitObject = new GameObject("Wheelhit-" + this.wheel.name);
-            hitObject.transform.parent = this.wheel.transform;
-            hitObject.transform.position = this.wheel.transform.position;
-            hitObject.transform.rotation = this.wheel.transform.rotation;
             frictionCurve = new KSPFrictionCurve();
         }
 
@@ -203,25 +196,19 @@ namespace KSPWheel
 
             wheelForward = Quaternion.AngleAxis(currentSteerAngle, wheel.transform.up) * wheel.transform.forward;
             wheelUp = wheel.transform.up;
-            wheelRight = Vector3.Cross(wheelForward, wheelUp);
+            wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             grounded = false;
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance))
             {
                 grounded = true;
                 prevCompressionDistance = compressionDistance;
-
                 wheelMeshPosition = hit.point + (wheel.transform.up * wheelRadius);
-                hitObject.transform.position = hit.point;
-                hitObject.transform.LookAt(hit.point + wheelForward, hit.normal);
-
-                worldVelocityAtHit = rigidBody.GetPointVelocity(hitObject.transform.position);
-                wheelLocalVelocity = hitObject.transform.InverseTransformDirection(worldVelocityAtHit);//speed of the wheel over the road in the roads frame of reference            
+                worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
+                wheelLocalVelocity.z = Vector3.Dot(worldVelocityAtHit, wheelForward) * worldVelocityAtHit.magnitude;
+                wheelLocalVelocity.x = Vector3.Dot(worldVelocityAtHit, wheelRight) * worldVelocityAtHit.magnitude;
+                wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit, wheel.transform.up) * worldVelocityAtHit.magnitude;
                 wheelMountLocalVelocity = wheel.transform.InverseTransformDirection(worldVelocityAtHit);//used for spring/damper 'velocity' value
-
-                dotX = Vector3.Dot(hitObject.transform.right, rigidBody.velocity.normalized);
-                dotY = Vector3.Dot(hitObject.transform.up, rigidBody.velocity.normalized);
-                dotZ = Vector3.Dot(hitObject.transform.forward, rigidBody.velocity.normalized);
-
+                
                 compressionDistance = suspensionLength + wheelRadius - (hit.distance);
                 compressionPercent = compressionDistance / suspensionLength;
                 compressionPercentInverse = 1.0f - compressionPercent;
@@ -232,16 +219,20 @@ namespace KSPWheel
                 springForce = (compressionDistance - (suspensionLength * target)) * spring;
                 springForce += dampForce;
 
-                forceToApply = hit.normal * springForce;
-                forceToApply += calculateForwardFriction(springForce) * hitObject.transform.forward;
-                forceToApply += calculateSideFriction(springForce, worldVelocityAtHit) * hitObject.transform.right;
-                forceToApply += calculateForwardInput(springForce) * hitObject.transform.forward;
+                forceToApply = hit.normal * springForce;// * Vector3.Dot(hit.normal, wheel.transform.up);//spring and damper -- suspension force
+                forceToApply += calculateForwardFriction(springForce) * wheelForward;
+                forceToApply += calculateSideFriction(springForce) * wheelRight;
+                forceToApply += calculateForwardInput(springForce) * wheelForward;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
                 calculateWheelRPM(springForce);
             }
             else
             {
                 springForce = dampForce = 0;
+                prevCompressionDistance = 0;
+                compressionDistance = 0;
+                compressionPercent = 0;
+                compressionPercentInverse = 1;
                 //worldVelocityAtHit = Vector3.zero;
                 //wheelMountLocalVelocity = Vector3.zero;
                 //wheelLocalVelocity = Vector3.zero;
@@ -258,11 +249,18 @@ namespace KSPWheel
             return friction;
         }
 
-        private float calculateSideFriction(float downForce, Vector3 velocity)
+        private float calculateSideFriction(float downForce)
         {
             Vector3 localVelocity = wheelLocalVelocity;
             sideSlip = -frictionCurve.Evaluate(localVelocity.normalized.x) * localVelocity.x * downForce * 0.00005f;
             float val = sideSlip * sideFrictionConst;
+
+            //float val = 0;
+            //float approxMass = downForce * 0.1f;//convert the newtons of downforce into mass in kilograms
+            //float maxForce = Mathf.Abs(wheelLocalVelocity.x) * approxMass;
+            //sideSlip = val = downForce * -wheelLocalVelocity.x * sideFrictionConst;
+            //if (Mathf.Abs(val) > maxForce) { val = val < 0 ? -maxForce : maxForce; }
+            //if (Mathf.Abs(val) > downForce) { val = val < 0 ? -downForce : downForce; }
             return val;
         }
         

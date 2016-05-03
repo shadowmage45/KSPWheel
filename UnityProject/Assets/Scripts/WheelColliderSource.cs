@@ -16,7 +16,11 @@ namespace KSPWheel
  * 
  * You are free to use, modify or distribute these classes however you wish, 
  * I only ask that you make mention of their use in your project credits.
-*/
+ *
+ * Slightly modified by John Cummens (Shadowmage) for testing and reference on custom wheel-collider
+ */
+
+        
     using UnityEngine;
     using System.Collections;
 
