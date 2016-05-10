@@ -8,7 +8,7 @@ public class LFWheelGrip : MonoBehaviour {
 
     #region public congfiguable properties
     public float suspensionDistance = 2;
-    public float wheelRadius = 0.1f;
+    public float wheelRadius = 0.5f;
     public float suspensionSpring = 2000;
     public float suspensionDamper = 200;
     public float steeringInput;
@@ -29,6 +29,14 @@ public class LFWheelGrip : MonoBehaviour {
     int layerMask;
     #endregion
 
+    void Awake()
+    {
+        //Set to the GO we're assigned to. Saves messing in editor and required for final product.
+        print("Awake");
+        wheel = this.transform.gameObject;
+        rb = this.GetComponent<Rigidbody>();
+    }
+
     /// <summary>
     /// Creates varies entities to model the suspension and sets start conditions
     /// </summary>
@@ -38,9 +46,7 @@ public class LFWheelGrip : MonoBehaviour {
         layerMask = 1 << 26;
         layerMask = ~layerMask;
 
-        //Set to the GO we're assigned to. Saves messing in editor and required for final product.
-        wheel = this.transform.gameObject;
-        rb = this.GetComponent<Rigidbody>();
+
         if(wheel.transform.localScale != Vector3.one)
         {
             print("The GameObject this script is aplied to should be set to scale 1,1,1!!!!");
@@ -153,6 +159,10 @@ public class LFWheelGrip : MonoBehaviour {
     /// </summary>
     void OnDrawGizmosSelected()
     {
+        if(wheel == null)
+        {
+            wheel = this.transform.gameObject;
+        }
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(wheel.transform.position, wheelRadius);
         Gizmos.DrawWireSphere(wheel.transform.position + -wheel.transform.up * suspensionDistance, wheelRadius);
