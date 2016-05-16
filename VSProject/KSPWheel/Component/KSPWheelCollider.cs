@@ -218,21 +218,24 @@ namespace KSPWheel
 
                 springForce = (compressionDistance - (suspensionLength * target)) * spring;
                 springForce += dampForce;
+                if (springForce < 0) { springForce = 0; }
 
                 forceToApply = hit.normal * springForce;// * Vector3.Dot(hit.normal, wheel.transform.up);//spring and damper -- suspension force
-                forceToApply += calculateForwardFriction(springForce) * wheelForward;
-                forceToApply += calculateSideFriction(springForce) * wheelRight;
+                float fDot = Mathf.Abs(Vector3.Dot(wheelUp, hit.normal));
+                forceToApply += calculateForwardFriction(springForce) * wheelForward * fDot;
+                float wDot = 1.0f - Mathf.Abs(Vector3.Dot(wheelRight, hit.normal));
+                forceToApply += calculateSideFriction(springForce) * wheelRight * wDot;
                 forceToApply += calculateForwardInput(springForce) * wheelForward;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
                 calculateWheelRPM(springForce);
             }
             else
             {
-                springForce = dampForce = 0;
-                prevCompressionDistance = 0;
-                compressionDistance = 0;
-                compressionPercent = 0;
-                compressionPercentInverse = 1;
+                //springForce = dampForce = 0;
+                //prevCompressionDistance = 0;
+                //compressionDistance = 0;
+                //compressionPercent = 0;
+                //compressionPercentInverse = 1;
                 //worldVelocityAtHit = Vector3.zero;
                 //wheelMountLocalVelocity = Vector3.zero;
                 //wheelLocalVelocity = Vector3.zero;
@@ -255,6 +258,11 @@ namespace KSPWheel
             sideSlip = -frictionCurve.Evaluate(localVelocity.normalized.x) * localVelocity.x * downForce * 0.00005f;
             float val = sideSlip * sideFrictionConst;
 
+            sideSlip = val = -downForce * localVelocity.normalized.x * sideFrictionConst;            
+            float sprungMass = downForce * 0.1f;//approximation of force->mass
+            if (sprungMass > rigidBody.mass) { sprungMass = rigidBody.mass; }
+            float vel = Mathf.Abs(localVelocity.x);
+            if (Mathf.Abs(val) > vel * sprungMass) { val = Mathf.Sign(val) * vel * sprungMass; }
             //float val = 0;
             //float approxMass = downForce * 0.1f;//convert the newtons of downforce into mass in kilograms
             //float maxForce = Mathf.Abs(wheelLocalVelocity.x) * approxMass;
