@@ -204,9 +204,9 @@ namespace KSPWheel
                 prevCompressionDistance = compressionDistance;
                 wheelMeshPosition = hit.point + (wheel.transform.up * wheelRadius);
                 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
-                wheelLocalVelocity.z = Vector3.Dot(worldVelocityAtHit, wheelForward) * worldVelocityAtHit.magnitude;
-                wheelLocalVelocity.x = Vector3.Dot(worldVelocityAtHit, wheelRight) * worldVelocityAtHit.magnitude;
-                wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit, wheel.transform.up) * worldVelocityAtHit.magnitude;
+                wheelLocalVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, wheelForward) * worldVelocityAtHit.magnitude;
+                wheelLocalVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * worldVelocityAtHit.magnitude;
+                wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheel.transform.up) * worldVelocityAtHit.magnitude;
                 wheelMountLocalVelocity = wheel.transform.InverseTransformDirection(worldVelocityAtHit);//used for spring/damper 'velocity' value
                 
                 compressionDistance = suspensionLength + wheelRadius - (hit.distance);
@@ -259,7 +259,7 @@ namespace KSPWheel
             float val = sideSlip * sideFrictionConst;
 
             sideSlip = val = -downForce * localVelocity.normalized.x * sideFrictionConst;            
-            float sprungMass = downForce * 0.1f;//approximation of force->mass
+            float sprungMass = downForce;//approximation of force->mass
             if (sprungMass > rigidBody.mass) { sprungMass = rigidBody.mass; }
             float vel = Mathf.Abs(localVelocity.x);
             if (Mathf.Abs(val) > vel * sprungMass) { val = Mathf.Sign(val) * vel * sprungMass; }

@@ -1305,7 +1305,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 20
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 2
+  sideFrictionConst: 10
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -1359,7 +1359,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 20
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 2
+  sideFrictionConst: 10
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -1422,7 +1422,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 2
+  sideFrictionConst: 10
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -1461,7 +1461,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 2
+  sideFrictionConst: 10
   tankSteer: 0
   invertSteer: 0
   debug: 1
