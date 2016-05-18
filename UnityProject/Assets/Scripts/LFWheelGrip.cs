@@ -35,7 +35,7 @@ public class LFWheelGrip : MonoBehaviour {
         //Set to the GO we're assigned to. Saves messing in editor and required for final product.
         print("Awake");
         wheel = this.transform.gameObject;
-        rb = this.GetComponent<Rigidbody>();
+        rb = GetComponentUpwards<Rigidbody>(gameObject);
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ public class LFWheelGrip : MonoBehaviour {
 
         // Needs to be an empty GO eventually - cube for convenience for now. Has to have Rigidybody for joint to attach to.
         contact = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        Destroy(gameObject.GetComponent("BoxCollider"));
+        //Destroy(contact.GetComponent("BoxCollider"));
         //Destroy(gameObject.GetComponent("MeshRenderer"));
         contact.layer = 26;
         print(-wheel.transform.up);
@@ -65,7 +65,7 @@ public class LFWheelGrip : MonoBehaviour {
         contactRb.mass = 0;
         
         // Creates the joint with carefully chosen parameters
-        susJoint = this.gameObject.AddComponent<ConfigurableJoint>();
+        susJoint = this.rb.gameObject.AddComponent<ConfigurableJoint>();
         susJoint.anchor = Vector3.zero;
         susJoint.axis = new Vector3(1, 0, 0);
         susJoint.autoConfigureConnectedAnchor = false;
@@ -164,6 +164,14 @@ public class LFWheelGrip : MonoBehaviour {
         Gizmos.DrawWireSphere(wheel.transform.position, wheelRadius);
         Gizmos.DrawWireSphere(wheel.transform.position + -wheel.transform.up * suspensionDistance, wheelRadius);
         Gizmos.DrawRay(wheel.transform.position, -wheel.transform.up * suspensionDistance);
+    }
+
+    public static T GetComponentUpwards<T>(GameObject obj) where T : Component
+    {
+        T comp = obj.GetComponent<T>();
+        if (comp != null) { return comp; }
+        if (obj.transform.parent != null) { comp = GetComponentUpwards<T>(obj.transform.parent.gameObject); }
+        return comp;
     }
 
 }
