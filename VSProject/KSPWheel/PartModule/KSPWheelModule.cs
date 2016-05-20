@@ -16,6 +16,8 @@ namespace KSPWheel
         [KSPField]
         public string wheelName;
         [KSPField]
+        public string bustedWheelName;
+        [KSPField]
         public string suspensionName;
         [KSPField]
         public string steeringName;
@@ -79,12 +81,15 @@ namespace KSPWheel
         #region REGION - Private working/cached variables
         private Transform wheelColliderTransform;
         private Transform wheelMesh;
+        private Transform bustedWheelMesh;
         private Transform suspensionMesh;
         private Transform steeringMesh;
 
         private KSPWheelCollider wheel;
         private KSPWheelState wheelState = KSPWheelState.DEPLOYED;
         private WheelAnimationHandler animationControl;
+
+        private Vector3 suspensionLocalOrigin;
         #endregion
 
         #region REGION - GUI Handling methods
@@ -160,7 +165,9 @@ namespace KSPWheel
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
             wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
             wheelMesh = part.transform.FindRecursive(wheelName);
+            bustedWheelMesh = part.transform.FindRecursive(bustedWheelName);
             suspensionMesh = part.transform.FindRecursive(suspensionName);
+            suspensionLocalOrigin = suspensionMesh.transform.localPosition;
             steeringMesh = part.transform.FindRecursive(steeringName);
             if (!string.IsNullOrEmpty(animationName)) { animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, wheelState); }
             WheelCollider collider = wheelColliderTransform.GetComponent<WheelCollider>();
@@ -175,6 +182,17 @@ namespace KSPWheel
             }
             Component.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
             if (animationControl != null) { animationControl.setToAnimationState(wheelState, false); }
+            Events["toggleGearEvent"].active = animationControl != null;
+            Actions["toggleGearAction"].active = animationControl != null;
+
+            Collider[] colliders = part.GetComponentsInChildren<Collider>();
+            int len = colliders.Length;
+            for (int i = 0; i < len; i++)
+            {
+                colliders[i].enabled = false;
+            }
+            wheelColliderTransform.localPosition += Vector3.up * suspensionTravel;
+            if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
         }
 
         /// <summary>
@@ -183,7 +201,7 @@ namespace KSPWheel
         public void Start()
         {
             //delaying until Start as the part.rigidbody is not initialized until ?? (need to find out when...)
-            wheel = new KSPWheelCollider(wheelColliderTransform.gameObject, part.Rigidbody);
+            wheel = new KSPWheelCollider(wheelColliderTransform.gameObject, part.gameObject.GetComponent<Rigidbody>());
             wheel.wheel = wheelColliderTransform.gameObject;
             wheel.wheelRadius = wheelRadius;
             wheel.wheelMass = wheelMass;
@@ -200,6 +218,13 @@ namespace KSPWheel
         /// </summary>
         public void FixedUpdate()
         {
+            if (!HighLogic.LoadedSceneIsFlight) { return; }
+            if (wheel.rigidBody == null) { wheel.rigidBody = part.GetComponent<Rigidbody>(); }
+            if (wheel.rigidBody == null)
+            {
+                MonoBehaviour.print("Part rigidbody is null, cannot update!");
+                return;
+            }
             //Update the wheel physics state as long as it is not broken or fully retracted
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
             if (wheelState != KSPWheelState.BROKEN && wheelState != KSPWheelState.RETRACTED)
@@ -215,23 +240,22 @@ namespace KSPWheel
         public void Update()
         {
             if (animationControl != null) { animationControl.updateAnimationState(); }
+            if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }
             //TODO -- input handling/updating
-            if (wheelMesh != null)
-            {
-                wheelMesh.transform.position = wheel.wheelMeshPosition;
-                wheelMesh.transform.Rotate(0, 0, wheel.wheelRPM, Space.Self);
-            }
             if (suspensionMesh != null)
             {
-                //TODO -- suspension transform positioning
-                // need to figure out how to find the 'neutral point' or 'start point' of the suspension
-                // how do the stock modules determine it?
+                suspensionMesh.localPosition = suspensionLocalOrigin + (Vector3.up * wheel.compressionDistance) + (Vector3.up * suspensionOffset);
             }
             if (steeringMesh != null)
             {
                 float angle = wheel.currentSteerAngle;
                 if (invertSteering) { angle = -angle; }
                 steeringMesh.localRotation = Quaternion.Euler(0, angle, 0);
+            }
+            if (wheelMesh != null)
+            {
+                wheelMesh.transform.position = wheel.wheelMeshPosition;
+                wheelMesh.transform.Rotate(wheel.wheelRPM, 0, 0, Space.Self);
             }
         }
 
