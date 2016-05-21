@@ -162,7 +162,11 @@ namespace KSPWheel
         #region REGION - Private working variables
         private float fwdInput = 0;
         private float rotInput = 0;
-        private KSPFrictionCurve frictionCurve;        
+        private KSPFrictionCurve frictionCurve;
+        private int sideStickyTimer = 0;
+        private int fwdStickyTimer = 0;
+        private float maxStickyVelocity = 0.25f;
+        private ConfigurableJoint stickyJoint;
         #endregion ENDREGION - Private working variables
 
         public KSPWheelCollider(GameObject wheel, Rigidbody rigidBody)
@@ -208,6 +212,11 @@ namespace KSPWheel
                 wheelLocalVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * worldVelocityAtHit.magnitude;
                 wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheel.transform.up) * worldVelocityAtHit.magnitude;
                 wheelMountLocalVelocity = wheel.transform.InverseTransformDirection(worldVelocityAtHit);//used for spring/damper 'velocity' value
+                if (Math.Abs(wheelLocalVelocity.x) < maxStickyVelocity) { sideStickyTimer++; }
+                else { sideStickyTimer = 0; }
+                if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity) { fwdStickyTimer++; }
+                else { fwdStickyTimer = 0; }
+                setupStickyJoint(fwdStickyTimer, sideStickyTimer);
                 
                 compressionDistance = suspensionLength + wheelRadius - (hit.distance);
                 compressionPercent = compressionDistance / suspensionLength;
@@ -240,6 +249,35 @@ namespace KSPWheel
                 //wheelMountLocalVelocity = Vector3.zero;
                 //wheelLocalVelocity = Vector3.zero;
                 wheelMeshPosition = wheel.transform.position + (-wheel.transform.up * suspensionLength * (1f - target));
+                Component.Destroy(stickyJoint);
+            }
+        }
+
+        private void setupStickyJoint(int fwd, int side)
+        {
+            if (stickyJoint == null)
+            {
+                stickyJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
+                stickyJoint.anchor = wheel.transform.localPosition;
+                stickyJoint.axis = Vector3.right;
+                stickyJoint.secondaryAxis = Vector3.up;
+            }
+            stickyJoint.connectedAnchor = hit.point;
+            if (fwd > 5 && fwdInput==0)
+            {
+                stickyJoint.zMotion = ConfigurableJointMotion.Locked;
+            }
+            else
+            {
+                stickyJoint.zMotion = ConfigurableJointMotion.Free;
+            }
+            if (side > 5 && wheelLocalVelocity.magnitude < maxStickyVelocity)
+            {
+                stickyJoint.xMotion = ConfigurableJointMotion.Locked;
+            }
+            else
+            {
+                stickyJoint.xMotion = ConfigurableJointMotion.Free;
             }
         }
 

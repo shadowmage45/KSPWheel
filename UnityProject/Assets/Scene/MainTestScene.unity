@@ -800,7 +800,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 20
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 1
+  sideFrictionConst: 8
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -2095,7 +2095,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 1
+  sideFrictionConst: 8
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -3008,7 +3008,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 1
+  sideFrictionConst: 8
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -4364,7 +4364,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 20
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 1
+  sideFrictionConst: 8
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -4491,7 +4491,6 @@ GameObject:
   - 4: {fileID: 1773594034}
   - 33: {fileID: 1773594033}
   - 23: {fileID: 1773594032}
-  - 65: {fileID: 1773594031}
   - 54: {fileID: 1773594030}
   m_Layer: 0
   m_Name: StickyFrictionTestAnchor
@@ -4515,18 +4514,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &1773594031
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1773594029}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &1773594032
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4827,7 +4814,6 @@ GameObject:
   m_Component:
   - 4: {fileID: 1986604050}
   - 54: {fileID: 1986604052}
-  - 153: {fileID: 1986604051}
   m_Layer: 0
   m_Name: VehicleExample1 (1)
   m_TagString: Untagged
@@ -4842,7 +4828,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1986604049}
   m_LocalRotation: {x: 0, y: .707106829, z: 0, w: .707106709}
-  m_LocalPosition: {x: 17.2999992, y: 3.54999995, z: 46.2000008}
+  m_LocalPosition: {x: 18.6599998, y: 3.54999995, z: 46.2000008}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1356012565}
@@ -4853,104 +4839,6 @@ Transform:
   - {fileID: 731863474}
   m_Father: {fileID: 0}
   m_RootOrder: 1
---- !u!153 &1986604051
-ConfigurableJoint:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1986604049}
-  m_ConnectedBody: {fileID: 1773594030}
-  m_Anchor: {x: 0, y: 0, z: 0}
-  m_Axis: {x: 1, y: 0, z: 0}
-  m_AutoConfigureConnectedAnchor: 0
-  m_ConnectedAnchor: {x: 0, y: 3.55999994, z: 0}
-  serializedVersion: 2
-  m_SecondaryAxis: {x: 0, y: 1, z: 0}
-  m_XMotion: 0
-  m_YMotion: 0
-  m_ZMotion: 2
-  m_AngularXMotion: 2
-  m_AngularYMotion: 2
-  m_AngularZMotion: 2
-  m_LinearLimitSpring:
-    spring: 0
-    damper: 0
-  m_LinearLimit:
-    limit: 0
-    bounciness: 0
-    contactDistance: 0
-  m_AngularXLimitSpring:
-    spring: 0
-    damper: 0
-  m_LowAngularXLimit:
-    limit: 0
-    bounciness: 0
-    contactDistance: 0
-  m_HighAngularXLimit:
-    limit: 0
-    bounciness: 0
-    contactDistance: 0
-  m_AngularYZLimitSpring:
-    spring: 0
-    damper: 0
-  m_AngularYLimit:
-    limit: 0
-    bounciness: 0
-    contactDistance: 0
-  m_AngularZLimit:
-    limit: 0
-    bounciness: 0
-    contactDistance: 0
-  m_TargetPosition: {x: 0, y: 0, z: 0}
-  m_TargetVelocity: {x: 0, y: 0, z: 0}
-  m_XDrive:
-    serializedVersion: 2
-    mode: 0
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.40282326e+38
-  m_YDrive:
-    serializedVersion: 2
-    mode: 0
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.40282326e+38
-  m_ZDrive:
-    serializedVersion: 2
-    mode: 0
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.40282326e+38
-  m_TargetRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_TargetAngularVelocity: {x: 0, y: 0, z: 0}
-  m_RotationDriveMode: 0
-  m_AngularXDrive:
-    serializedVersion: 2
-    mode: 0
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.40282326e+38
-  m_AngularYZDrive:
-    serializedVersion: 2
-    mode: 0
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.40282326e+38
-  m_SlerpDrive:
-    serializedVersion: 2
-    mode: 0
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.40282326e+38
-  m_ProjectionMode: 0
-  m_ProjectionDistance: .100000001
-  m_ProjectionAngle: 180
-  m_ConfiguredInWorldSpace: 0
-  m_SwapBodies: 0
-  m_BreakForce: Infinity
-  m_BreakTorque: Infinity
-  m_EnableCollision: 0
-  m_EnablePreprocessing: 1
 --- !u!54 &1986604052
 Rigidbody:
   m_ObjectHideFlags: 0
