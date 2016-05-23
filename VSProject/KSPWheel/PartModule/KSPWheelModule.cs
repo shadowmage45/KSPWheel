@@ -139,6 +139,7 @@ namespace KSPWheel
 
         #region REGION - Private working/cached variables
         private Transform wheelColliderTransform;
+        private Transform wheelPivotTransform;
         private Transform wheelMesh;
         private Transform bustedWheelMesh;
         private Transform suspensionMesh;
@@ -223,6 +224,7 @@ namespace KSPWheel
             base.OnStart(state);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
             wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
+            wheelPivotTransform = part.transform.FindRecursive(wheelPivotName);
             wheelMesh = part.transform.FindRecursive(wheelName);
             bustedWheelMesh = part.transform.FindRecursive(bustedWheelName);
             suspensionMesh = part.transform.FindRecursive(suspensionName);
@@ -244,14 +246,27 @@ namespace KSPWheel
             Events["toggleGearEvent"].active = animationControl != null;
             Actions["toggleGearAction"].active = animationControl != null;
             Events["repairWheel"].active = wheelState == KSPWheelState.BROKEN;
+
+            //TODO -- there has got to be an easier way to handle these; perhaps check if the collider is part of the 
+            // model hierarchy for the part/vessel?
             Collider[] colliders = part.GetComponentsInChildren<Collider>();
             int len = colliders.Length;
             for (int i = 0; i < len; i++)
             {
-                colliders[i].enabled = false;
+                colliders[i].gameObject.layer = 26;//wheelcollidersignore
             }
+
             wheelColliderTransform.localPosition += Vector3.up * suspensionTravel;
-            if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
+            if (wheelState == KSPWheelState.BROKEN)
+            {
+                if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
+                if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(true); }
+            }
+            else
+            {
+                if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
+                if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
+            }
         }
 
         /// <summary>
@@ -289,6 +304,7 @@ namespace KSPWheel
                 MonoBehaviour.print("Part rigidbody is null, cannot update!");
                 return;
             }
+            //update the wheels input state from current keyboard input
             sampleInput();
             //Update the wheel physics state as long as it is not broken or fully retracted
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
@@ -301,7 +317,6 @@ namespace KSPWheel
             vessel.checkLanded();
         }
 
-        //TODO -- input handling
         /// <summary>
         /// Updates the mesh animation status from the wheel collider components current state (steer angle, wheel rotation, suspension compression)
         /// </summary>
@@ -322,10 +337,12 @@ namespace KSPWheel
                 if (invertSteering) { angle = -angle; }
                 steeringMesh.localRotation = Quaternion.Euler(0, angle, 0);
             }
+            //might not actually be necessary to update the wheel mesh position explicitly; it should be a child of suspension and thus positioned properly from the suspension positioning code
             if (wheelMesh != null)
             {
-                wheelMesh.transform.position = wheel.wheelMeshPosition + wheel.rigidBody.velocity * TimeWarp.fixedDeltaTime;
-                wheelMesh.transform.Rotate(wheel.wheelRPM, 0, 0, Space.Self);
+                //wheelMesh.transform.position = wheel.wheelMeshPosition + wheel.rigidBody.velocity * TimeWarp.fixedDeltaTime;
+                //however, it -does- need to be rotated according to the wheel current RPM
+                wheelPivotTransform.Rotate(wheel.wheelRPM, 0, 0, Space.Self);
             }
         }
 
@@ -334,18 +351,14 @@ namespace KSPWheel
         #region REGION - Custom update methods
 
         /// <summary>
-        /// Temporariy input handling code
+        /// Temporary very basic input handling code
         /// </summary>
         private void sampleInput()
         {
-            float left = Input.GetKey(KeyCode.A) ? -1 : 0;
-            float right = Input.GetKey(KeyCode.D) ? 1 : 0;
-            float fwd = Input.GetKey(KeyCode.W) ? 1 : 0;
-            float rev = Input.GetKey(KeyCode.S) ? -1 : 0;
-            if (motorLocked) { fwd = rev = 0; }
-            if (steeringLocked) { left = right = 0; }
-            float fwdInput = fwd + rev;
-            float rotInput = left + right;
+            float fwdInput = GameSettings.AXIS_WHEEL_THROTTLE.GetAxis();
+            float rotInput = GameSettings.AXIS_WHEEL_STEER.GetAxis();
+            if (motorLocked) { fwdInput = 0; }
+            if (steeringLocked) { rotInput = 0; }
             if (invertSteering) { rotInput = -rotInput; }
             if (tankSteering)
             {
@@ -356,7 +369,6 @@ namespace KSPWheel
             wheel.setInputState(fwdInput, rotInput);
         }
 
-        //TODO -- ??
         /// <summary>
         /// Callback from animationControl for when an animation transitions from one state to another
         /// </summary>
@@ -364,6 +376,10 @@ namespace KSPWheel
         public void onAnimationStateChanged(KSPWheelState state)
         {
             wheelState = state;
+            if (state == KSPWheelState.RETRACTED)
+            {
+                //TODO reset suspension and steering transforms to neutral?
+            }
         }
 
         /// <summary>
@@ -373,7 +389,7 @@ namespace KSPWheel
         /// <param name="localImpactVelocity"></param>
         public void onWheelImpact(Vector3 localImpactVelocity)
         {
-
+            //TODO
         }
 
         #endregion
