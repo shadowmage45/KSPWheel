@@ -814,6 +814,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!1 &301343513
 GameObject:
   m_ObjectHideFlags: 0
@@ -1032,6 +1036,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!1 &360438514
 GameObject:
   m_ObjectHideFlags: 0
@@ -1275,15 +1283,15 @@ Prefab:
     m_Modifications:
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -27.1000004
+      value: 16.8999996
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: .550000012
+      value: 5.96000004
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 44.7999992
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1303,7 +1311,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 400032, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -1344,6 +1352,22 @@ Prefab:
     - target: {fileID: 400000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 100020, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 100024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 100028, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 100032, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2300008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -1449,6 +1473,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!54 &523005900
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1503,6 +1531,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!64 &523005902
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1566,6 +1598,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!114 &523005905
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1605,6 +1641,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!4 &523005907 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -1677,6 +1717,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!1 &617458321
 GameObject:
   m_ObjectHideFlags: 0
@@ -2109,6 +2153,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!1 &769263970
 GameObject:
   m_ObjectHideFlags: 0
@@ -3022,6 +3070,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!1 &1150879878
 GameObject:
   m_ObjectHideFlags: 0
@@ -3446,6 +3498,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!1 &1356012564
 GameObject:
   m_ObjectHideFlags: 0
@@ -4378,6 +4434,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!1 &1608088954
 GameObject:
   m_ObjectHideFlags: 0
@@ -4554,7 +4614,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1773594029}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 17.2999992, y: -.00999999046, z: 46.2000008}
+  m_LocalPosition: {x: 16.9300003, y: 1.53999996, z: 44.7799988}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -4805,6 +4865,10 @@ MonoBehaviour:
   hitNormal: {x: 0, y: 0, z: 0}
   sideSlipForce: 0
   sideFrictionForce: 0
+  angularVelocity: 0
+  fwdSlipRatio: 0
+  fwdFrictionForce: 0
+  wheelRPM: 0
 --- !u!1 &1986604049
 GameObject:
   m_ObjectHideFlags: 0
