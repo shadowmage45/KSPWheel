@@ -169,12 +169,12 @@ namespace KSPWheel
         private float rotInput = 0;        
         private int sideStickyTimer = 0;
         private int fwdStickyTimer = 0;
-        private float maxStickyVelocity = 0.25f;//TODO -- expose as a configurable field
-        private ConfigurableJoint stickyJoint;
+        private float maxStickyVelocity = 0.1f;//TODO -- expose as a configurable field
+        private ConfigurableJoint stickyJoint;//the joint used for sticky friction
         private int raycastMask = ~(1 << 26);//cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask
         private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity
 
-        private KSPFrictionCurve frictionCurve;//TODO -- currently un-used
+        private KSPFrictionCurve frictionCurve;
         #endregion ENDREGION - Private working variables
 
         #region REGION - Public accessible methods / API methods
@@ -184,6 +184,11 @@ namespace KSPWheel
             this.wheel = wheel;
             this.rigidBody = rigidBody;
             frictionCurve = new KSPFrictionCurve();
+            frictionCurve.Stiffness = sideFrictionConst;
+            frictionCurve.ExtremumValue = 2;
+            frictionCurve.ExtremumSlip = 1;
+            frictionCurve.AsymptoteValue = 1;
+            frictionCurve.AsymptoteSlip = 2;
         }
 
         public void setImpactCallback(Action<Vector3> callback) { onImpactCallback = callback; }
@@ -241,13 +246,7 @@ namespace KSPWheel
                 wheelLocalVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * worldVelocityAtHit.magnitude;
                 wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheel.transform.up) * worldVelocityAtHit.magnitude;
                 wheelMountLocalVelocity = wheel.transform.InverseTransformDirection(worldVelocityAtHit);//used for spring/damper 'velocity' value
-                
-                if (Math.Abs(wheelLocalVelocity.x) < maxStickyVelocity) { sideStickyTimer++; }
-                else { sideStickyTimer = 0; }
-                if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity) { fwdStickyTimer++; }
-                else { fwdStickyTimer = 0; }
-                setupStickyJoint(fwdStickyTimer, sideStickyTimer);
-                
+
                 compressionDistance = suspensionLength + wheelRadius - (hit.distance);
                 compressionPercent = compressionDistance / suspensionLength;
                 compressionPercentInverse = 1.0f - compressionPercent;
@@ -259,6 +258,13 @@ namespace KSPWheel
                 springForce += dampForce;
                 if (springForce < 0) { springForce = 0; }
 
+                if (Math.Abs(wheelLocalVelocity.x) < maxStickyVelocity) { sideStickyTimer++; }
+                else { sideStickyTimer = 0; }
+                if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity) { fwdStickyTimer++; }
+                else { fwdStickyTimer = 0; }
+                setupStickyJoint(springForce, fwdStickyTimer, sideStickyTimer);
+
+                //forceToApply = Vector3.zero;
                 forceToApply = hit.normal * springForce;// * Vector3.Dot(hit.normal, wheel.transform.up);//spring and damper -- suspension force
                 float fDot = Mathf.Abs(Vector3.Dot(wheelUp, hit.normal));
                 forceToApply += calculateForwardFriction(springForce) * wheelForward * fDot;
@@ -298,11 +304,11 @@ namespace KSPWheel
         /// //TODO -- anti-punchthrough setup; somehow ensure the part cannot actually punch-through by using joint constraints
         /// //TODO -- how to tell if it was a punch-through or the surface was moved? Perhaps start the raycast slightly above the wheel?
         /// //TODO -- or, start at center of wheel and validate that it cannot compress suspension past (travel-radius), 
-        /// //TODO -- so there will be at least (radis*1) between the wheel origin and the surface
+        /// //TODO -- so there will be at least (radius*1) between the wheel origin and the surface
         /// </summary>
         /// <param name="fwd"></param>
         /// <param name="side"></param>
-        private void setupStickyJoint(int fwd, int side)
+        private void setupStickyJoint(float downForce, int fwd, int side)
         {            
             if (stickyJoint == null)
             {
@@ -310,10 +316,25 @@ namespace KSPWheel
                 stickyJoint.anchor = wheel.transform.localPosition;
                 stickyJoint.axis = Vector3.right;
                 stickyJoint.secondaryAxis = Vector3.up;
-                //stickyJoint.breakForce = 10f;
-                //stickyJoint.breakTorque = 10f;
             }
+            stickyJoint.breakForce = downForce;
+            stickyJoint.breakTorque = downForce;
             stickyJoint.connectedAnchor = hit.point;
+
+            //below were tests of using the sticky joint for suspension as well; sadly I was unable to figure out usable settings for it (it liked to bounce and oscillate)
+            //stickyJoint.targetPosition = Vector3.up * (suspensionLength - target);
+            //SoftJointLimitSpring sjls = new SoftJointLimitSpring();
+            //sjls.spring = spring*0.5f;
+            //sjls.damper = damper;
+            //stickyJoint.linearLimitSpring = sjls;
+
+            //JointDrive jd = new JointDrive();
+            //jd.mode = JointDriveMode.Position;
+            //jd.positionSpring = spring*0.5f;
+            //jd.positionDamper = damper;
+            //jd.maximumForce = float.PositiveInfinity;
+            //stickyJoint.yDrive = jd;
+
             if (fwd > 5 && fwdInput==0)
             {
                 stickyJoint.zMotion = ConfigurableJointMotion.Locked;
@@ -322,7 +343,7 @@ namespace KSPWheel
             {
                 stickyJoint.zMotion = ConfigurableJointMotion.Free;
             }
-            if (side > 5 && wheelLocalVelocity.magnitude < maxStickyVelocity)
+            if (side > 5 && Mathf.Abs(wheelLocalVelocity.x) < maxStickyVelocity)
             {
                 stickyJoint.xMotion = ConfigurableJointMotion.Locked;
             }
@@ -341,20 +362,17 @@ namespace KSPWheel
             fwdFrictionForce = friction;
             return friction;
         }
-        
+
         //TODO use proper friction curve to determine side friction
         private float calculateSideFriction(float downForce)
         {
-            Vector3 localVelocity = wheelLocalVelocity;
-            sideSlip = -frictionCurve.Evaluate(localVelocity.normalized.x) * localVelocity.x * downForce * 0.00005f;
-            float val = sideSlip * sideFrictionConst;
-
-            sideSlip = val = -downForce * localVelocity.normalized.x * sideFrictionConst;            
-            float sprungMass = downForce;//approximation of force->mass
-            if (sprungMass > rigidBody.mass) { sprungMass = rigidBody.mass; }
-            float vel = Mathf.Abs(localVelocity.x);
-            if (Mathf.Abs(val) > vel * sprungMass) { val = Mathf.Sign(val) * vel * sprungMass; }
-            return val;
+            float absSlipVel = Mathf.Abs(wheelLocalVelocity.x);
+            float normSlipVal = Mathf.Abs(wheelLocalVelocity.normalized.x);
+            float force = frictionCurve.Evaluate(normSlipVal);
+            float calculatedSlipFriction = force * downForce;
+            if (calculatedSlipFriction > absSlipVel * downForce * 2f ) { calculatedSlipFriction = absSlipVel * downForce * 2f; }
+            sideSlip = calculatedSlipFriction *= -Mathf.Sign(wheelLocalVelocity.x);
+            return calculatedSlipFriction;
         }
         
         //TODO roll this, brake, wheelRPM, and fwd friction all into a single method

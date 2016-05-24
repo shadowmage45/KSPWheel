@@ -1339,7 +1339,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -1435,7 +1435,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 20
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 10
+  sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -1489,7 +1489,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 20
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 10
+  sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -1552,7 +1552,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 10
+  sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -1591,7 +1591,7 @@ MonoBehaviour:
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
-  sideFrictionConst: 10
+  sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 0
   debug: 1
@@ -4820,7 +4820,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1986604050
 Transform:
   m_ObjectHideFlags: 0
