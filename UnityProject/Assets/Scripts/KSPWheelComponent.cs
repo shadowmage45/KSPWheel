@@ -113,6 +113,10 @@ namespace KSPWheel
         public Vector3 hitNormal;
         public float sideSlipForce;
         public float sideFrictionForce;
+        public float angularVelocity;
+        public float fwdSlipRatio;
+        public float fwdFrictionForce;
+        public float wheelRPM;
 
         #endregion ENDREGION - Unity Editor Display Variables
 
@@ -173,6 +177,10 @@ namespace KSPWheel
             sideSlipForce = wheelCollider.sideSlip;
             springForce = wheelCollider.springForce;
             dampForce = wheelCollider.dampForce;
+            angularVelocity = wheelCollider.wheelAngularVelocity;
+            fwdSlipRatio = wheelCollider.fwdSlipRatio;
+            fwdFrictionForce = wheelCollider.fwdFrictionForce;
+            wheelRPM = wheelCollider.wheelRPM;
         }
 
         public void OnValidate()
