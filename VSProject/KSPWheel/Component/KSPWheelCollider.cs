@@ -267,7 +267,7 @@ namespace KSPWheel
                 forceToApply += calculateForwardInput(springForce) * wheelForward;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
                 calculateWheelRPM(springForce);
-                if (!grounded)//if was not previously grounded, call-back with grounded state
+                if (!grounded && onImpactCallback!=null)//if was not previously grounded, call-back with grounded state
                 {
                     onImpactCallback.Invoke(wheelLocalVelocity);
                 }

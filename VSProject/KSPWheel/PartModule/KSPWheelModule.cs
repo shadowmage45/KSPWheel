@@ -152,6 +152,19 @@ namespace KSPWheel
         private Vector3 suspensionLocalOrigin;
         #endregion
 
+        #region REGION - Debug fields
+
+        [KSPField(guiName ="FwdInput", guiActive =true)]
+        public float fwdInput;
+
+        [KSPField(guiName = "RotInput", guiActive = true)]
+        public float rotInput;
+
+        [KSPField(guiName = "Hit", guiActive = true)]
+        public string colliderHit;
+
+        #endregion
+
         #region REGION - GUI Handling methods
 
         //TODO -- disable when no animation is present
@@ -286,6 +299,7 @@ namespace KSPWheel
             wheel.motorTorque = motorTorque;
             wheel.brakeTorque = brakeTorque;
             wheel.grounded = grounded;
+            wheel.setImpactCallback(onWheelImpact);
         }
 
         /// <summary>
@@ -305,7 +319,6 @@ namespace KSPWheel
                 return;
             }
             //update the wheels input state from current keyboard input
-            sampleInput();
             //Update the wheel physics state as long as it is not broken or fully retracted
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
             if (wheelState != KSPWheelState.BROKEN && wheelState != KSPWheelState.RETRACTED)
@@ -313,8 +326,9 @@ namespace KSPWheel
                 wheel.UpdateWheel();
             }
             grounded = wheel.grounded;
-            part.GroundContact = grounded;
-            vessel.checkLanded();
+            //part.GroundContact = grounded;
+            //vessel.checkLanded();
+            colliderHit = grounded ? wheel.hit.collider.name : "None";
         }
 
         /// <summary>
@@ -325,7 +339,8 @@ namespace KSPWheel
             if (animationControl != null) { animationControl.updateAnimationState(); }
             //TODO reset input state on animation state changes, re-orient wheels to default when retracted/ing?
             if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }
-            
+
+            sampleInput();
             //TODO -- input handling/updating
             if (suspensionMesh != null)
             {
@@ -355,8 +370,8 @@ namespace KSPWheel
         /// </summary>
         private void sampleInput()
         {
-            float fwdInput = GameSettings.AXIS_WHEEL_THROTTLE.GetAxis();
-            float rotInput = GameSettings.AXIS_WHEEL_STEER.GetAxis();
+            fwdInput = GameSettings.AXIS_WHEEL_THROTTLE.GetAxis();
+            rotInput = GameSettings.AXIS_WHEEL_STEER.GetAxis();
             if (motorLocked) { fwdInput = 0; }
             if (steeringLocked) { rotInput = 0; }
             if (invertSteering) { rotInput = -rotInput; }

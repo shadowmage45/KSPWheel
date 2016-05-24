@@ -66,6 +66,11 @@ namespace KSPWheel
         public float maxSteerAngle = 0;
 
         /// <summary>
+        /// The steering response speed; higher values result in more responsive steering
+        /// </summary>
+        public float steerLerpSpeed = 1;
+
+        /// <summary>
         /// The forward friction constant (rolling friction)
         /// </summary>
         public float fwdFrictionConst = 1f;
@@ -101,17 +106,20 @@ namespace KSPWheel
         public float springForce;
 
         /// <summary>
-        /// The amount of force of the spring that is negated by the damping value
+        /// The amount of force of the spring that was negated by the damping value<para/>
+        /// The 'springForce' variable already has this value applied;
+        /// raw spring force (before damper) can be calculated by springForce+dampForce
         /// </summary>
         public float dampForce;
 
         /// <summary>
-        /// The velocity of the wheel as seen at the wheel mounting point in the local reference of the wheel collider object (the object this script is attached to)
+        /// The velocity of the wheel as seen at the wheel mounting point in the local reference of the wheel collider object (the object this script is attached to)<para/>
+        /// This does not take into account the steering angle of the wheel
         /// </summary>
         public Vector3 wheelMountLocalVelocity;
 
         /// <summary>
-        /// The velocity of the wheel as seen by the surface at the point of contact
+        /// The velocity of the wheel as seen by the surface at the point of contact, taking into account steering angle and angle of the collider to the surface.
         /// </summary>
         public Vector3 wheelLocalVelocity;
 
@@ -126,11 +134,6 @@ namespace KSPWheel
         public Vector3 forceToApply;
 
         /// <summary>
-        /// At each update set to true or false depending on if the wheel is in contact with the ground
-        /// </summary>
-        public bool grounded;
-
-        /// <summary>
         /// If grounded == true, this is populated with a reference to the raycast hit information
         /// </summary>
         public RaycastHit hit;
@@ -140,34 +143,41 @@ namespace KSPWheel
         /// </summary>
         public float wheelRPM;
 
+        /// <summary>
+        /// At each update set to true or false depending on if the wheel is in contact with the ground<para/>
+        /// Saved persistently in the KSPWheelModule, manually restored upon instantiation of the KSPWheelCollider; this prevents erroneous callbacks on part-load.
+        /// </summary>
+        public bool grounded;
+
         #endregion ENDREGION - Public Accessible derived values
 
         #region REGION - Public editor-display variables
-
         public float fwdFrictionForce;
         public float sideFrictionForce;
-
         public float prevCompressionDistance;
         public float springVelocity;
         public float compressionPercentInverse;
-
         public Vector3 wheelForward;
         public Vector3 wheelRight;
         public Vector3 wheelUp;
-        //public GameObject hitObject;
         public float currentSteerAngle;
         public float sideSlip;
         #endregion ENDREGION - Public editor-display variables
 
         #region REGION - Private working variables
         private float fwdInput = 0;
-        private float rotInput = 0;
-        private KSPFrictionCurve frictionCurve;
+        private float rotInput = 0;        
         private int sideStickyTimer = 0;
         private int fwdStickyTimer = 0;
-        private float maxStickyVelocity = 0.25f;
+        private float maxStickyVelocity = 0.25f;//TODO -- expose as a configurable field
         private ConfigurableJoint stickyJoint;
+        private int raycastMask = ~(1 << 26);//cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask
+        private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity
+
+        private KSPFrictionCurve frictionCurve;//TODO -- currently un-used
         #endregion ENDREGION - Private working variables
+
+        #region REGION - Public accessible methods / API methods
 
         public KSPWheelCollider(GameObject wheel, Rigidbody rigidBody)
         {
@@ -176,12 +186,32 @@ namespace KSPWheel
             frictionCurve = new KSPFrictionCurve();
         }
 
+        public void setImpactCallback(Action<Vector3> callback) { onImpactCallback = callback; }
+
+        /// <summary>
+        /// Set the raycast layer mask
+        /// </summary>
+        /// <param name="mask"></param>
+        public void setRaycastMask(int mask)
+        {
+            raycastMask = mask;
+        }
+
+        /// <summary>
+        /// Set the current input state
+        /// </summary>
+        /// <param name="fwd"></param>
+        /// <param name="rot"></param>
         public void setInputState(float fwd, float rot)
         {
             fwdInput = fwd;
             rotInput = rot;
         }
 
+        /// <summary>
+        /// Set the current steering angle explicitly, and update the internal rotInput state to match the new explicit steering angle
+        /// </summary>
+        /// <param name="angle"></param>
         public void setSteeringAngle(float angle)
         {
             currentSteerAngle = angle;
@@ -202,9 +232,8 @@ namespace KSPWheel
             wheelUp = wheel.transform.up;
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             grounded = false;
-            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance))
+            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance, raycastMask))
             {
-                grounded = true;
                 prevCompressionDistance = compressionDistance;
                 wheelMeshPosition = hit.point + (wheel.transform.up * wheelRadius);
                 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
@@ -212,6 +241,7 @@ namespace KSPWheel
                 wheelLocalVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * worldVelocityAtHit.magnitude;
                 wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheel.transform.up) * worldVelocityAtHit.magnitude;
                 wheelMountLocalVelocity = wheel.transform.InverseTransformDirection(worldVelocityAtHit);//used for spring/damper 'velocity' value
+                
                 if (Math.Abs(wheelLocalVelocity.x) < maxStickyVelocity) { sideStickyTimer++; }
                 else { sideStickyTimer = 0; }
                 if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity) { fwdStickyTimer++; }
@@ -237,9 +267,15 @@ namespace KSPWheel
                 forceToApply += calculateForwardInput(springForce) * wheelForward;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
                 calculateWheelRPM(springForce);
+                if (!grounded && onImpactCallback!=null)//if was not previously grounded, call-back with grounded state
+                {
+                    onImpactCallback.Invoke(wheelLocalVelocity);
+                }
+                grounded = true;
             }
             else
             {
+                grounded = false;
                 //springForce = dampForce = 0;
                 //prevCompressionDistance = 0;
                 //compressionDistance = 0;
@@ -253,8 +289,21 @@ namespace KSPWheel
             }
         }
 
+        #endregion ENDREGION - Public accessible methods / API methods
+
+        #region REGION - Private/internal update methods
+
+        /// <summary>
+        /// Per-fixed-update configuration of the rigidbody joints that are used for sticky friction and anti-punchthrough behaviour
+        /// //TODO -- anti-punchthrough setup; somehow ensure the part cannot actually punch-through by using joint constraints
+        /// //TODO -- how to tell if it was a punch-through or the surface was moved? Perhaps start the raycast slightly above the wheel?
+        /// //TODO -- or, start at center of wheel and validate that it cannot compress suspension past (travel-radius), 
+        /// //TODO -- so there will be at least (radis*1) between the wheel origin and the surface
+        /// </summary>
+        /// <param name="fwd"></param>
+        /// <param name="side"></param>
         private void setupStickyJoint(int fwd, int side)
-        {
+        {            
             if (stickyJoint == null)
             {
                 stickyJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
@@ -281,6 +330,7 @@ namespace KSPWheel
             }
         }
 
+        //TODO use proper friction curve, wheel RPM, wheel-mass, and downforce to determine fwd friction
         private float calculateForwardFriction(float downForce)
         {
             float friction = 0;
@@ -289,7 +339,8 @@ namespace KSPWheel
             fwdFrictionForce = friction;
             return friction;
         }
-
+        
+        //TODO use proper friction curve to determine side friction
         private float calculateSideFriction(float downForce)
         {
             Vector3 localVelocity = wheelLocalVelocity;
@@ -301,15 +352,10 @@ namespace KSPWheel
             if (sprungMass > rigidBody.mass) { sprungMass = rigidBody.mass; }
             float vel = Mathf.Abs(localVelocity.x);
             if (Mathf.Abs(val) > vel * sprungMass) { val = Mathf.Sign(val) * vel * sprungMass; }
-            //float val = 0;
-            //float approxMass = downForce * 0.1f;//convert the newtons of downforce into mass in kilograms
-            //float maxForce = Mathf.Abs(wheelLocalVelocity.x) * approxMass;
-            //sideSlip = val = downForce * -wheelLocalVelocity.x * sideFrictionConst;
-            //if (Mathf.Abs(val) > maxForce) { val = val < 0 ? -maxForce : maxForce; }
-            //if (Mathf.Abs(val) > downForce) { val = val < 0 ? -downForce : downForce; }
             return val;
         }
         
+        //TODO roll this, brake, wheelRPM, and fwd friction all into a single method
         private float calculateForwardInput(float downForce)
         {
             float fwdForce = fwdInput * motorTorque;
@@ -330,10 +376,14 @@ namespace KSPWheel
             wheelRPM = (wheelLocalVelocity.z / (wheelRadius * 2 * Mathf.PI)) * Mathf.PI;
         }
 
+        /// <summary>
+        /// Updates the current steering angle from the current rotation input (-1...0...1), maxSteerAngle (config param), and steerLerpSpeed (response speed)
+        /// </summary>
         private void calculateSteeringAngle()
         {
-            currentSteerAngle = Mathf.Lerp(currentSteerAngle, rotInput * maxSteerAngle, Time.fixedDeltaTime);
+            currentSteerAngle = Mathf.Lerp(currentSteerAngle, rotInput * maxSteerAngle, Time.fixedDeltaTime * steerLerpSpeed);
         }
 
+        # endregion ENDREGION - Private/internal update methods
     }
 }
