@@ -310,6 +310,8 @@ namespace KSPWheel
                 stickyJoint.anchor = wheel.transform.localPosition;
                 stickyJoint.axis = Vector3.right;
                 stickyJoint.secondaryAxis = Vector3.up;
+                //stickyJoint.breakForce = 10f;
+                //stickyJoint.breakTorque = 10f;
             }
             stickyJoint.connectedAnchor = hit.point;
             if (fwd > 5 && fwdInput==0)

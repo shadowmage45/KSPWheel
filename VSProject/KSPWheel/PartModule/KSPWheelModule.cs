@@ -262,11 +262,16 @@ namespace KSPWheel
 
             //TODO -- there has got to be an easier way to handle these; perhaps check if the collider is part of the 
             // model hierarchy for the part/vessel?
-            Collider[] colliders = part.GetComponentsInChildren<Collider>();
-            int len = colliders.Length;
-            for (int i = 0; i < len; i++)
+            if (HighLogic.LoadedSceneIsFlight)
             {
-                colliders[i].gameObject.layer = 26;//wheelcollidersignore
+                Collider[] colliders = part.GetComponentsInChildren<Collider>();
+                int len = colliders.Length;
+                for (int i = 0; i < len; i++)
+                {
+
+                    //colliders[i].enabled = false;
+                    colliders[i].gameObject.layer = 26;//wheelcollidersignore
+                }
             }
 
             wheelColliderTransform.localPosition += Vector3.up * suspensionTravel;
@@ -280,6 +285,8 @@ namespace KSPWheel
                 if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
                 if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
             }
+            CollisionEnhancer ce = part.GetComponent<CollisionEnhancer>();
+            if (ce != null) { MonoBehaviour.Destroy(ce); }
         }
 
         /// <summary>
@@ -308,7 +315,7 @@ namespace KSPWheel
         public void FixedUpdate()
         {
             if (!HighLogic.LoadedSceneIsFlight) { return; }
-            
+            if (!FlightGlobals.ready || !FlightDriver.fetch) { return; }
             if (wheel.rigidBody == null)
             {
                 wheel.rigidBody = part.GetComponent<Rigidbody>();
@@ -336,6 +343,7 @@ namespace KSPWheel
         /// </summary>
         public void Update()
         {
+            if (!FlightGlobals.ready || !FlightDriver.fetch) { return; }
             if (animationControl != null) { animationControl.updateAnimationState(); }
             //TODO reset input state on animation state changes, re-orient wheels to default when retracted/ing?
             if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }
@@ -344,7 +352,9 @@ namespace KSPWheel
             //TODO -- input handling/updating
             if (suspensionMesh != null)
             {
-                suspensionMesh.localPosition = suspensionLocalOrigin + (Vector3.up * wheel.compressionDistance) + (Vector3.up * suspensionOffset);
+                float offset = wheel.compressionDistance + suspensionOffset;
+                if (offset < 0) { offset = 0; }
+                suspensionMesh.localPosition = suspensionLocalOrigin + Vector3.up * offset;
             }
             if (steeringMesh != null)
             {
@@ -370,8 +380,9 @@ namespace KSPWheel
         /// </summary>
         private void sampleInput()
         {
-            fwdInput = GameSettings.AXIS_WHEEL_THROTTLE.GetAxis();
-            rotInput = GameSettings.AXIS_WHEEL_STEER.GetAxis();
+
+            fwdInput = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
+            rotInput = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
             if (motorLocked) { fwdInput = 0; }
             if (steeringLocked) { rotInput = 0; }
             if (invertSteering) { rotInput = -rotInput; }
