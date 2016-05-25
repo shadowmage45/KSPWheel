@@ -172,14 +172,22 @@ namespace KSPWheel
 
         #region REGION - Private working variables
         private float fwdInput = 0;
-        private float rotInput = 0;        
+        private float rotInput = 0;
+        private float brakeInput = 0;
         private int sideStickyTimer = 0;
         private int fwdStickyTimer = 0;
         private float maxStickyVelocity = 0.1f;//TODO -- expose as a configurable field
         private ConfigurableJoint stickyJoint;//the joint used for sticky friction
         private int raycastMask = ~(1 << 26);//cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask
-        private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity
-        private KSPFrictionCurve frictionCurve;//TODO -- write custom curve implementation?
+        private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity        
+
+        private float longSlip = 0f;
+        private float latSlip = 0f;
+        private float longForce = 0f;
+        private float latForce = 0f;
+
+        private KSPWheelFrictionCurve sideFrictionCurve;
+        private KSPWheelFrictionCurve fwdFrictionCurve;
         #endregion ENDREGION - Private working variables
 
         #region REGION - Public accessible methods / API methods
@@ -188,12 +196,18 @@ namespace KSPWheel
         {
             this.wheel = wheel;
             this.rigidBody = rigidBody;
-            frictionCurve = new KSPFrictionCurve();
-            frictionCurve.Stiffness = sideFrictionConst;
-            frictionCurve.ExtremumValue = 2;
-            frictionCurve.ExtremumSlip = 1;
-            frictionCurve.AsymptoteValue = 1;
-            frictionCurve.AsymptoteSlip = 2;
+
+            sideFrictionCurve = new KSPWheelFrictionCurve();
+            sideFrictionCurve.addPoint(0, 0, 0, 0);
+            sideFrictionCurve.addPoint(0.06f, 1.1f, 0, 0);
+            sideFrictionCurve.addPoint(0.08f, 1.0f, 0, 0);
+            sideFrictionCurve.addPoint(1.00f, 0.65f, 0, 0);
+
+            fwdFrictionCurve = new KSPWheelFrictionCurve();
+            fwdFrictionCurve.addPoint(0, 0, 0, 0);
+            fwdFrictionCurve.addPoint(0.06f, 1.1f, 0, 0);
+            fwdFrictionCurve.addPoint(0.08f, 1.0f, 0, 0);
+            fwdFrictionCurve.addPoint(1.00f, 0.65f, 0, 0);
         }
 
         public void setImpactCallback(Action<Vector3> callback) { onImpactCallback = callback; }
@@ -359,31 +373,8 @@ namespace KSPWheel
         //TODO use proper friction curve, wheel RPM, wheel-mass, and downforce to determine fwd friction
         private float calculateForwardFriction(float downForce)
         {
-            /**
-            ** Calculate slip ratio from (vCirc - vLong) / vLong
-            ** Add momentum to wheel from torque input
-            ** Subtract momentum from wheel for slip friction
-            ** Add force to body equap to slip friction
-            **
-            **
-            **/            
-            //slip ratio calculation            
-            //<0 denotes tire is spinning slower than the road, if moving forwards, -1 denotes a locked tire
-            //0 denotes tire is moving at same speed as the surface
-            //>0 deontes tires is spinning faster than the surface moving beneath it, if moving backwards 1 deontes a locked tire
-            //float vLong = wheelLocalVelocity.z;
-            //float vCirc = wheelAngularVelocity * wheelRadius;
-            //float slipRatio = vLong == 0 ? 0 :  (vCirc - vLong) / vLong;
-            //fwdSlipRatio = slipRatio;
-            //float tractionForce = downForce * slipRatio * -Mathf.Sign(wheelLocalVelocity.z);
-            //this.fwdFrictionForce = tractionForce;
-            //float tractionTorque = tractionForce * wheelRadius;
-            //float driveTorque = motorTorque * fwdInput;//always positive
-            //float brakeTorque = -Mathf.Sign(wheelAngularVelocity) * this.brakeTorque;//always oposite sign to current angular velocity
-            //float totalTorque = driveTorque + tractionTorque + brakeTorque;
-            //float inertia = (wheelMass * wheelRadius * wheelRadius) / 2;
-            //float accel = totalTorque / inertia;
-            //wheelAngularVelocity += accel;
+            calculateWheelSlip();
+            calcLongFriction(downForce);
             
             //update visual wheel RPM from current angular velocity
             //convert from radians per second into rotations per minute
@@ -395,12 +386,12 @@ namespace KSPWheel
         {
             float absSlipVel = Mathf.Abs(wheelLocalVelocity.x);
             float normSlipVal = Mathf.Abs(wheelLocalVelocity.normalized.x);
-            float force = frictionCurve.Evaluate(normSlipVal) * downForce;
+            float force = sideFrictionCurve.evaluate(normSlipVal) * downForce;
             if (force > absSlipVel * downForce * 2f ) { force = absSlipVel * downForce * 2f; }
             sideSlip = -Mathf.Sign(wheelLocalVelocity.x) * force;
             return sideSlip;
         }
-
+        
         /// <summary>
         /// Updates the current steering angle from the current rotation input (-1...0...1), maxSteerAngle (config param), and steerLerpSpeed (response speed)
         /// </summary>
@@ -409,6 +400,77 @@ namespace KSPWheel
             currentSteerAngle = Mathf.Lerp(currentSteerAngle, rotInput * maxSteerAngle, Time.fixedDeltaTime * steerLerpSpeed);
         }
 
-        # endregion ENDREGION - Private/internal update methods
+
+        #region REGION - Friction calculation methods
+
+        /***
+         * 
+         * Below here the equations are derived from:
+         * http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf
+         * 
+         ***/
+
+        /// <summary>
+        /// Calculate the wheel lat and long slips from the current axis velocities and wheel rotational speed
+        /// </summary>
+        private void calculateWheelSlip()
+        {
+            float maxDenom = 0.01f;
+            float fudge1 = 1f;
+            float vZ = wheelLocalVelocity.z;//m/s
+            float vX = wheelLocalVelocity.x;//m/s
+            float vW = wheelAngularVelocity * wheelRadius;//m/s @ radius
+
+            float absVZ = Mathf.Abs(vZ);
+            float absVW = Mathf.Abs(vW);
+
+            latSlip = Mathf.Atan(vX / (vZ+0.1f));//??
+            if (vW == 0 && vZ == 0)
+            {
+                longSlip = 0f;                
+            }
+            //else if (brakeInput != 0 || fwdInput != 0)//user-input to change velocity
+            //{
+            //    longSlip = (vW - vZ) / (Mathf.Max(absVZ, absVW) + 0.1f * fudge1);
+            //}
+            else
+            {
+                longSlip = (vW - vZ) / Mathf.Max(maxDenom, Mathf.Max(absVZ, absVW));
+            }
+        }
+
+        private void calcLongFriction(float downForce)
+        {
+            longForce = fwdFrictionCurve.evaluate(longSlip) * downForce;
+        }
+
+        /// <summary>
+        /// http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf equation 20
+        /// </summary>
+        /// <param name="k"></param>
+        /// <returns></returns>
+        private float smooth1(float k)
+        {
+            float oneThird = 0.33333333333f;
+            float oneTwentySeventh = 0.03703703703f;
+            return Mathf.Min(1, k - oneThird * k * k + oneTwentySeventh * k * k * k);
+        }
+
+        /// <summary>
+        /// http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf equation 21
+        /// </summary>
+        /// <param name="k"></param>
+        /// <returns></returns>
+        private float smooth2(float k)
+        {
+            float oneThird = 0.33333333333f;
+            float oneTwentySeventh = 0.03703703703f;
+            return (k - (k * k) + (oneThird * k * k * k) - (oneTwentySeventh * k * k * k * k));
+        }
+
+        #endregion ENDREGION - Friction Calculation Methods
+
+        #endregion ENDREGION - Private/internal update methods
+
     }
 }

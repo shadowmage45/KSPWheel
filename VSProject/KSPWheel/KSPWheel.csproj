@@ -84,17 +84,13 @@
   <ItemGroup>
     <Compile Include="Component\KSPWheelCollider.cs" />
     <Compile Include="Component\KSPWheelComponent.cs" />
+    <Compile Include="Component\KSPWheelFrictionCurve.cs" />
     <Compile Include="Component\LFWheelGrip.cs" />
-    <Compile Include="Component\WheelColliderSource.cs" />
-    <Compile Include="Component\WheelHitSource.cs" />
     <Compile Include="PartModule\KSPWheelAnimationState.cs" />
     <Compile Include="PartModule\KSPWheelInfo.cs" />
     <Compile Include="PartModule\KSPWheelState.cs" />
     <Compile Include="PartModule\Utils.cs" />
     <Compile Include="PartModule\WheelAnimationHandler.cs" />
-    <Compile Include="PhysicsModel\KSPFrictionCurve.cs" />
-    <Compile Include="PhysicsModel\KSPWheelDefaultFrictionModel.cs" />
-    <Compile Include="PhysicsModel\KSPWheelPhysicsModel.cs" />
     <Compile Include="PartModule\KSPWheelModule.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -103,8 +99,9 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(TargetPath) $(SolutionDir)\..\GameData\KSPWheel\Plugin\$(TargetFileName)
+
 copy $(ProjectDir)Component\*.* $(SolutionDir)\..\UnityProject\Assets\Scripts\*.*
-copy $(ProjectDir)PhysicsModel\*.* $(SolutionDir)\..\UnityProject\Assets\Scripts\*.*
+
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
