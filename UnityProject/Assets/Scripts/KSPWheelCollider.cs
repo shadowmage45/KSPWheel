@@ -179,8 +179,7 @@ namespace KSPWheel
         private ConfigurableJoint stickyJoint;//the joint used for sticky friction
         private int raycastMask = ~(1 << 26);//cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask
         private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity
-
-        private KSPFrictionCurve frictionCurve;
+        private KSPFrictionCurve frictionCurve;//TODO -- write custom curve implementation?
         #endregion ENDREGION - Private working variables
 
         #region REGION - Public accessible methods / API methods
@@ -268,17 +267,14 @@ namespace KSPWheel
                 else { sideStickyTimer = 0; }
                 if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity) { fwdStickyTimer++; }
                 else { fwdStickyTimer = 0; }
-                //setupStickyJoint(springForce, fwdStickyTimer, sideStickyTimer);
+                //updateStickyJoint(springForce, fwdStickyTimer, sideStickyTimer);
 
-                //forceToApply = Vector3.zero;
-                forceToApply = hit.normal * springForce;// * Vector3.Dot(hit.normal, wheel.transform.up);//spring and damper -- suspension force
+                forceToApply = hit.normal * springForce;
                 float fDot = Mathf.Abs(Vector3.Dot(wheelUp, hit.normal));
                 forceToApply += calculateForwardFriction(springForce) * wheelForward * fDot;
-                float wDot = 1.0f - Mathf.Abs(Vector3.Dot(wheelRight, hit.normal));
-                forceToApply += calculateSideFriction(springForce) * wheelRight * wDot;
-                forceToApply += calculateForwardInput(springForce) * wheelForward;
+                float sDot = 1.0f - Mathf.Abs(Vector3.Dot(wheelRight, hit.normal));
+                forceToApply += calculateSideFriction(springForce) * wheelRight * sDot;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
-                calculateWheelRPM(springForce);
                 if (!grounded && onImpactCallback!=null)//if was not previously grounded, call-back with grounded state
                 {
                     onImpactCallback.Invoke(wheelLocalVelocity);
@@ -314,8 +310,8 @@ namespace KSPWheel
         /// </summary>
         /// <param name="fwd"></param>
         /// <param name="side"></param>
-        private void setupStickyJoint(float downForce, int fwd, int side)
-        {            
+        private void updateStickyJoint(float downForce, int fwd, int side)
+        {
             if (stickyJoint == null)
             {
                 stickyJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
@@ -323,9 +319,10 @@ namespace KSPWheel
                 stickyJoint.axis = Vector3.right;
                 stickyJoint.secondaryAxis = Vector3.up;
             }
+            stickyJoint.connectedAnchor = hit.point;
+
             stickyJoint.breakForce = downForce;
             stickyJoint.breakTorque = downForce;
-            stickyJoint.connectedAnchor = hit.point;
 
             //below were tests of using the sticky joint for suspension as well; sadly I was unable to figure out usable settings for it (it liked to bounce and oscillate)
             //stickyJoint.targetPosition = Vector3.up * (suspensionLength - target);
@@ -362,23 +359,38 @@ namespace KSPWheel
         //TODO use proper friction curve, wheel RPM, wheel-mass, and downforce to determine fwd friction
         private float calculateForwardFriction(float downForce)
         {
-            wheelAngularVelocity += (fwdInput * motorTorque * wheelRadius) / wheelMass;
-            wheelRPM = (wheelAngularVelocity * Mathf.Deg2Rad * 60);//from rads/s into rotations per minute
+            /**
+            ** Calculate slip ratio from (vCirc - vLong) / vLong
+            ** Add momentum to wheel from torque input
+            ** Subtract momentum from wheel for slip friction
+            ** Add force to body equap to slip friction
+            **
+            **
+            **/            
+            //slip ratio calculation            
+            //<0 denotes tire is spinning slower than the road, if moving forwards, -1 denotes a locked tire
+            //0 denotes tire is moving at same speed as the surface
+            //>0 deontes tires is spinning faster than the surface moving beneath it, if moving backwards 1 deontes a locked tire
             float vLong = wheelLocalVelocity.z;
-            fwdSlipRatio = (wheelAngularVelocity * wheelRadius -vLong) / vLong;
-            if (fwdSlipRatio < -1) { fwdSlipRatio = -1; }
-            if (fwdSlipRatio > 1) { fwdSlipRatio = 1; }            
-            fwdFrictionForce = downForce * fwdSlipRatio * Mathf.Sign(vLong);
-            wheelAngularVelocity -= fwdFrictionForce / wheelMass;
-            return fwdFrictionForce;
+            float vCirc = wheelAngularVelocity * wheelRadius;
+            float slipRatio = vLong == 0 ? 0 :  (vCirc - vLong) / vLong;
+            fwdSlipRatio = slipRatio;
+            float tractionForce = downForce * slipRatio * -Mathf.Sign(wheelLocalVelocity.z);
+            this.fwdFrictionForce = tractionForce;
+            float tractionTorque = tractionForce * wheelRadius;
+            float driveTorque = motorTorque * fwdInput;//always positive
+            float brakeTorque = -Mathf.Sign(wheelAngularVelocity) * this.brakeTorque;//always oposite sign to current angular velocity
+            float totalTorque = driveTorque + tractionTorque + brakeTorque;
+            float inertia = (wheelMass * wheelRadius * wheelRadius) / 2;
+            float accel = totalTorque / inertia;
+            wheelAngularVelocity += accel;
             
-            //float friction = 0;
-            //friction = fwdFrictionConst * -wheelLocalVelocity.z;
-            //friction *= downForce;
-            //return friction;
+            //update visual wheel RPM from current angular velocity
+            //convert from radians per second into rotations per minute
+            wheelRPM = (wheelAngularVelocity * Mathf.Rad2Deg)/60;
+            return -tractionForce;
         }
-
-        //TODO use proper friction curve to determine side friction
+        
         private float calculateSideFriction(float downForce)
         {
             float absSlipVel = Mathf.Abs(wheelLocalVelocity.x);
@@ -388,28 +400,6 @@ namespace KSPWheel
             if (calculatedSlipFriction > absSlipVel * downForce * 2f ) { calculatedSlipFriction = absSlipVel * downForce * 2f; }
             sideSlip = calculatedSlipFriction *= -Mathf.Sign(wheelLocalVelocity.x);
             return calculatedSlipFriction;
-        }
-        
-        //TODO roll this, brake, wheelRPM, and fwd friction all into a single method
-        private float calculateForwardInput(float downForce)
-        {
-            //float fwdForce = fwdInput * motorTorque;
-            //return fwdForce;
-            return 0f;
-        }
-
-        //TODO
-        private float calculateBrakeTorque(float downForce)
-        {
-            float friction = 0;
-
-            return friction;
-        }
-
-        //TODO - use wheel mass, downforce, brake and motor input to determine actual current RPM
-        private void calculateWheelRPM(float downForce)
-        {
-            //wheelRPM = (wheelLocalVelocity.z / (wheelRadius * 2 * Mathf.PI)) * Mathf.PI;
         }
 
         /// <summary>

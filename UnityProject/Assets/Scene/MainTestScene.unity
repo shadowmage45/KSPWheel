@@ -1287,11 +1287,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.96000004
+      value: 1.46000004
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 44.7999992
+      value: 40.1100006
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1450,7 +1450,7 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005889}
   wheelTransform: {fileID: 523005890}
   wheelRadius: .402999997
-  wheelMass: 1
+  wheelMass: .0625
   suspensionLength: .300000012
   target: .699999988
   spring: 35
@@ -1508,7 +1508,7 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005887}
   wheelTransform: {fileID: 523005888}
   wheelRadius: .402999997
-  wheelMass: 1
+  wheelMass: .0625
   suspensionLength: .300000012
   target: .699999988
   spring: 35
@@ -1575,12 +1575,12 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005885}
   wheelTransform: {fileID: 523005886}
   wheelRadius: .402999997
-  wheelMass: 1
+  wheelMass: .0625
   suspensionLength: .300000012
   target: .699999988
   spring: 35
   damper: 200
-  motorTorque: 5
+  motorTorque: 1
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
@@ -1618,12 +1618,12 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005884}
   wheelTransform: {fileID: 523005891}
   wheelRadius: .402999997
-  wheelMass: 1
+  wheelMass: .0625
   suspensionLength: .300000012
   target: .699999988
   spring: 35
   damper: 200
-  motorTorque: 5
+  motorTorque: 1
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
