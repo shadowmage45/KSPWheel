@@ -142,12 +142,7 @@ namespace KSPWheel
         /// The current measured RPM of the wheel; derived from down-force, motor-force, wheel mass, and previous RPM
         /// </summary>
         public float wheelRPM;
-
-        /// <summary>
-        /// Wheel angular velocity, in radians/second
-        /// </summary>
-        public float wheelAngularVelocity;
-
+        
         /// <summary>
         /// At each update set to true or false depending on if the wheel is in contact with the ground<para/>
         /// Saved persistently in the KSPWheelModule, manually restored upon instantiation of the KSPWheelCollider; this prevents erroneous callbacks on part-load.
@@ -157,9 +152,6 @@ namespace KSPWheel
         #endregion ENDREGION - Public Accessible derived values
 
         #region REGION - Public editor-display variables
-        public float fwdSlipRatio;
-        public float fwdFrictionForce;        
-        public float sideFrictionForce;
         public float prevCompressionDistance;
         public float springVelocity;
         public float compressionPercentInverse;
@@ -167,22 +159,45 @@ namespace KSPWheel
         public Vector3 wheelRight;
         public Vector3 wheelUp;
         public float currentSteerAngle;
-        public float sideSlip;
         #endregion ENDREGION - Public editor-display variables
 
         #region REGION - Private working variables
         private float fwdInput = 0;
-        private float rotInput = 0;        
+        private float rotInput = 0;
+        private float brakeInput = 0;
         private int sideStickyTimer = 0;
         private int fwdStickyTimer = 0;
         private float maxStickyVelocity = 0.1f;//TODO -- expose as a configurable field
         private ConfigurableJoint stickyJoint;//the joint used for sticky friction
         private int raycastMask = ~(1 << 26);//cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask
-        private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity        
-
+        private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity 
         private KSPWheelFrictionCurve sideFrictionCurve;
         private KSPWheelFrictionCurve fwdFrictionCurve;
         #endregion ENDREGION - Private working variables
+
+        #region REGION - more private vars; debug
+
+        public bool debug = false;
+
+        public float wWheel;
+        public float iWheel;//moment of inertia of wheel; used for mass in acceleration calculations regarding wheel angular velocity        
+        public float vLong;
+        public float vLat;
+        public float vWheel;
+        public float sLong;
+        public float sLat;
+        public float fLong;
+        public float fLat;
+
+        public float tDrive;
+        public float tBrake;
+        public float tRoll;
+        public float tTract;
+        public float tTotal;
+
+        public float wAccel;
+
+        #endregion
 
         #region REGION - Public accessible methods / API methods
 
@@ -204,7 +219,14 @@ namespace KSPWheel
             fwdFrictionCurve.addPoint(1.00f, 0.65f, 0, 0);
         }
 
-        public void setImpactCallback(Action<Vector3> callback) { onImpactCallback = callback; }
+        /// <summary>
+        /// Seat the reference to the wheel-impact callback.  This method will be called when the wheel first contacts the surface, passing in the wheel-local impact velocity
+        /// </summary>
+        /// <param name="callback"></param>
+        public void setImpactCallback(Action<Vector3> callback)
+        {
+            onImpactCallback = callback;
+        }
 
         /// <summary>
         /// Set the raycast layer mask
@@ -243,6 +265,8 @@ namespace KSPWheel
         public void UpdateWheel()
         {
             calculateSteeringAngle();
+            wheelRPM = (wWheel * Mathf.Rad2Deg) / 60;
+            iWheel = wheelMass * wheelRadius * wheelRadius * 0.5f;
 
             float rayDistance = suspensionLength + wheelRadius;
 
@@ -278,10 +302,9 @@ namespace KSPWheel
                 //updateStickyJoint(springForce, fwdStickyTimer, sideStickyTimer);
 
                 forceToApply = hit.normal * springForce;
-                float fDot = Mathf.Abs(Vector3.Dot(wheelUp, hit.normal));
-                forceToApply += calculateForwardFriction(springForce) * wheelForward * fDot;
-                float sDot = 1.0f - Mathf.Abs(Vector3.Dot(wheelRight, hit.normal));
-                forceToApply += calculateSideFriction(springForce) * wheelRight * sDot;
+                calcFriction(springForce);
+                forceToApply += fLong * wheelForward;
+                forceToApply += fLat * wheelRight;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
                 if (!grounded && onImpactCallback!=null)//if was not previously grounded, call-back with grounded state
                 {
@@ -367,35 +390,11 @@ namespace KSPWheel
         //TODO use proper friction curve, wheel RPM, wheel-mass, and downforce to determine fwd friction
         private float calculateForwardFriction(float downForce)
         {
-            /**
-            ** Calculate slip ratio from (vCirc - vLong) / vLong
-            ** Add momentum to wheel from torque input
-            ** Subtract momentum from wheel for slip friction
-            ** Add force to body equap to slip friction
-            **
-            **
-            **/            
-            //slip ratio calculation            
-            //<0 denotes tire is spinning slower than the road, if moving forwards, -1 denotes a locked tire
-            //0 denotes tire is moving at same speed as the surface
-            //>0 deontes tires is spinning faster than the surface moving beneath it, if moving backwards 1 deontes a locked tire
-            //float vLong = wheelLocalVelocity.z;
-            //float vCirc = wheelAngularVelocity * wheelRadius;
-            //float slipRatio = vLong == 0 ? 0 :  (vCirc - vLong) / vLong;
-            //fwdSlipRatio = slipRatio;
-            //float tractionForce = downForce * slipRatio * -Mathf.Sign(wheelLocalVelocity.z);
-            //this.fwdFrictionForce = tractionForce;
-            //float tractionTorque = tractionForce * wheelRadius;
-            //float driveTorque = motorTorque * fwdInput;//always positive
-            //float brakeTorque = -Mathf.Sign(wheelAngularVelocity) * this.brakeTorque;//always oposite sign to current angular velocity
-            //float totalTorque = driveTorque + tractionTorque + brakeTorque;
-            //float inertia = (wheelMass * wheelRadius * wheelRadius) / 2;
-            //float accel = totalTorque / inertia;
-            //wheelAngularVelocity += accel;
+            calculateWheelSlip();
+            calcLongFriction(downForce);
             
             //update visual wheel RPM from current angular velocity
             //convert from radians per second into rotations per minute
-            wheelRPM = (wheelAngularVelocity * Mathf.Rad2Deg)/60;
             return 0;
         }
         
@@ -405,10 +404,10 @@ namespace KSPWheel
             float normSlipVal = Mathf.Abs(wheelLocalVelocity.normalized.x);
             float force = sideFrictionCurve.evaluate(normSlipVal) * downForce;
             if (force > absSlipVel * downForce * 2f ) { force = absSlipVel * downForce * 2f; }
-            sideSlip = -Mathf.Sign(wheelLocalVelocity.x) * force;
+            float sideSlip = -Mathf.Sign(wheelLocalVelocity.x) * force;
             return sideSlip;
         }
-
+        
         /// <summary>
         /// Updates the current steering angle from the current rotation input (-1...0...1), maxSteerAngle (config param), and steerLerpSpeed (response speed)
         /// </summary>
@@ -416,8 +415,115 @@ namespace KSPWheel
         {
             currentSteerAngle = Mathf.Lerp(currentSteerAngle, rotInput * maxSteerAngle, Time.fixedDeltaTime * steerLerpSpeed);
         }
+        
+        #region REGION - Friction calculation methods based on Physx origin: http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf
+        
+        /// <summary>
+        /// Calculate the wheel lat and long slips from the current axis velocities and wheel rotational speed
+        /// </summary>
+        private void calculateWheelSlip()
+        {
+            float maxDenom = 0.01f;
+            float vZ = wheelLocalVelocity.z;//m/s
+            float vX = wheelLocalVelocity.x;//m/s
+            float vW = wWheel * wheelRadius;//m/s @ radius
 
-        # endregion ENDREGION - Private/internal update methods
+            float absVZ = Mathf.Abs(vZ);
+            float absVW = Mathf.Abs(vW);
+
+            sLat = Mathf.Atan(vX / (vZ+0.1f));//??
+            if (vW == 0 && vZ == 0)
+            {
+                sLong = 0f;                
+            }
+            //else if (brakeInput != 0 || fwdInput != 0)//user-input to change velocity
+            //{
+            //    longSlip = (vW - vZ) / (Mathf.Max(absVZ, absVW) + 0.1f * fudge1);
+            //}
+            else
+            {
+                sLong = (vW - vZ) / Mathf.Max(maxDenom, Mathf.Max(absVZ, absVW));
+            }
+        }
+
+        private void calcLongFriction(float downForce)
+        {
+            float longForce = fwdFrictionCurve.evaluate(sLong) * downForce;
+        }
+
+        /// <summary>
+        /// http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf equation 20
+        /// </summary>
+        /// <param name="k"></param>
+        /// <returns></returns>
+        private float smooth1(float k)
+        {
+            float oneThird = 0.33333333333f;
+            float oneTwentySeventh = 0.03703703703f;
+            return Mathf.Min(1, k - oneThird * k * k + oneTwentySeventh * k * k * k);
+        }
+
+        /// <summary>
+        /// http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf equation 21
+        /// </summary>
+        /// <param name="k"></param>
+        /// <returns></returns>
+        private float smooth2(float k)
+        {
+            float oneThird = 0.33333333333f;
+            float oneTwentySeventh = 0.03703703703f;
+            return (k - (k * k) + (oneThird * k * k * k) - (oneTwentySeventh * k * k * k * k));
+        }
+
+        #endregion ENDREGION - Friction Calculation Methods
+
+        #region REGION - Friction calculations methods based on alternate source: http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+
+        /// <summary>
+        /// Working, but incomplete; fwd traction input/output needs attention
+        /// </summary>
+        /// <param name="downForce"></param>
+        private void calcFriction(float downForce)
+        {
+            //TODO add rolling resistance calculation
+            float constRR = 13;// rolling resistance drag constant
+
+            vLong = wheelLocalVelocity.z;
+            vLat = wheelLocalVelocity.x;            
+            vWheel = wWheel * wheelRadius;
+            sLong = (vWheel - vLong) / Mathf.Abs(vLong);
+            if (vLong == 0 && vWheel!=0)//for cases where wheel is spinning but not moving, solves div/0 errors for vLongAbs as the denom
+            {
+                sLong = -(vLong - vWheel) / Mathf.Abs(vWheel);
+            }
+            //raw longitudinal force based purely on the slip ratio
+            fLong = fwdFrictionCurve.evaluate(Mathf.Abs(sLong)) * downForce * -Mathf.Sign(vLong);
+
+            float latSlipRadians = Mathf.Abs(Mathf.Atan(vLat / vLong));
+            if (vLat == 0) { latSlipRadians = 0f; }//zero slip angle if no lateral movement
+            else if (vLong == 0) { latSlipRadians = 0.5f * Mathf.PI; }//90' angle if there is no long movement
+            float latSlipAngle = Mathf.Rad2Deg * latSlipRadians;
+            sLat = latSlipAngle / 90f;//convert from an angle (0-90) into a percent (0-1) for use with the friction curve system
+            //raw lateral force based purely on the slip ratio
+            fLat = sideFrictionCurve.evaluate(sLat) * downForce;
+            if (fLat > Mathf.Abs(vLat) * downForce * 2f) { fLat = Mathf.Abs(vLat) * downForce * 2f; }
+            fLat *= -Mathf.Sign(vLat);
+
+            tDrive = fwdInput * motorTorque;
+            tBrake = brakeInput * this.brakeTorque;
+            tRoll = 0;
+            float tTractMax = Mathf.Abs((vWheel - vLong) * iWheel);
+            tTract = Mathf.Min(tTractMax, Mathf.Abs(fLong) / iWheel) * -Mathf.Sign(sLong);
+            fLong = -tTract;
+            tTotal = tDrive + tBrake + tRoll + tTract;
+            wAccel = tTotal / iWheel;
+
+            wWheel += wAccel;
+        }
+
+        #endregion ENDREGION - Friction calculations methods based on alternate source: 
+        
+        #endregion ENDREGION - Private/internal update methods
 
     }
 }

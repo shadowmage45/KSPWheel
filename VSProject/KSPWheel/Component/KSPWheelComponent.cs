@@ -111,12 +111,25 @@ namespace KSPWheel
         public Vector3 totalWorldForce;
         public Vector3 totalLocalForce;
         public Vector3 hitNormal;
-        public float sideSlipForce;
-        public float sideFrictionForce;
-        public float angularVelocity;
-        public float fwdSlipRatio;
-        public float fwdFrictionForce;
+
         public float wheelRPM;
+
+        public float iWheel;
+        public float wWheel;
+        public float vLong;
+        public float vLat;
+        public float vWheel;
+        public float sLong;
+        public float sLat;
+        public float fLong;
+        public float fLat;
+
+        public float tDrive;
+        public float tBrake;
+        public float tRoll;
+        public float tTract;
+        public float tTotal;
+        public float wAccel;
 
         #endregion ENDREGION - Unity Editor Display Variables
 
@@ -174,13 +187,25 @@ namespace KSPWheel
             hitNormal = wheelCollider.hit.normal;
             worldVelocity = wheelCollider.worldVelocityAtHit;
             localVelocity = wheelCollider.wheelLocalVelocity;
-            sideSlipForce = wheelCollider.sideSlip;
             springForce = wheelCollider.springForce;
             dampForce = wheelCollider.dampForce;
-            angularVelocity = wheelCollider.wheelAngularVelocity;
-            fwdSlipRatio = wheelCollider.fwdSlipRatio;
-            fwdFrictionForce = wheelCollider.fwdFrictionForce;
             wheelRPM = wheelCollider.wheelRPM;
+
+            iWheel = wheelCollider.iWheel;
+            wWheel = wheelCollider.wWheel;
+            vLong = wheelCollider.vLong;
+            vLat = wheelCollider.vLat;
+            vWheel = wheelCollider.vWheel;
+            sLong = wheelCollider.sLong;
+            sLat = wheelCollider.sLat;
+            fLong = wheelCollider.fLong;
+            fLat = wheelCollider.fLat;
+            tDrive = wheelCollider.tDrive;
+            tBrake = wheelCollider.tBrake;
+            tRoll = wheelCollider.tRoll;
+            tTract = wheelCollider.tTract;
+            tTotal = wheelCollider.tTotal;
+            wAccel = wheelCollider.wAccel;
         }
 
         public void OnValidate()
