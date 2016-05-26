@@ -1470,7 +1470,7 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005889}
   wheelTransform: {fileID: 523005890}
   wheelRadius: .402999997
-  wheelMass: 1
+  wheelMass: .0625
   suspensionLength: .300000012
   target: .699999988
   spring: 35
@@ -1538,7 +1538,7 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005887}
   wheelTransform: {fileID: 523005888}
   wheelRadius: .402999997
-  wheelMass: 1
+  wheelMass: .0625
   suspensionLength: .300000012
   target: .699999988
   spring: 35
@@ -1615,12 +1615,12 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005885}
   wheelTransform: {fileID: 523005886}
   wheelRadius: .402999997
-  wheelMass: 1
+  wheelMass: .0625
   suspensionLength: .300000012
   target: .699999988
   spring: 35
   damper: 200
-  motorTorque: 1
+  motorTorque: .00999999978
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
@@ -1668,12 +1668,12 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005884}
   wheelTransform: {fileID: 523005891}
   wheelRadius: .402999997
-  wheelMass: 1
+  wheelMass: .0625
   suspensionLength: .300000012
   target: .699999988
   spring: 35
   damper: 200
-  motorTorque: 1
+  motorTorque: .00999999978
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
