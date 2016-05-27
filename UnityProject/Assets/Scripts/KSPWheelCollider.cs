@@ -303,8 +303,8 @@ namespace KSPWheel
 
                 forceToApply = hit.normal * springForce;
                 calcFriction(springForce);
-                forceToApply += fLong * wheelForward;
-                forceToApply += fLat * wheelRight;
+                //forceToApply += fLong * wheelForward;
+                //forceToApply += fLat * wheelRight;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
                 if (!grounded && onImpactCallback!=null)//if was not previously grounded, call-back with grounded state
                 {
@@ -488,13 +488,19 @@ namespace KSPWheel
             //TODO add rolling resistance calculation
             float constRR = 13;// rolling resistance drag constant
 
+            //integrate drive torque before calculating slips; so that end wheel rpm = after friction applied... a visual thing...
+            tDrive = fwdInput * motorTorque;
+            wWheel += tDrive / iWheel;
+            //should also apply brake torques prior to traction?
+
             vLong = wheelLocalVelocity.z;
             vLat = wheelLocalVelocity.x;            
             vWheel = wWheel * wheelRadius;
-            sLong = (vWheel - vLong) / Mathf.Abs(vLong);
-            if (vLong == 0 && vWheel!=0)//for cases where wheel is spinning but not moving, solves div/0 errors for vLongAbs as the denom
+            //sLong = (vWheel - vLong) / Mathf.Abs(vLong);
+            sLong = (Mathf.Max(vLong, vWheel) - Mathf.Min(vLong, vWheel)) / Mathf.Max(Mathf.Abs(vLong), Mathf.Abs(vWheel));
+            if (vLong == 0 && vWheel==0)//for cases where wheel is spinning but not moving, solves div/0 errors for vLongAbs as the denom
             {
-                sLong = -(vLong - vWheel) / Mathf.Abs(vWheel);
+                sLong = 0;
             }
             //raw longitudinal force based purely on the slip ratio
             fLong = fwdFrictionCurve.evaluate(Mathf.Abs(sLong)) * downForce * -Mathf.Sign(vLong);
@@ -509,13 +515,16 @@ namespace KSPWheel
             if (fLat > Mathf.Abs(vLat) * downForce * 2f) { fLat = Mathf.Abs(vLat) * downForce * 2f; }
             fLat *= -Mathf.Sign(vLat);
 
-            tDrive = fwdInput * motorTorque;
+            float vDelta = (vWheel - vLong);
+            float wDelta = vDelta / wheelRadius;
+            float tDelta = wDelta * iWheel;
+            float fDelta = tDelta / wheelRadius;
             tBrake = brakeInput * this.brakeTorque;
             tRoll = 0;
-            float tTractMax = Mathf.Abs((vWheel - vLong) * iWheel);
-            tTract = Mathf.Min(tTractMax, Mathf.Abs(fLong) / iWheel) * -Mathf.Sign(sLong);
-            fLong = -tTract;
-            tTotal = tDrive + tBrake + tRoll + tTract;
+            float tTractMax = Mathf.Abs(wDelta * iWheel);
+            tTract = Mathf.Min(tTractMax, Mathf.Abs(fLong) / iWheel) * Mathf.Sign(vLong);
+            fLong = -(fDelta / wheelRadius);
+            tTotal = tBrake + tRoll + tTract;
             wAccel = tTotal / iWheel;
 
             wWheel += wAccel;

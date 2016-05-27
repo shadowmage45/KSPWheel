@@ -820,14 +820,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!1 &301343513
 GameObject:
   m_ObjectHideFlags: 0
@@ -1052,14 +1056,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!1 &360438514
 GameObject:
   m_ObjectHideFlags: 0
@@ -1311,7 +1319,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 40.1100006
+      value: 34.4700012
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1470,11 +1478,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005889}
   wheelTransform: {fileID: 523005890}
   wheelRadius: .402999997
-  wheelMass: .0625
+  wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 35
-  damper: 200
+  spring: 20000
+  damper: 200000
   motorTorque: 0
   brakeTorque: 0
   maxSteerAngle: 20
@@ -1499,14 +1507,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!54 &523005900
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1514,7 +1526,7 @@ Rigidbody:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 523005893}
   serializedVersion: 2
-  m_Mass: 1
+  m_Mass: 1300
   m_Drag: 0
   m_AngularDrag: .0500000007
   m_UseGravity: 1
@@ -1538,11 +1550,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005887}
   wheelTransform: {fileID: 523005888}
   wheelRadius: .402999997
-  wheelMass: .0625
+  wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 35
-  damper: 200
+  spring: 20000
+  damper: 200000
   motorTorque: 0
   brakeTorque: 0
   maxSteerAngle: 20
@@ -1567,14 +1579,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!64 &523005902
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1615,12 +1631,12 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005885}
   wheelTransform: {fileID: 523005886}
   wheelRadius: .402999997
-  wheelMass: .0625
+  wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 35
-  damper: 200
-  motorTorque: .00999999978
+  spring: 20000
+  damper: 200000
+  motorTorque: 10000
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
@@ -1644,14 +1660,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!114 &523005905
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1668,12 +1688,12 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005884}
   wheelTransform: {fileID: 523005891}
   wheelRadius: .402999997
-  wheelMass: .0625
+  wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 35
-  damper: 200
-  motorTorque: .00999999978
+  spring: 20000
+  damper: 200000
+  motorTorque: 10000
   brakeTorque: 0
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
@@ -1697,14 +1717,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!4 &523005907 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -1783,14 +1807,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!1 &617458321
 GameObject:
   m_ObjectHideFlags: 0
@@ -2229,14 +2257,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!1 &769263970
 GameObject:
   m_ObjectHideFlags: 0
@@ -3156,14 +3188,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!1 &1150879878
 GameObject:
   m_ObjectHideFlags: 0
@@ -3594,14 +3630,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!1 &1356012564
 GameObject:
   m_ObjectHideFlags: 0
@@ -4540,14 +4580,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!1 &1608088954
 GameObject:
   m_ObjectHideFlags: 0
@@ -4981,14 +5025,18 @@ MonoBehaviour:
   vWheel: 0
   sLong: 0
   sLat: 0
-  fLong: 0
-  fLat: 0
+  fLatMax: 0
+  fLongMax: 0
+  wDelta: 0
+  vDelta: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
   tTract: 0
   tTotal: 0
   wAccel: 0
+  fLong: 0
+  fLat: 0
 --- !u!1 &1986604049
 GameObject:
   m_ObjectHideFlags: 0

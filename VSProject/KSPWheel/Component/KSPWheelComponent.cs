@@ -121,8 +121,11 @@ namespace KSPWheel
         public float vWheel;
         public float sLong;
         public float sLat;
-        public float fLong;
-        public float fLat;
+        public float fLatMax;
+        public float fLongMax;
+
+        public float wDelta;
+        public float vDelta;
 
         public float tDrive;
         public float tBrake;
@@ -130,6 +133,9 @@ namespace KSPWheel
         public float tTract;
         public float tTotal;
         public float wAccel;
+
+        public float fLong;
+        public float fLat;
 
         #endregion ENDREGION - Unity Editor Display Variables
 
