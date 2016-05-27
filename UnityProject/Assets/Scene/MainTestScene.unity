@@ -824,6 +824,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -1060,6 +1062,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -1315,7 +1319,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.46000004
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1484,8 +1488,8 @@ MonoBehaviour:
   spring: 20000
   damper: 200000
   motorTorque: 0
-  brakeTorque: 0
-  maxSteerAngle: 20
+  brakeTorque: 10000
+  maxSteerAngle: 35
   fwdFrictionConst: .00100000005
   sideFrictionConst: 1
   tankSteer: 0
@@ -1511,6 +1515,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -1556,8 +1562,8 @@ MonoBehaviour:
   spring: 20000
   damper: 200000
   motorTorque: 0
-  brakeTorque: 0
-  maxSteerAngle: 20
+  brakeTorque: 10000
+  maxSteerAngle: 35
   fwdFrictionConst: .00100000005
   sideFrictionConst: 1
   tankSteer: 0
@@ -1583,6 +1589,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -1636,13 +1644,13 @@ MonoBehaviour:
   target: .699999988
   spring: 20000
   damper: 200000
-  motorTorque: 10000
-  brakeTorque: 0
+  motorTorque: 1000
+  brakeTorque: 10000
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
   sideFrictionConst: 1
   tankSteer: 0
-  invertSteer: 0
+  invertSteer: 1
   debug: 1
   springForce: 0
   dampForce: 0
@@ -1664,6 +1672,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -1693,13 +1703,13 @@ MonoBehaviour:
   target: .699999988
   spring: 20000
   damper: 200000
-  motorTorque: 10000
-  brakeTorque: 0
+  motorTorque: 1000
+  brakeTorque: 10000
   maxSteerAngle: 0
   fwdFrictionConst: .00100000005
   sideFrictionConst: 1
   tankSteer: 0
-  invertSteer: 0
+  invertSteer: 1
   debug: 1
   springForce: 0
   dampForce: 0
@@ -1721,6 +1731,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -1811,6 +1823,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -2261,6 +2275,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -3192,6 +3208,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -3634,6 +3652,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -4584,6 +4604,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0
@@ -5029,6 +5051,8 @@ MonoBehaviour:
   fLongMax: 0
   wDelta: 0
   vDelta: 0
+  tTractMax: 0
+  fTractMax: 0
   tDrive: 0
   tBrake: 0
   tRoll: 0

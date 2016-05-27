@@ -181,19 +181,25 @@ namespace KSPWheel
 
         public float wWheel;
         public float iWheel;//moment of inertia of wheel; used for mass in acceleration calculations regarding wheel angular velocity        
-        public float vLong;
-        public float vLat;
-        public float vWheel;
-        public float sLong;
-        public float sLat;
-        public float fLong;
-        public float fLat;
+        public float vLong;//logitudinal velocity of the wheel (forwards) over the surface
+        public float vLat;//lateral velocity of the wheel (sideways) over the surface
+        public float vWheel;//linear velocity of the spinning wheel
+        public float sLong;//fwd slip ratio
+        public float sLat;//side slip ratio
+
+        public float fLongMax;
+        public float fLatMax;
+        public float tTractMax;
+        public float fTractMax;
 
         public float tDrive;
         public float tBrake;
         public float tRoll;
         public float tTract;
         public float tTotal;
+        
+        public float fLong;
+        public float fLat;
 
         public float wAccel;
 
@@ -242,10 +248,11 @@ namespace KSPWheel
         /// </summary>
         /// <param name="fwd"></param>
         /// <param name="rot"></param>
-        public void setInputState(float fwd, float rot)
+        public void setInputState(float fwd, float rot, float brake)
         {
             fwdInput = fwd;
             rotInput = rot;
+            brakeInput = brake;
         }
 
         /// <summary>
@@ -274,6 +281,10 @@ namespace KSPWheel
             wheelUp = wheel.transform.up;
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             grounded = false;
+
+            tDrive = fwdInput * motorTorque;
+            wWheel += tDrive / iWheel;
+
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance, raycastMask))
             {
                 prevCompressionDistance = compressionDistance;
@@ -303,8 +314,8 @@ namespace KSPWheel
 
                 forceToApply = hit.normal * springForce;
                 calcFriction(springForce);
-                //forceToApply += fLong * wheelForward;
-                //forceToApply += fLat * wheelRight;
+                forceToApply += fLong * wheelForward;
+                forceToApply += fLat * wheelRight;
                 rigidBody.AddForceAtPosition(forceToApply, wheel.transform.position, ForceMode.Force);
                 if (!grounded && onImpactCallback!=null)//if was not previously grounded, call-back with grounded state
                 {
@@ -326,6 +337,12 @@ namespace KSPWheel
                 wheelMeshPosition = wheel.transform.position + (-wheel.transform.up * suspensionLength * (1f - target));
                 Component.Destroy(stickyJoint);
             }
+            
+            tBrake = brakeInput * brakeTorque;
+            float wBrakeMax = tBrake / iWheel;
+            if (wBrakeMax > Mathf.Abs(wWheel)) { wBrakeMax = Mathf.Abs(wWheel); }
+            wBrakeMax *= -Mathf.Sign(wWheel);
+            wWheel += wBrakeMax;
         }
 
         #endregion ENDREGION - Public accessible methods / API methods
@@ -385,27 +402,6 @@ namespace KSPWheel
             {
                 stickyJoint.xMotion = ConfigurableJointMotion.Free;
             }
-        }
-
-        //TODO use proper friction curve, wheel RPM, wheel-mass, and downforce to determine fwd friction
-        private float calculateForwardFriction(float downForce)
-        {
-            calculateWheelSlip();
-            calcLongFriction(downForce);
-            
-            //update visual wheel RPM from current angular velocity
-            //convert from radians per second into rotations per minute
-            return 0;
-        }
-        
-        private float calculateSideFriction(float downForce)
-        {
-            float absSlipVel = Mathf.Abs(wheelLocalVelocity.x);
-            float normSlipVal = Mathf.Abs(wheelLocalVelocity.normalized.x);
-            float force = sideFrictionCurve.evaluate(normSlipVal) * downForce;
-            if (force > absSlipVel * downForce * 2f ) { force = absSlipVel * downForce * 2f; }
-            float sideSlip = -Mathf.Sign(wheelLocalVelocity.x) * force;
-            return sideSlip;
         }
         
         /// <summary>
@@ -489,45 +485,79 @@ namespace KSPWheel
             float constRR = 13;// rolling resistance drag constant
 
             //integrate drive torque before calculating slips; so that end wheel rpm = after friction applied... a visual thing...
-            tDrive = fwdInput * motorTorque;
-            wWheel += tDrive / iWheel;
-            //should also apply brake torques prior to traction?
-
+            
             vLong = wheelLocalVelocity.z;
             vLat = wheelLocalVelocity.x;            
             vWheel = wWheel * wheelRadius;
-            sLong = (vWheel - vLong) / Mathf.Abs(vLong);
-            //sLong = (Mathf.Max(vLong, vWheel) - Mathf.Min(vLong, vWheel)) / Mathf.Max(Mathf.Abs(vLong), Mathf.Abs(vWheel));
-            if (vLong == 0 && vWheel==0)//for cases where wheel is spinning but not moving, solves div/0 errors for vLongAbs as the denom
-            {
-                sLong = 0;
-            }
+            sLong = calcLongSlip(vLong, vWheel);
+            sLat = calcLatSlip(vLong, vLat);
             //raw longitudinal force based purely on the slip ratio
-            fLong = fwdFrictionCurve.evaluate(Mathf.Abs(sLong)) * downForce * -Mathf.Sign(vLong);
-
-            float latSlipRadians = Mathf.Abs(Mathf.Atan(vLat / vLong));
-            if (vLat == 0) { latSlipRadians = 0f; }//zero slip angle if no lateral movement
-            else if (vLong == 0) { latSlipRadians = 0.5f * Mathf.PI; }//90' angle if there is no long movement
-            float latSlipAngle = Mathf.Rad2Deg * latSlipRadians;
-            sLat = latSlipAngle / 90f;//convert from an angle (0-90) into a percent (0-1) for use with the friction curve system
+            fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce;
             //raw lateral force based purely on the slip ratio
-            fLat = sideFrictionCurve.evaluate(sLat) * downForce;
+            fLatMax = sideFrictionCurve.evaluate(sLat) * downForce;
+            
+            // 'limited' lateral force            
+            fLat = fLatMax;
             if (fLat > Mathf.Abs(vLat) * downForce * 2f) { fLat = Mathf.Abs(vLat) * downForce * 2f; }
-            fLat *= -Mathf.Sign(vLat);
+            fLat *= -Mathf.Sign(vLat);//and sign it opposite to the current vLat
 
-            float vDelta = (vWheel - vLong);
-            float wDelta = vDelta / wheelRadius;
-            float tDelta = wDelta * iWheel;
-            float fDelta = tDelta / wheelRadius;
-            tBrake = brakeInput * this.brakeTorque;
+            float vDelta = vWheel - vLong;//linear velocity delta between wheel and surface
+            float wDelta = vDelta / wheelRadius;//angular velocity delta between wheel and surface
+            float tDelta = wDelta * iWheel;//amount of torque needed to bring wheel to surface speed
+            float fDelta = tDelta / wheelRadius;//newtons of force needed to bring wheel to surface speed            
+            tTractMax = Mathf.Abs(tDelta);//absolute value of the torque needed
+
+            fTractMax = tTractMax / wheelRadius;
+            fTractMax = Mathf.Min(fTractMax, fLongMax);
+
+            tTract = fTractMax * wheelRadius * -Mathf.Sign(vDelta);
+            fLong = fTractMax * Mathf.Sign(vDelta);
+                        
             tRoll = 0;
-            float tTractMax = Mathf.Abs(wDelta * iWheel);
-            tTract = Mathf.Min(tTractMax, Mathf.Abs(fLong) / iWheel) * -Mathf.Sign(sLong);
-            fLong = -(fDelta / wheelRadius);
-            tTotal = tBrake + tRoll + tTract;
+            tTotal = tRoll + tTract;
             wAccel = tTotal / iWheel;
 
             wWheel += wAccel;
+        }
+
+        /// <summary>
+        /// Returns a slip ratio between 0 and 1, 0 being no slip, 1 being lots of slip
+        /// </summary>
+        /// <param name="vLong"></param>
+        /// <param name="vWheel"></param>
+        /// <returns></returns>
+        private float calcLongSlip(float vLong, float vWheel)
+        {
+            float sLong = 0;
+            if(vLong==0 && vWheel == 0) { return 0f; }//no slip present
+            float a = Mathf.Max(vLong, vWheel);
+            float b = Mathf.Min(vLong, vWheel);
+            sLong = (a - b) / Mathf.Abs(a);
+            sLong = Mathf.Clamp(sLong, 0, 1);
+            return sLong;
+        }
+
+        /// <summary>
+        /// Returns a slip ratio between 0 and 1, 0 being no slip, 1 being lots of slip
+        /// </summary>
+        /// <param name="vLong"></param>
+        /// <param name="vLat"></param>
+        /// <returns></returns>
+        private float calcLatSlip(float vLong, float vLat)
+        {
+            float sLat = 0;
+            if (vLat == 0)//vLat = 0, so there can be no sideways slip
+            {
+                return 0f;
+            }
+            else if (vLong == 0)//vLat!=0, but vLong==0, so all slip is sideways
+            {
+                return 1f;
+            }
+            sLat = Mathf.Abs(Mathf.Atan(vLat / vLong));//radians
+            sLat = sLat * Mathf.Rad2Deg;//degrees
+            sLat = sLat / 90f;//percentage (0 - 1)
+            return sLat;
         }
 
         #endregion ENDREGION - Friction calculations methods based on alternate source: 

@@ -126,6 +126,8 @@ namespace KSPWheel
 
         public float wDelta;
         public float vDelta;
+        public float tTractMax;
+        public float fTractMax;
 
         public float tDrive;
         public float tBrake;
@@ -142,6 +144,7 @@ namespace KSPWheel
         private KSPWheelCollider wheelCollider;
         private float fwdInput;
         private float rotInput;
+        private float brakeInput;
 
         public void Start()
         {
@@ -155,6 +158,7 @@ namespace KSPWheel
             float right = Input.GetKey(KeyCode.D) ? 1 : 0;
             float fwd = Input.GetKey(KeyCode.W) ? 1 : 0;
             float rev = Input.GetKey(KeyCode.S) ? -1 : 0;
+            brakeInput = Input.GetKey(KeyCode.Space) ? 1 : 0;
             fwdInput = fwd + rev;
             rotInput = left + right;
             if (invertSteer) { rotInput = -rotInput; }
@@ -169,7 +173,7 @@ namespace KSPWheel
         public void FixedUpdate()
         {
             sampleInput();
-            wheelCollider.setInputState(fwdInput, rotInput);
+            wheelCollider.setInputState(fwdInput, rotInput, brakeInput);//TODO brakes...
             wheelCollider.UpdateWheel();
             if (debug)
             {
@@ -204,14 +208,18 @@ namespace KSPWheel
             vWheel = wheelCollider.vWheel;
             sLong = wheelCollider.sLong;
             sLat = wheelCollider.sLat;
-            fLong = wheelCollider.fLong;
-            fLat = wheelCollider.fLat;
+            fLongMax = wheelCollider.fLongMax;
+            fLatMax = wheelCollider.fLatMax;
+            tTractMax = wheelCollider.tTractMax;
+            fTractMax = wheelCollider.fTractMax;
             tDrive = wheelCollider.tDrive;
             tBrake = wheelCollider.tBrake;
             tRoll = wheelCollider.tRoll;
             tTract = wheelCollider.tTract;
             tTotal = wheelCollider.tTotal;
             wAccel = wheelCollider.wAccel;
+            fLong = wheelCollider.fLong;
+            fLat = wheelCollider.fLat;
         }
 
         public void OnValidate()

@@ -160,6 +160,9 @@ namespace KSPWheel
         [KSPField(guiName = "RotInput", guiActive = true)]
         public float rotInput;
 
+        [KSPField(guiName = "BrakeInput", guiActive = true)]
+        public float brakeInput;
+
         [KSPField(guiName = "Hit", guiActive = true)]
         public string colliderHit;
 
@@ -383,6 +386,7 @@ namespace KSPWheel
 
             fwdInput = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             rotInput = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
+            //brakeInput = part.vessel.ActionGroups.
             if (motorLocked) { fwdInput = 0; }
             if (steeringLocked) { rotInput = 0; }
             if (invertSteering) { rotInput = -rotInput; }
@@ -392,7 +396,7 @@ namespace KSPWheel
                 if (fwdInput > 1) { fwdInput = 1; }
                 if (fwdInput < -1) { fwdInput = -1; }
             }
-            wheel.setInputState(fwdInput, rotInput);
+            wheel.setInputState(fwdInput, rotInput, brakeInput);//TODO -- brakes input
         }
 
         /// <summary>
