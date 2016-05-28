@@ -68,7 +68,7 @@ namespace KSPWheel
         /// <summary>
         /// The steering response speed; higher values result in more responsive steering
         /// </summary>
-        public float steerLerpSpeed = 1;
+        public float steerLerpSpeed = 8;
 
         /// <summary>
         /// The forward friction constant (rolling friction)
@@ -283,7 +283,8 @@ namespace KSPWheel
             grounded = false;
 
             tDrive = fwdInput * motorTorque;
-            wWheel += tDrive / iWheel;
+            if (Mathf.Abs(wheelRPM) > 200f){ tDrive = 0f; }
+            wWheel += (tDrive / iWheel)*Time.fixedDeltaTime;
 
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance, raycastMask))
             {
@@ -338,11 +339,6 @@ namespace KSPWheel
                 Component.Destroy(stickyJoint);
             }
             
-            tBrake = brakeInput * brakeTorque;
-            float wBrakeMax = tBrake / iWheel;
-            if (wBrakeMax > Mathf.Abs(wWheel)) { wBrakeMax = Mathf.Abs(wWheel); }
-            wBrakeMax *= -Mathf.Sign(wWheel);
-            wWheel += wBrakeMax;
         }
 
         #endregion ENDREGION - Public accessible methods / API methods
@@ -492,9 +488,9 @@ namespace KSPWheel
             sLong = calcLongSlip(vLong, vWheel);
             sLat = calcLatSlip(vLong, vLat);
             //raw longitudinal force based purely on the slip ratio
-            fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce;
+            fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * fwdFrictionConst;
             //raw lateral force based purely on the slip ratio
-            fLatMax = sideFrictionCurve.evaluate(sLat) * downForce;
+            fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * sideFrictionConst;
             
             // 'limited' lateral force            
             fLat = fLatMax;
@@ -505,7 +501,7 @@ namespace KSPWheel
             float wDelta = vDelta / wheelRadius;//angular velocity delta between wheel and surface
             float tDelta = wDelta * iWheel;//amount of torque needed to bring wheel to surface speed
             float fDelta = tDelta / wheelRadius;//newtons of force needed to bring wheel to surface speed            
-            tTractMax = Mathf.Abs(tDelta);//absolute value of the torque needed
+            tTractMax = Mathf.Abs(tDelta)/Time.fixedDeltaTime;//absolute value of the torque needed
 
             fTractMax = tTractMax / wheelRadius;
             fTractMax = Mathf.Min(fTractMax, fLongMax);
@@ -517,7 +513,13 @@ namespace KSPWheel
             tTotal = tRoll + tTract;
             wAccel = tTotal / iWheel;
 
-            wWheel += wAccel;
+            wWheel += wAccel*Time.fixedDeltaTime;
+            
+            tBrake = brakeInput * brakeTorque;
+            float wBrakeMax = tBrake / iWheel;
+            if (wBrakeMax > Mathf.Abs(wWheel)) { wBrakeMax = Mathf.Abs(wWheel); }
+            wBrakeMax *= -Mathf.Sign(wWheel);
+            wWheel += wBrakeMax;
         }
 
         /// <summary>

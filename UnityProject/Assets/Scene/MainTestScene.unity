@@ -1401,6 +1401,42 @@ Prefab:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -.660000026
+      objectReference: {fileID: 0}
+    - target: {fileID: 400002, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -.660000026
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -.660000026
+      objectReference: {fileID: 0}
+    - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -.660000026
+      objectReference: {fileID: 0}
+    - target: {fileID: 400008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -.660000026
+      objectReference: {fileID: 0}
+    - target: {fileID: 400020, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: .939999998
+      objectReference: {fileID: 0}
+    - target: {fileID: 400024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: .939999998
+      objectReference: {fileID: 0}
+    - target: {fileID: 400028, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.21000004
+      objectReference: {fileID: 0}
+    - target: {fileID: 400032, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.21000004
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2300008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
     - {fileID: 2300006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -1485,12 +1521,12 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 20000
+  spring: 30000
   damper: 200000
   motorTorque: 0
   brakeTorque: 10000
   maxSteerAngle: 35
-  fwdFrictionConst: .00100000005
+  fwdFrictionConst: 1
   sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 0
@@ -1559,12 +1595,12 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 20000
+  spring: 30000
   damper: 200000
   motorTorque: 0
   brakeTorque: 10000
   maxSteerAngle: 35
-  fwdFrictionConst: .00100000005
+  fwdFrictionConst: 1
   sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 0
@@ -1642,12 +1678,12 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 20000
+  spring: 30000
   damper: 200000
-  motorTorque: 1000
+  motorTorque: 1100
   brakeTorque: 10000
   maxSteerAngle: 0
-  fwdFrictionConst: .00100000005
+  fwdFrictionConst: 1
   sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 1
@@ -1701,12 +1737,12 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 20000
+  spring: 30000
   damper: 200000
-  motorTorque: 1000
+  motorTorque: 1100
   brakeTorque: 10000
   maxSteerAngle: 0
-  fwdFrictionConst: .00100000005
+  fwdFrictionConst: 1
   sideFrictionConst: 1
   tankSteer: 0
   invertSteer: 1
@@ -2489,7 +2525,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 794483619}
   m_LocalRotation: {x: 0, y: .00436331006, z: 0, w: .999990523}
-  m_LocalPosition: {x: 0, y: 3, z: -8}
+  m_LocalPosition: {x: 0, y: 3, z: -8.65999985}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 523005907}
