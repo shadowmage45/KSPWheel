@@ -154,6 +154,14 @@ namespace KSPWheel
 
         #region REGION - Debug fields
 
+        [KSPField(guiName = "SpringMult", guiActive = true),
+         UI_FloatRange(minValue = 0.05f, maxValue = 10, stepIncrement = 0.05f, suppressEditorShipModified =true)]
+        public float springMult = 1f;
+
+        [KSPField(guiName = "DampMult", guiActive = true),
+         UI_FloatRange(minValue = 0.05f, maxValue = 10, stepIncrement = 0.05f, suppressEditorShipModified =true)]
+        public float dampMult = 1f;
+
         [KSPField(guiName ="FwdInput", guiActive =true)]
         public float fwdInput;
 
@@ -166,19 +174,41 @@ namespace KSPWheel
         [KSPField(guiName = "Hit", guiActive = true)]
         public string colliderHit;
 
+        [KSPField(guiName = "RPM", guiActive = true)]
+        public float rpm;
+
+        [KSPField(guiName = "Steer", guiActive = true)]
+        public float steer;
+
+        [KSPField(guiName = "fLong", guiActive = true)]
+        public float fLong;
+
+        [KSPField(guiName = "fLat", guiActive = true)]
+        public float fLat;
+
         #endregion
 
         #region REGION - GUI Handling methods
 
-        //TODO -- disable when no animation is present
+        public void onSpringUpdated(BaseField field, object obj)
+        {
+            wheel.spring = suspensionSpring * springMult;
+            MonoBehaviour.print("Set spring to: " + wheel.spring);
+        }
+
+        public void onDamperUpdated(BaseField field, object obj)
+        {
+            wheel.damper = suspensionDamper * dampMult;
+            MonoBehaviour.print("Set damper to: " + wheel.damper);
+        }
+        
         [KSPAction("Toggle Gear")]
         public void toggleGearAction(KSPActionParam param)
         {
             if (param.type == KSPActionType.Activate) { deploy(); }
             else if (param.type == KSPActionType.Deactivate) { retract(); }
         }
-
-        //TODO -- disable when no animation is present
+        
         [KSPEvent(guiName = "Toggle Gear", guiActive = true, guiActiveEditor = true)]
         public void toggleGearEvent()
         {
@@ -251,8 +281,8 @@ namespace KSPWheel
             if (collider != null)
             {
                 wheelRadius = collider.radius;
-                suspensionTravel = suspensionTravel==-1? collider.suspensionDistance : suspensionTravel;
-                suspensionTarget = suspensionTarget==-1? collider.suspensionSpring.targetPosition : suspensionTarget;
+                suspensionTravel = suspensionTravel == -1? collider.suspensionDistance : suspensionTravel;
+                suspensionTarget = suspensionTarget == -1? collider.suspensionSpring.targetPosition : suspensionTarget;
                 suspensionSpring = suspensionSpring == -1 ? collider.suspensionSpring.spring : suspensionSpring ;
                 suspensionDamper = suspensionDamper == -1 ? collider.suspensionSpring.damper : suspensionDamper;
                 wheelMass = wheelMass == -1 ? collider.mass : wheelMass;
@@ -262,6 +292,8 @@ namespace KSPWheel
             Events["toggleGearEvent"].active = animationControl != null;
             Actions["toggleGearAction"].active = animationControl != null;
             Events["repairWheel"].active = wheelState == KSPWheelState.BROKEN;
+            Fields["springMult"].uiControlFlight.onFieldChanged = onSpringUpdated;
+            Fields["dampMult"].uiControlFlight.onFieldChanged = onDamperUpdated;
 
             //TODO -- there has got to be an easier way to handle these; perhaps check if the collider is part of the 
             // model hierarchy for the part/vessel?
@@ -309,6 +341,7 @@ namespace KSPWheel
             wheel.motorTorque = motorTorque;
             wheel.brakeTorque = brakeTorque;
             wheel.grounded = grounded;
+            wheel.maxSteerAngle = maxSteeringAngle;
             wheel.setImpactCallback(onWheelImpact);
         }
 
@@ -328,6 +361,7 @@ namespace KSPWheel
                 MonoBehaviour.print("Part rigidbody is null, cannot update!");
                 return;
             }
+            sampleInput();
             //update the wheels input state from current keyboard input
             //Update the wheel physics state as long as it is not broken or fully retracted
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
@@ -335,6 +369,10 @@ namespace KSPWheel
             {
                 wheel.UpdateWheel();
             }
+            fLong = wheel.fLong;
+            fLat = wheel.fLat;
+            rpm = wheel.wheelRPM;
+            steer = wheel.currentSteerAngle;
             grounded = wheel.grounded;
             //part.GroundContact = grounded;
             //vessel.checkLanded();
@@ -351,7 +389,6 @@ namespace KSPWheel
             //TODO reset input state on animation state changes, re-orient wheels to default when retracted/ing?
             if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }
 
-            sampleInput();
             //TODO -- input handling/updating
             if (suspensionMesh != null)
             {
@@ -362,14 +399,17 @@ namespace KSPWheel
             if (steeringMesh != null)
             {
                 float angle = wheel.currentSteerAngle;
-                if (invertSteering) { angle = -angle; }
                 steeringMesh.localRotation = Quaternion.Euler(0, angle, 0);
             }
-            //might not actually be necessary to update the wheel mesh position explicitly; it should be a child of suspension and thus positioned properly from the suspension positioning code
             if (wheelMesh != null)
             {
-                //wheelMesh.transform.position = wheel.wheelMeshPosition + wheel.rigidBody.velocity * TimeWarp.fixedDeltaTime;
+                //might not actually be necessary to update the wheel mesh position explicitly; it should be a child of suspension and thus positioned properly from the suspension positioning code                
                 //however, it -does- need to be rotated according to the wheel current RPM
+                //wheelMesh.transform.position = wheel.wheelMeshPosition + wheel.rigidBody.velocity * TimeWarp.fixedDeltaTime;
+                //wheelMesh.Rotate(wheel.wheelRPM, 0, 0, Space.Self);
+            }
+            if (wheelPivotTransform != null)
+            {
                 wheelPivotTransform.Rotate(wheel.wheelRPM, 0, 0, Space.Self);
             }
         }
@@ -390,13 +430,14 @@ namespace KSPWheel
             if (motorLocked) { fwdInput = 0; }
             if (steeringLocked) { rotInput = 0; }
             if (invertSteering) { rotInput = -rotInput; }
+            if (invertMotor) { fwdInput = -fwdInput; }
             if (tankSteering)
             {
                 fwdInput = fwdInput + rotInput;
                 if (fwdInput > 1) { fwdInput = 1; }
                 if (fwdInput < -1) { fwdInput = -1; }
             }
-            wheel.setInputState(fwdInput, rotInput, brakeInput);//TODO -- brakes input
+            wheel.setInputState(fwdInput, rotInput, brakeInput);
         }
 
         /// <summary>
