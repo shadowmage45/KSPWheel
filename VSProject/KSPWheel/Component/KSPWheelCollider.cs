@@ -165,6 +165,7 @@ namespace KSPWheel
         public Vector3 wheelUp;
         public float currentSteerAngle;
         public float currentThrottle;
+        public bool sphereCast = false;
         #endregion ENDREGION - Public editor-display variables
 
         #region REGION - Private working variables
@@ -304,7 +305,7 @@ namespace KSPWheel
                 wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheel.transform.up) * worldVelocityAtHit.magnitude;
                 wheelMountLocalVelocity = wheel.transform.InverseTransformDirection(worldVelocityAtHit);//used for spring/damper 'velocity' value
                 
-                springVelocity = compressionDistance - prevCompressionDistance;//per frame... supposed to be per second?
+                springVelocity = (compressionDistance - prevCompressionDistance)/Time.fixedDeltaTime;//per second velocity
                 dampForce = damper * springVelocity;
 
                 springForce = (compressionDistance - (suspensionLength * target)) * spring;
@@ -340,7 +341,7 @@ namespace KSPWheel
                 worldVelocityAtHit = Vector3.zero;
                 wheelMountLocalVelocity = Vector3.zero;
                 wheelLocalVelocity = Vector3.zero;
-                wheelMeshPosition = wheel.transform.position + (-wheel.transform.up * suspensionLength * (1f - target));
+                wheelMeshPosition = wheel.transform.position + (-wheel.transform.up * suspensionLength);
                 Component.Destroy(stickyJoint);
             }
 
@@ -429,7 +430,7 @@ namespace KSPWheel
 
         private bool updateSuspension()
         {
-            //if (true) { return spherecastSuspension(); }
+            if (sphereCast) { return spherecastSuspension(); }
             return raycastSuspension();
         }
 
@@ -452,12 +453,13 @@ namespace KSPWheel
         {
             float rayDistance = suspensionLength + wheelRadius;
             if (Physics.SphereCast(wheel.transform.position + wheel.transform.up*wheelRadius, wheelRadius, -wheel.transform.up, out hit, rayDistance, raycastMask))
-            {
-                wheelMeshPosition = hit.point - rigidBody.velocity*Time.fixedDeltaTime + wheel.transform.up*wheelRadius;
-                worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
+            {                
+                
                 compressionDistance = suspensionLength - hit.distance + wheelRadius;
                 compressionPercent = compressionDistance / suspensionLength;
                 compressionPercentInverse = 1.0f - compressionPercent;
+                wheelMeshPosition = wheel.transform.position - (suspensionLength - compressionDistance) * wheel.transform.up;// hit.point - rigidBody.velocity*Time.fixedDeltaTime + wheel.transform.up*wheelRadius;
+                worldVelocityAtHit = rigidBody.GetPointVelocity(wheelMeshPosition - wheel.transform.up * wheelRadius);
                 return true;
             }
             return false;

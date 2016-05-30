@@ -91,11 +91,13 @@ namespace KSPWheel
         /// </summary>
         public bool invertSteer = false;
 
+        public bool sphereCast = false;
+
         /// <summary>
         /// If true, display debug gizmos in the editor
         /// TODO add some sort of debug drawing for play mode (line-renderer?)
         /// </summary>
-        public bool debug = false;
+        public bool debug = false;       
 
         #endregion ENDREGION - Unity Editor Inspector Assignable Fields
 
@@ -175,10 +177,6 @@ namespace KSPWheel
             sampleInput();
             wheelCollider.setInputState(fwdInput, rotInput, brakeInput);//TODO brakes...
             wheelCollider.UpdateWheel();
-            if (debug)
-            {
-                drawDebug();
-            }
             currentSteerAngle = wheelCollider.currentSteerAngle;
             if (steeringTransform != null)
             {
@@ -237,60 +235,80 @@ namespace KSPWheel
                 wheelCollider.maxSteerAngle = maxSteerAngle;
                 wheelCollider.fwdFrictionConst = fwdFrictionConst;
                 wheelCollider.sideFrictionConst = sideFrictionConst;
+                wheelCollider.sphereCast = sphereCast;
             }
         }
 
-        private void drawDebug()
+        //private void drawDebug()
+        //{
+        //    Vector3 rayStart = gameObject.transform.position;
+        //    Vector3 rayEnd = rayStart - gameObject.transform.up * (suspensionLength + wheelRadius);
+        //    Vector3 velocity = rigidBody.velocity * Time.deltaTime;
+
+        //    Debug.DrawLine(rayStart + velocity, rayEnd + velocity, Color.green);//Y-axis of WC
+
+        //    Debug.DrawLine(gameObject.transform.position - gameObject.transform.right * 0.25f + velocity, gameObject.transform.position + gameObject.transform.right * 0.25f + velocity, Color.red);//X-axis of wheel collider transform
+        //    Debug.DrawLine(gameObject.transform.position - gameObject.transform.forward * 0.25f + velocity, gameObject.transform.position + gameObject.transform.forward * 0.25f + velocity, Color.blue);//Z-axis of wheel collider transform
+
+        //    Vector3 lineStart = gameObject.transform.position + (-gameObject.transform.up * suspensionLength * (1f - target));
+        //    Debug.DrawLine(lineStart - gameObject.transform.right * 0.25f + velocity, lineStart + gameObject.transform.right * 0.25f + velocity, Color.red);//X-axis of wheel collider transform
+        //    Debug.DrawLine(lineStart - gameObject.transform.forward * 0.25f + velocity, lineStart + gameObject.transform.forward * 0.25f + velocity, Color.blue);//Z-axis of wheel collider transform
+
+        //    if (wheelCollider.grounded)
+        //    {
+        //        rayStart = wheelCollider.wheel.transform.position + velocity;
+        //        rayEnd = rayStart + (wheelCollider.wheelUp * 10);
+        //        Debug.DrawLine(rayStart, rayEnd, Color.magenta);
+
+        //        rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.wheelForward * 10);
+        //        Debug.DrawLine(rayStart, rayEnd, Color.magenta);
+
+        //        rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.wheelRight * 10);
+        //        Debug.DrawLine(rayStart, rayEnd, Color.magenta);
+
+        //        rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.forceToApply);
+        //        Debug.DrawLine(rayStart, rayEnd, Color.gray);
+
+        //        rayStart = rigidBody.position + velocity;
+        //        rayEnd = rayStart + rigidBody.velocity.normalized * 10f;
+        //        Debug.DrawLine(rayStart, rayEnd, Color.blue);
+        //    }
+
+        //    drawDebugWheel();
+        //}
+
+        //private void drawDebugWheel()
+        //{
+        //    //Draw the wheel
+        //    Vector3 velocity = rigidBody.velocity * Time.deltaTime;
+        //    Vector3 diff = -gameObject.transform.up * (suspensionLength - wheelCollider.compressionDistance) + velocity;
+        //    float radius = wheelRadius;
+        //    Vector3 point1;
+        //    Vector3 point0 = gameObject.transform.TransformPoint(radius * new Vector3(0, Mathf.Sin(0), Mathf.Cos(0))) + diff;
+        //    for (int i = 1; i <= 20; ++i)
+        //    {
+        //        point1 = gameObject.transform.TransformPoint(radius * new Vector3(0, Mathf.Sin(i / 20.0f * Mathf.PI * 2.0f), Mathf.Cos(i / 20.0f * Mathf.PI * 2.0f))) + diff;
+        //        Debug.DrawLine(point0, point1, Color.red);
+        //        point0 = point1;
+        //    }
+        //}
+
+
+        /// <summary>
+        /// Display a visual representation of the wheel in the editor. Unity has no inbuilt gizmo for 
+        /// circles, so a sphere is used. Unlike the original WC, I've represented the wheel at top and bottom 
+        /// of suspension travel
+        /// </summary>
+        void OnDrawGizmosSelected()
         {
-            Vector3 rayStart = gameObject.transform.position;
-            Vector3 rayEnd = rayStart - gameObject.transform.up * (suspensionLength + wheelRadius);
-            Vector3 velocity = rigidBody.velocity * Time.deltaTime;
-
-            Debug.DrawLine(rayStart + velocity, rayEnd + velocity, Color.green);//Y-axis of WC
-
-            Debug.DrawLine(gameObject.transform.position - gameObject.transform.right * 0.25f + velocity, gameObject.transform.position + gameObject.transform.right * 0.25f + velocity, Color.red);//X-axis of wheel collider transform
-            Debug.DrawLine(gameObject.transform.position - gameObject.transform.forward * 0.25f + velocity, gameObject.transform.position + gameObject.transform.forward * 0.25f + velocity, Color.blue);//Z-axis of wheel collider transform
-
-            Vector3 lineStart = gameObject.transform.position + (-gameObject.transform.up * suspensionLength * (1f - target));
-            Debug.DrawLine(lineStart - gameObject.transform.right * 0.25f + velocity, lineStart + gameObject.transform.right * 0.25f + velocity, Color.red);//X-axis of wheel collider transform
-            Debug.DrawLine(lineStart - gameObject.transform.forward * 0.25f + velocity, lineStart + gameObject.transform.forward * 0.25f + velocity, Color.blue);//Z-axis of wheel collider transform
-
-            if (wheelCollider.grounded)
+            if (debug)
             {
-                rayStart = wheelCollider.wheel.transform.position + velocity;
-                rayEnd = rayStart + (wheelCollider.wheelUp * 10);
-                Debug.DrawLine(rayStart, rayEnd, Color.magenta);
-
-                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.wheelForward * 10);
-                Debug.DrawLine(rayStart, rayEnd, Color.magenta);
-
-                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.wheelRight * 10);
-                Debug.DrawLine(rayStart, rayEnd, Color.magenta);
-
-                rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.forceToApply);
-                Debug.DrawLine(rayStart, rayEnd, Color.gray);
-
-                rayStart = rigidBody.position + velocity;
-                rayEnd = rayStart + rigidBody.velocity.normalized * 10f;
-                Debug.DrawLine(rayStart, rayEnd, Color.blue);
-            }
-
-            drawDebugWheel();
-        }
-
-        private void drawDebugWheel()
-        {
-            //Draw the wheel
-            Vector3 velocity = rigidBody.velocity * Time.deltaTime;
-            Vector3 diff = -gameObject.transform.up * (suspensionLength - wheelCollider.compressionDistance) + velocity;
-            float radius = wheelRadius;
-            Vector3 point1;
-            Vector3 point0 = gameObject.transform.TransformPoint(radius * new Vector3(0, Mathf.Sin(0), Mathf.Cos(0))) + diff;
-            for (int i = 1; i <= 20; ++i)
-            {
-                point1 = gameObject.transform.TransformPoint(radius * new Vector3(0, Mathf.Sin(i / 20.0f * Mathf.PI * 2.0f), Mathf.Cos(i / 20.0f * Mathf.PI * 2.0f))) + diff;
-                Debug.DrawLine(point0, point1, Color.red);
-                point0 = point1;
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireSphere(gameObject.transform.position, wheelRadius);
+                Vector3 pos2 = gameObject.transform.position + -gameObject.transform.up * suspensionLength;
+                if (wheelCollider != null) { pos2 += gameObject.transform.up * wheelCollider.compressionDistance; }
+                Gizmos.DrawWireSphere(pos2, wheelRadius);
+                Gizmos.DrawRay(gameObject.transform.position - gameObject.transform.up * wheelRadius, -gameObject.transform.up * suspensionLength);
             }
         }
 
