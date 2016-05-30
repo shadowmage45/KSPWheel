@@ -162,6 +162,10 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0.05f, maxValue = 10, stepIncrement = 0.05f, suppressEditorShipModified =true)]
         public float dampMult = 1f;
 
+        [KSPField(guiName = "LoadRating", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0.05f, maxValue = 5, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        public float loadRating = 0.05f;
+
         [KSPField(guiName ="FwdInput", guiActive =true)]
         public float fwdInput;
 
@@ -200,6 +204,13 @@ namespace KSPWheel
         {
             wheel.damper = suspensionDamper * dampMult;
             MonoBehaviour.print("Set damper to: " + wheel.damper);
+        }
+
+        public void onLoadUpdated(BaseField field, object obj)
+        {
+            calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1, out suspensionSpring, out suspensionDamper);
+            wheel.spring = suspensionSpring * springMult;
+            wheel.damper = suspensionDamper * dampMult;
         }
         
         [KSPAction("Toggle Gear")]
@@ -294,7 +305,8 @@ namespace KSPWheel
             Events["repairWheel"].active = wheelState == KSPWheelState.BROKEN;
             Fields["springMult"].uiControlFlight.onFieldChanged = onSpringUpdated;
             Fields["dampMult"].uiControlFlight.onFieldChanged = onDamperUpdated;
-
+            BaseField f = Fields["loadRating"];
+            f.uiControlEditor.onFieldChanged = f.uiControlFlight.onFieldChanged = onLoadUpdated;
             //TODO -- there has got to be an easier way to handle these; perhaps check if the collider is part of the 
             // model hierarchy for the part/vessel?
             if (HighLogic.LoadedSceneIsFlight)
@@ -463,6 +475,18 @@ namespace KSPWheel
         public void onWheelImpact(Vector3 localImpactVelocity)
         {
             //TODO
+        }
+
+        /// <summary>
+        /// Input load in tons, suspension length, target (0-1), and desired damp ratio (1 = critical)
+        /// and output spring and damper for that load and ratio
+        /// WIP - may or may not be correct...
+        /// </summary>
+        /// <param name="load"></param>
+        private void calcSuspension(float load, float length, float target, float dampRatio, out float spring, out float damper)
+        {
+            spring = (load * 10)/(1-target)/length;
+            damper = 2 * Mathf.Sqrt(load * spring) * dampRatio;
         }
 
         //debug code...
