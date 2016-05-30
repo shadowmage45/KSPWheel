@@ -303,11 +303,14 @@ namespace KSPWheel
                 int len = colliders.Length;
                 for (int i = 0; i < len; i++)
                 {
-
-                    //colliders[i].enabled = false;
                     colliders[i].gameObject.layer = 26;//wheelcollidersignore
+                    //if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
+                    //{
+                    //    GameObject.Destroy(colliders[i].gameObject);
+                    //}
                 }
             }
+            part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
 
             wheelColliderTransform.localPosition += Vector3.up * suspensionTravel;
             if (wheelState == KSPWheelState.BROKEN)
@@ -320,8 +323,6 @@ namespace KSPWheel
                 if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
                 if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
             }
-            CollisionEnhancer ce = part.GetComponent<CollisionEnhancer>();
-            if (ce != null) { MonoBehaviour.Destroy(ce); }
         }
 
         /// <summary>
@@ -343,6 +344,14 @@ namespace KSPWheel
             wheel.grounded = grounded;
             wheel.maxSteerAngle = maxSteeringAngle;
             wheel.setImpactCallback(onWheelImpact);
+
+            //have to remove this as it will cause false-explosions
+            CollisionEnhancer ce = part.GetComponent<CollisionEnhancer>();
+            if (ce != null)
+            {
+                MonoBehaviour.print("Destroying collision enhancer!");
+                Component.Destroy(ce);
+            }
         }
 
         /// <summary>
@@ -410,7 +419,7 @@ namespace KSPWheel
             }
             if (wheelPivotTransform != null)
             {
-                wheelPivotTransform.Rotate(wheel.wheelRPM, 0, 0, Space.Self);
+                wheelPivotTransform.Rotate(wheel.getWheelFrameRotation(), 0, 0, Space.Self);
             }
         }
 
@@ -462,6 +471,17 @@ namespace KSPWheel
         {
             //TODO
         }
+
+        //debug code...
+        //public void OnCollisionEnter(Collision c)
+        //{
+        //    MonoBehaviour.print("OCE: " + c.collider);
+        //    int len = c.contacts.Length;
+        //    for (int i = 0; i < len; i++)
+        //    {
+        //        MonoBehaviour.print("C: " + c.contacts[i].thisCollider + " :: " + c.contacts[i].otherCollider);
+        //    }
+        //}
 
         #endregion
 

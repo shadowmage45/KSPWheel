@@ -265,6 +265,11 @@ namespace KSPWheel
             rotInput = currentSteerAngle / maxSteerAngle;
         }
 
+        public float getWheelFrameRotation()
+        {
+            return (wheelRPM / 60) * 360 * Time.deltaTime;
+        }
+
         /// <summary>
         /// UpdateWheel() should be called by the controlling component/container on every FixedUpdate that this wheel should apply forces for.<para/>
         /// Collider and physics integration can be disabled by simply no longer calling UpdateWheel
@@ -272,7 +277,7 @@ namespace KSPWheel
         public void UpdateWheel()
         {
             calculateSteeringAngle();
-            wheelRPM = (wWheel * Mathf.Rad2Deg) / 60;
+            wheelRPM = (wWheel / (Mathf.PI*2)) * 60;
             iWheel = wheelMass * wheelRadius * wheelRadius * 0.5f;
 
             float rayDistance = suspensionLength + wheelRadius;
@@ -283,7 +288,6 @@ namespace KSPWheel
             grounded = false;
 
             tDrive = fwdInput * motorTorque;
-            if (Mathf.Abs(wheelRPM) > 200f){ tDrive = 0f; }
             wWheel += (tDrive / iWheel)*Time.fixedDeltaTime;
 
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance, raycastMask))
