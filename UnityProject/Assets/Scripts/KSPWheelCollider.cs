@@ -286,7 +286,6 @@ namespace KSPWheel
             calculateThrottle();
             iWheel = wheelMass * wheelRadius * wheelRadius * 0.5f;
 
-            float rayDistance = suspensionLength + wheelRadius;
 
             wheelForward = Quaternion.AngleAxis(currentSteerAngle, wheel.transform.up) * wheel.transform.forward;
             wheelUp = wheel.transform.up;
@@ -296,24 +295,20 @@ namespace KSPWheel
             tDrive = currentThrottle * motorTorque;
             wWheel += (tDrive / iWheel)*Time.fixedDeltaTime;
 
-            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance, raycastMask))
+            prevCompressionDistance = compressionDistance;
+            if (updateSuspension())
             {
-                prevCompressionDistance = compressionDistance;
-                wheelMeshPosition = hit.point + (wheel.transform.up * wheelRadius);
-                worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
+
                 wheelLocalVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, wheelForward) * worldVelocityAtHit.magnitude;
                 wheelLocalVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * worldVelocityAtHit.magnitude;
                 wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheel.transform.up) * worldVelocityAtHit.magnitude;
                 wheelMountLocalVelocity = wheel.transform.InverseTransformDirection(worldVelocityAtHit);//used for spring/damper 'velocity' value
-
-                compressionDistance = suspensionLength + wheelRadius - (hit.distance);
-                compressionPercent = compressionDistance / suspensionLength;
-                compressionPercentInverse = 1.0f - compressionPercent;
-
-                springVelocity = compressionDistance - prevCompressionDistance;
+                
+                springVelocity = compressionDistance - prevCompressionDistance;//per frame... supposed to be per second?
                 dampForce = damper * springVelocity;
 
                 springForce = (compressionDistance - (suspensionLength * target)) * spring;
+                if (springForce < 0) { springForce = 0; }
                 springForce += dampForce;
                 if (springForce < 0) { springForce = 0; }
 
@@ -337,14 +332,14 @@ namespace KSPWheel
             else
             {
                 grounded = false;
-                //springForce = dampForce = 0;
-                //prevCompressionDistance = 0;
-                //compressionDistance = 0;
-                //compressionPercent = 0;
-                //compressionPercentInverse = 1;
-                //worldVelocityAtHit = Vector3.zero;
-                //wheelMountLocalVelocity = Vector3.zero;
-                //wheelLocalVelocity = Vector3.zero;
+                springForce = dampForce = 0;
+                prevCompressionDistance = 0;
+                compressionDistance = 0;
+                compressionPercent = 0;
+                compressionPercentInverse = 1;
+                worldVelocityAtHit = Vector3.zero;
+                wheelMountLocalVelocity = Vector3.zero;
+                wheelLocalVelocity = Vector3.zero;
                 wheelMeshPosition = wheel.transform.position + (-wheel.transform.up * suspensionLength * (1f - target));
                 Component.Destroy(stickyJoint);
             }
@@ -431,6 +426,42 @@ namespace KSPWheel
             currentThrottle = Mathf.Lerp(currentThrottle, fwdInput, Time.fixedDeltaTime * throttleResponseSpeed);
             if (Mathf.Abs(currentThrottle) < 0.005 && fwdInput==0) { currentThrottle = 0; }//set to zero
         }
+
+        private bool updateSuspension()
+        {
+            //if (true) { return spherecastSuspension(); }
+            return raycastSuspension();
+        }
+
+        private bool raycastSuspension()
+        {
+            float rayDistance = suspensionLength + wheelRadius;
+            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance, raycastMask))
+            {
+                wheelMeshPosition = hit.point + (wheel.transform.up * wheelRadius);
+                worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
+                compressionDistance = suspensionLength + wheelRadius - hit.distance;
+                compressionPercent = compressionDistance / suspensionLength;
+                compressionPercentInverse = 1.0f - compressionPercent;
+                return true;
+            }
+            return false;            
+        }
+
+        private bool spherecastSuspension()
+        {
+            float rayDistance = suspensionLength + wheelRadius;
+            if (Physics.SphereCast(wheel.transform.position + wheel.transform.up*wheelRadius, wheelRadius, -wheel.transform.up, out hit, rayDistance, raycastMask))
+            {
+                wheelMeshPosition = hit.point - rigidBody.velocity*Time.fixedDeltaTime + wheel.transform.up*wheelRadius;
+                worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
+                compressionDistance = suspensionLength - hit.distance + wheelRadius;
+                compressionPercent = compressionDistance / suspensionLength;
+                compressionPercentInverse = 1.0f - compressionPercent;
+                return true;
+            }
+            return false;
+        }
         
         #region REGION - Friction calculation methods based on Physx origin: http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf
         
@@ -511,9 +542,9 @@ namespace KSPWheel
             vWheel = wWheel * wheelRadius;
             sLong = calcLongSlip(vLong, vWheel);
             sLat = calcLatSlip(vLong, vLat);
-            //raw longitudinal force based purely on the slip ratio
+            //raw max longitudinal force based purely on the slip ratio
             fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * fwdFrictionConst;
-            //raw lateral force based purely on the slip ratio
+            //raw max lateral force based purely on the slip ratio
             fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * sideFrictionConst;
             
             // 'limited' lateral force
