@@ -190,7 +190,7 @@ namespace KSPWheel
             }
             if (wheelTransform != null)
             {
-                wheelTransform.Rotate(wheelTransform.right, wheelCollider.wheelRPM * Time.deltaTime * 360 / 60, Space.World);
+                wheelTransform.Rotate(wheelTransform.right, wheelCollider.getWheelFrameRotation(), Space.World);
             }
             totalWorldForce = wheelCollider.forceToApply;
             totalLocalForce = gameObject.transform.InverseTransformDirection(totalWorldForce);

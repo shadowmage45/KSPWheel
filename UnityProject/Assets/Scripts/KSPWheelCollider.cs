@@ -71,6 +71,11 @@ namespace KSPWheel
         public float steerLerpSpeed = 8;
 
         /// <summary>
+        /// Throttle response speed
+        /// </summary>
+        public float throttleResponseSpeed = 5;
+
+        /// <summary>
         /// The forward friction constant (rolling friction)
         /// </summary>
         public float fwdFrictionConst = 1f;
@@ -159,6 +164,7 @@ namespace KSPWheel
         public Vector3 wheelRight;
         public Vector3 wheelUp;
         public float currentSteerAngle;
+        public float currentThrottle;
         #endregion ENDREGION - Public editor-display variables
 
         #region REGION - Private working variables
@@ -267,9 +273,7 @@ namespace KSPWheel
 
         public float getWheelFrameRotation()
         {
-            float rpm = wheelRPM;
-            float rps = wheelRPM / 60;//rotations per second
-            return rps;
+            return (wheelRPM / 60) * 360 * Time.deltaTime;
         }
 
         /// <summary>
@@ -279,7 +283,7 @@ namespace KSPWheel
         public void UpdateWheel()
         {
             calculateSteeringAngle();
-            wheelRPM = (wWheel / (Mathf.PI*2)) * 60;
+            calculateThrottle();
             iWheel = wheelMass * wheelRadius * wheelRadius * 0.5f;
 
             float rayDistance = suspensionLength + wheelRadius;
@@ -289,7 +293,7 @@ namespace KSPWheel
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             grounded = false;
 
-            tDrive = fwdInput * motorTorque;
+            tDrive = currentThrottle * motorTorque;
             wWheel += (tDrive / iWheel)*Time.fixedDeltaTime;
 
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, rayDistance, raycastMask))
@@ -344,7 +348,14 @@ namespace KSPWheel
                 wheelMeshPosition = wheel.transform.position + (-wheel.transform.up * suspensionLength * (1f - target));
                 Component.Destroy(stickyJoint);
             }
-            
+
+            tBrake = brakeInput * brakeTorque;
+            float wBrakeMax = tBrake / iWheel;
+            if (wBrakeMax > Mathf.Abs(wWheel)) { wBrakeMax = Mathf.Abs(wWheel); }
+            wBrakeMax *= -Mathf.Sign(wWheel);
+            wWheel += wBrakeMax;
+
+            wheelRPM = (wWheel / (Mathf.PI * 2)) * 60;
         }
 
         #endregion ENDREGION - Public accessible methods / API methods
@@ -412,6 +423,13 @@ namespace KSPWheel
         private void calculateSteeringAngle()
         {
             currentSteerAngle = Mathf.Lerp(currentSteerAngle, rotInput * maxSteerAngle, Time.fixedDeltaTime * steerLerpSpeed);
+            if (Mathf.Abs(currentSteerAngle) < 0.005 && rotInput == 0) { currentSteerAngle = 0; }//set to zero
+        }
+
+        private void calculateThrottle()
+        {
+            currentThrottle = Mathf.Lerp(currentThrottle, fwdInput, Time.fixedDeltaTime * throttleResponseSpeed);
+            if (Mathf.Abs(currentThrottle) < 0.005 && fwdInput==0) { currentThrottle = 0; }//set to zero
         }
         
         #region REGION - Friction calculation methods based on Physx origin: http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf
@@ -498,34 +516,36 @@ namespace KSPWheel
             //raw lateral force based purely on the slip ratio
             fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * sideFrictionConst;
             
-            // 'limited' lateral force            
+            // 'limited' lateral force
+            // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame
+            // so limit max should be abs(vLat)*downForce/Time.fixedDeltaTime
+            // however I'm pretty sure this will cause terrible oscillations
             fLat = fLatMax;
             if (fLat > Mathf.Abs(vLat) * downForce * 2f) { fLat = Mathf.Abs(vLat) * downForce * 2f; }
-            fLat *= -Mathf.Sign(vLat);//and sign it opposite to the current vLat
+            fLat *= -Mathf.Sign(vLat);// sign it opposite to the current vLat
 
-            float vDelta = vWheel - vLong;//linear velocity delta between wheel and surface
-            float wDelta = vDelta / wheelRadius;//angular velocity delta between wheel and surface
-            float tDelta = wDelta * iWheel;//amount of torque needed to bring wheel to surface speed
-            float fDelta = tDelta / wheelRadius;//newtons of force needed to bring wheel to surface speed            
-            tTractMax = Mathf.Abs(tDelta)/Time.fixedDeltaTime;//absolute value of the torque needed
+            float vDelta = vWheel - vLong;//linear velocity delta between wheel and surface in meters per second
+            float wDelta = vDelta / wheelRadius;//angular velocity delta between wheel and surface in radians per second
+            float tDelta = wDelta * iWheel;//amount of torque needed to bring wheel to surface speed over one second
+            float fDelta = tDelta / wheelRadius;//newtons of force needed to bring wheel to surface speed over one second 
+            tTractMax = Mathf.Abs(tDelta)/Time.fixedDeltaTime;//absolute value of the torque needed to bring the wheel to road speed instantaneously/this frame
 
+            //newtons needed to bring wheel to ground velocity this frame
             fTractMax = tTractMax / wheelRadius;
+            //final maximum force value is the smallest of the two force values;
+            // if fTractMax is used the wheel will be brought to surface velocity,
+            // otherwise fLongMax is used and the wheel is still slipping
             fTractMax = Mathf.Min(fTractMax, fLongMax);
-
+            // convert the clamped traction value into a torque value and apply to the wheel
             tTract = fTractMax * wheelRadius * -Mathf.Sign(vDelta);
+            // and set the longitudinal force to the force calculated for the wheel/surface torque
             fLong = fTractMax * Mathf.Sign(vDelta);
-                        
+            //not yet implemented, static rolling-friction coefficient
             tRoll = 0;
-            tTotal = tRoll + tTract;
-            wAccel = tTotal / iWheel;
-
-            wWheel += wAccel*Time.fixedDeltaTime;
-            
-            tBrake = brakeInput * brakeTorque;
-            float wBrakeMax = tBrake / iWheel;
-            if (wBrakeMax > Mathf.Abs(wWheel)) { wBrakeMax = Mathf.Abs(wWheel); }
-            wBrakeMax *= -Mathf.Sign(wWheel);
-            wWheel += wBrakeMax;
+            tTotal = tRoll + tTract;//tTotal is immediate torque impulse, for this physics frame
+            wAccel = tTotal / iWheel;//use wheel inertia to determine wheel acceleration
+            //apply acceleration to wheel for the current physics time frame, as wAccel is in radians/second
+            wWheel += wAccel*Time.fixedDeltaTime;            
         }
 
         /// <summary>

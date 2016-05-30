@@ -304,15 +304,15 @@ namespace KSPWheel
                 for (int i = 0; i < len; i++)
                 {
                     colliders[i].gameObject.layer = 26;//wheelcollidersignore
-                    //if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
-                    //{
-                    //    GameObject.Destroy(colliders[i].gameObject);
-                    //}
+                    if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
+                    {
+                        GameObject.Destroy(colliders[i].gameObject);
+                    }
                 }
             }
             part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
 
-            wheelColliderTransform.localPosition += Vector3.up * suspensionTravel;
+            wheelColliderTransform.localPosition += Vector3.up * (suspensionTravel - (suspensionTravel*suspensionTarget));
             if (wheelState == KSPWheelState.BROKEN)
             {
                 if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
@@ -344,14 +344,6 @@ namespace KSPWheel
             wheel.grounded = grounded;
             wheel.maxSteerAngle = maxSteeringAngle;
             wheel.setImpactCallback(onWheelImpact);
-
-            //have to remove this as it will cause false-explosions
-            CollisionEnhancer ce = part.GetComponent<CollisionEnhancer>();
-            if (ce != null)
-            {
-                MonoBehaviour.print("Destroying collision enhancer!");
-                Component.Destroy(ce);
-            }
         }
 
         /// <summary>
@@ -370,6 +362,7 @@ namespace KSPWheel
                 MonoBehaviour.print("Part rigidbody is null, cannot update!");
                 return;
             }
+            if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }            
             sampleInput();
             //update the wheels input state from current keyboard input
             //Update the wheel physics state as long as it is not broken or fully retracted
