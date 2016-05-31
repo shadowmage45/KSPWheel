@@ -393,18 +393,17 @@ namespace KSPWheel
             wWheel += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;//acceleration is in radians/second; only operating on 1 * fixedDeltaTime seconds, so only update for that length of time
         }
 
-        //TODO this needs to operate on delta-time
         private void updateBrakeTorque()
         {
-            //maximum angular velocity change for brake torque, in radians per second
-            float wBrakeMax = currentBrakeTorque * inertiaInverse;
-            //clamp this to the current angular velocity of the wheel
-            if (wBrakeMax > Mathf.Abs(wWheel))
+            //maximum torque exerted by brakes onto wheel this FixedUpdate frame
+            float wBrake = currentBrakeTorque * inertiaInverse * Time.fixedDeltaTime;
+            //clamp the actual value to the current angular velocity of the wheel
+            if (wBrake > Mathf.Abs(wWheel))
             {
-                wBrakeMax = Mathf.Abs(wWheel);
+                wBrake = Mathf.Abs(wWheel);
             }
-            wBrakeMax *= -Mathf.Sign(wWheel);
-            wWheel += wBrakeMax;
+            wBrake *= -Mathf.Sign(wWheel);
+            wWheel += wBrake;
         }
 
         /// <summary>
