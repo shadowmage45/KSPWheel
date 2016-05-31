@@ -684,7 +684,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400032, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
-      value: 11
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 400028, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -696,7 +696,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400020, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 400008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -716,7 +716,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -960,43 +960,28 @@ MonoBehaviour:
   target: .5
   spring: 40
   damper: 200
-  motorTorque: 0
-  brakeTorque: 0
+  maxMotorTorque: 0
+  maxBrakeTorque: 0
   maxSteerAngle: 20
-  fwdFrictionConst: .00100000005
-  sideFrictionConst: 8
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
+  invertMotor: 0
   sphereCast: 0
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &301343513
@@ -1285,43 +1270,28 @@ MonoBehaviour:
   target: .5
   spring: 40
   damper: 200
-  motorTorque: 5
-  brakeTorque: 0
+  maxMotorTorque: 0
+  maxBrakeTorque: 0
   maxSteerAngle: 0
-  fwdFrictionConst: .00100000005
-  sideFrictionConst: 1
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
+  invertMotor: 0
   sphereCast: 0
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &360438514
@@ -1449,43 +1419,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &377664100
@@ -1541,43 +1496,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &441339093
@@ -1736,43 +1676,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1001 &523005883
@@ -1848,7 +1773,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -1996,43 +1921,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 0
-  brakeTorque: 10000
+  maxMotorTorque: 0
+  maxBrakeTorque: 5000
   maxSteerAngle: 35
-  fwdFrictionConst: 1
-  sideFrictionConst: 1
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!54 &523005900
@@ -2071,43 +1981,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 0
-  brakeTorque: 10000
+  maxMotorTorque: 0
+  maxBrakeTorque: 5000
   maxSteerAngle: 35
-  fwdFrictionConst: 1
-  sideFrictionConst: 1
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!64 &523005902
@@ -2155,43 +2050,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 1100
-  brakeTorque: 10000
+  maxMotorTorque: 1200
+  maxBrakeTorque: 5000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 1
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!114 &523005905
@@ -2215,43 +2095,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 1100
-  brakeTorque: 10000
+  maxMotorTorque: 1200
+  maxBrakeTorque: 5000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 1
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!4 &523005907 stripped
@@ -2308,43 +2173,28 @@ MonoBehaviour:
   target: .5
   spring: 40
   damper: 200
-  motorTorque: 5
-  brakeTorque: 0
+  maxMotorTorque: 0
+  maxBrakeTorque: 0
   maxSteerAngle: 0
-  fwdFrictionConst: .00100000005
-  sideFrictionConst: 1
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
+  invertMotor: 0
   sphereCast: 0
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &593581620
@@ -2722,43 +2572,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &683615209
@@ -3046,43 +2881,28 @@ MonoBehaviour:
   target: .5
   spring: 40
   damper: 200
-  motorTorque: 5
-  brakeTorque: 0
+  maxMotorTorque: 0
+  maxBrakeTorque: 0
   maxSteerAngle: 0
-  fwdFrictionConst: .00100000005
-  sideFrictionConst: 8
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
+  invertMotor: 0
   sphereCast: 0
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &764206516
@@ -3135,43 +2955,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &769263970
@@ -3896,43 +3701,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &933400985
@@ -4162,43 +3952,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1017201675
@@ -4485,43 +4260,28 @@ MonoBehaviour:
   target: .5
   spring: 40
   damper: 200
-  motorTorque: 5
-  brakeTorque: 0
+  maxMotorTorque: 0
+  maxBrakeTorque: 0
   maxSteerAngle: 0
-  fwdFrictionConst: .00100000005
-  sideFrictionConst: 8
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
+  invertMotor: 0
   sphereCast: 0
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1136791720
@@ -4655,43 +4415,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1150879878
@@ -5066,43 +4811,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1272550555
@@ -5258,43 +4988,28 @@ MonoBehaviour:
   target: .5
   spring: 40
   damper: 200
-  motorTorque: 0
-  brakeTorque: 0
+  maxMotorTorque: 0
+  maxBrakeTorque: 0
   maxSteerAngle: 20
-  fwdFrictionConst: .00100000005
-  sideFrictionConst: 1
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
+  invertMotor: 0
   sphereCast: 0
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1356012564
@@ -6231,43 +5946,28 @@ MonoBehaviour:
   target: .5
   spring: 40
   damper: 200
-  motorTorque: 0
-  brakeTorque: 0
+  maxMotorTorque: 0
+  maxBrakeTorque: 0
   maxSteerAngle: 20
-  fwdFrictionConst: .00100000005
-  sideFrictionConst: 8
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
+  invertMotor: 0
   sphereCast: 0
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1608088954
@@ -6907,43 +6607,28 @@ MonoBehaviour:
   target: .5
   spring: 40
   damper: 200
-  motorTorque: 0
-  brakeTorque: 0
+  maxMotorTorque: 0
+  maxBrakeTorque: 0
   maxSteerAngle: 20
-  fwdFrictionConst: .00100000005
-  sideFrictionConst: 1
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
+  invertMotor: 0
   sphereCast: 0
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1986604049
@@ -7020,43 +6705,28 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  motorTorque: 300
-  brakeTorque: 10000
+  maxMotorTorque: 250
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  fwdFrictionConst: 1
-  sideFrictionConst: 2
+  throttleResponse: 2
+  steeringResponse: 2
+  brakeResponse: 2
+  forwardFrictionCoefficient: 1
+  sideFrictionCoefficient: 1
+  surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
-  sphereCast: 1
-  debug: 1
-  springForce: 0
-  dampForce: 0
-  currentSteerAngle: 0
+  invertMotor: 0
+  sphereCast: 0
   worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalWorldForce: {x: 0, y: 0, z: 0}
   totalLocalForce: {x: 0, y: 0, z: 0}
   hitNormal: {x: 0, y: 0, z: 0}
+  springForce: 0
+  dampForce: 0
   wheelRPM: 0
-  iWheel: 0
-  wWheel: 0
-  vLong: 0
-  vLat: 0
-  vWheel: 0
   sLong: 0
   sLat: 0
-  fLatMax: 0
-  fLongMax: 0
-  wDelta: 0
-  vDelta: 0
-  tTractMax: 0
-  fTractMax: 0
-  tDrive: 0
-  tBrake: 0
-  tRoll: 0
-  tTract: 0
-  tTotal: 0
-  wAccel: 0
   fLong: 0
   fLat: 0
 --- !u!1 &2038602079

@@ -393,10 +393,16 @@ namespace KSPWheel
             wWheel += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;//acceleration is in radians/second; only operating on 1 * fixedDeltaTime seconds, so only update for that length of time
         }
 
+        //TODO this needs to operate on delta-time
         private void updateBrakeTorque()
         {
+            //maximum angular velocity change for brake torque, in radians per second
             float wBrakeMax = currentBrakeTorque * inertiaInverse;
-            if (wBrakeMax > Mathf.Abs(wWheel)) { wBrakeMax = Mathf.Abs(wWheel); }
+            //clamp this to the current angular velocity of the wheel
+            if (wBrakeMax > Mathf.Abs(wWheel))
+            {
+                wBrakeMax = Mathf.Abs(wWheel);
+            }
             wBrakeMax *= -Mathf.Sign(wWheel);
             wWheel += wBrakeMax;
         }
@@ -509,9 +515,9 @@ namespace KSPWheel
             //lat slip ratio
             sLat = calcLatSlip(vLong, vLat);
             //raw max longitudinal force based purely on the slip ratio
-            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef;
+            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
             //raw max lateral force based purely on the slip ratio
-            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef;
+            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef;
             
             // 'limited' lateral force
             // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame

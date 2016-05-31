@@ -59,12 +59,12 @@ namespace KSPWheel
         /// <summary>
         /// The maximum torque the motor can exhert against the wheel
         /// </summary>
-        public float motorTorque = 0;
+        public float maxMotorTorque = 0;
 
         /// <summary>
         /// The maximum torque the brakes can exhert against the wheel while attempting to bring its angular velocity to zero
         /// </summary>
-        public float brakeTorque = 0;
+        public float maxBrakeTorque = 0;
 
         /// <summary>
         /// The maximum deflection for the steering of this wheel, in degrees
@@ -72,14 +72,34 @@ namespace KSPWheel
         public float maxSteerAngle = 0;
 
         /// <summary>
+        /// Throttle/motor torque lerp speed
+        /// </summary>
+        public float throttleResponse = 2;
+
+        /// <summary>
+        /// Steering angle lerp speed
+        /// </summary>
+        public float steeringResponse = 2;
+
+        /// <summary>
+        /// Brake torque lerp speed
+        /// </summary>
+        public float brakeResponse = 2;
+
+        /// <summary>
         /// The forward friction constant (rolling friction)
         /// </summary>
-        public float fwdFrictionConst = 0.001f;
+        public float forwardFrictionCoefficient = 1f;
 
         /// <summary>
         /// The sideways friction constant
         /// </summary>
-        public float sideFrictionConst = 1f;
+        public float sideFrictionCoefficient = 1f;
+
+        /// <summary>
+        /// Global surface friction coefficient applied to both forward and sideways friction
+        /// </summary>
+        public float surfaceFrictionCoefficient = 1f;
 
         /// <summary>
         /// If should use differential motor input for steering
@@ -91,67 +111,46 @@ namespace KSPWheel
         /// </summary>
         public bool invertSteer = false;
 
-        public bool sphereCast = false;
+        /// <summary>
+        /// If true, this wheel will rotate opposite for torque inputs (e.g. rpm will go negative for positive torque inputs)
+        /// </summary>
+        public bool invertMotor = false;
 
         /// <summary>
-        /// If true, display debug gizmos in the editor
-        /// TODO add some sort of debug drawing for play mode (line-renderer?)
+        /// If true, will use sphere-casts instead of ray-casts
         /// </summary>
-        public bool debug = false;       
+        public bool sphereCast = false;
 
         #endregion ENDREGION - Unity Editor Inspector Assignable Fields
 
-        #region REGION - Unity Editor Display Variables
-        //these variables are updated every fixed-tick after the wheel has been updated
-        //used merely to display some info while in the editor
+        // these variables are updated every fixed-tick after the wheel has been updated
+        // used merely to display some info while in the editor for debugging purposes
+        #region REGION - Unity Editor Display-Only Variables
 
-        public float springForce;
-        public float dampForce;
-        public float currentSteerAngle;
         public Vector3 worldVelocity;
         public Vector3 localVelocity;
-        public Vector3 totalWorldForce;
         public Vector3 totalLocalForce;
         public Vector3 hitNormal;
-
-        public float wheelRPM;
-
-        public float iWheel;
-        public float wWheel;
-        public float vLong;
-        public float vLat;
-        public float vWheel;
+        public float springForce;
+        public float dampForce;
+        public float wheelRPM;        
         public float sLong;
         public float sLat;
-        public float fLatMax;
-        public float fLongMax;
-
-        public float wDelta;
-        public float vDelta;
-        public float tTractMax;
-        public float fTractMax;
-
-        public float tDrive;
-        public float tBrake;
-        public float tRoll;
-        public float tTract;
-        public float tTotal;
-        public float wAccel;
-
         public float fLong;
         public float fLat;
 
         #endregion ENDREGION - Unity Editor Display Variables
 
         private KSPWheelCollider wheelCollider;
-        private float fwdInput;
-        private float rotInput;
-        private float brakeInput;
+        
+        private float curMotorTorque;
+        private float curSteer;
+        private float curBrakeTorque;
 
         public void Start()
         {
             wheelCollider = new KSPWheelCollider(gameObject, rigidBody);
-            OnValidate();
+            OnValidate();//manually call to set all current parameters into wheel collider object
         }
 
         private void sampleInput()
@@ -160,139 +159,71 @@ namespace KSPWheel
             float right = Input.GetKey(KeyCode.D) ? 1 : 0;
             float fwd = Input.GetKey(KeyCode.W) ? 1 : 0;
             float rev = Input.GetKey(KeyCode.S) ? -1 : 0;
-            brakeInput = Input.GetKey(KeyCode.Space) ? 1 : 0;
-            fwdInput = fwd + rev;
-            rotInput = left + right;
-            if (invertSteer) { rotInput = -rotInput; }
+            float brakeInput = Input.GetKey(KeyCode.Space) ? 1 : 0;
+            float forwardInput = fwd + rev;
+            float turnInput = left + right;
+            if (invertSteer) { turnInput = -turnInput; }
+            if (invertMotor) { forwardInput = -forwardInput; }
             if (tankSteer)
             {
-                fwdInput = fwdInput + rotInput;
-                if (fwdInput > 1) { fwdInput = 1; }
-                if (fwdInput < -1) { fwdInput = -1; }
+                forwardInput = forwardInput + turnInput;
+                if (forwardInput > 1) { forwardInput = 1; }
+                if (forwardInput < -1) { forwardInput = -1; }
             }
+            curMotorTorque = Mathf.Lerp(curMotorTorque, forwardInput * maxMotorTorque, throttleResponse);
+            curSteer = Mathf.Lerp(curSteer, turnInput * maxSteerAngle, steeringResponse);
+            curBrakeTorque = Mathf.Lerp(curBrakeTorque, brakeInput * maxBrakeTorque, brakeResponse);
         }
 
         public void FixedUpdate()
         {
             sampleInput();
-            wheelCollider.setInputState(fwdInput, rotInput, brakeInput);//TODO brakes...
-            wheelCollider.UpdateWheel();
-            currentSteerAngle = wheelCollider.currentSteerAngle;
+            wheelCollider.motorTorque = curMotorTorque;
+            wheelCollider.steeringAngle = curSteer;
+            wheelCollider.brakeTorque = curBrakeTorque;
+            wheelCollider.updateWheel();
             if (steeringTransform != null)
             {
-                steeringTransform.localRotation = Quaternion.AngleAxis(currentSteerAngle, steeringTransform.up);
+                steeringTransform.localRotation = Quaternion.AngleAxis(curSteer, steeringTransform.up);
             }
             if (suspensionTransform != null)
             {
-                suspensionTransform.position = wheelCollider.wheelMeshPosition;                
+                suspensionTransform.position = gameObject.transform.position - (suspensionLength - wheelCollider.compressionDistance) * gameObject.transform.up;
             }
             if (wheelTransform != null)
             {
-                wheelTransform.Rotate(wheelTransform.right, wheelCollider.getWheelFrameRotation(), Space.World);
+                wheelTransform.Rotate(wheelTransform.right, wheelCollider.perFrameRotation, Space.World);
             }
-            totalWorldForce = wheelCollider.forceToApply;
-            totalLocalForce = gameObject.transform.InverseTransformDirection(totalWorldForce);
+            totalLocalForce = wheelCollider.calculatedForces;
             hitNormal = wheelCollider.hit.normal;
             worldVelocity = wheelCollider.worldVelocityAtHit;
             localVelocity = wheelCollider.wheelLocalVelocity;
             springForce = wheelCollider.springForce;
             dampForce = wheelCollider.dampForce;
-            wheelRPM = wheelCollider.wheelRPM;
-
-            iWheel = wheelCollider.iWheel;
-            wWheel = wheelCollider.wWheel;
-            vLong = wheelCollider.vLong;
-            vLat = wheelCollider.vLat;
-            vWheel = wheelCollider.vWheel;
-            sLong = wheelCollider.sLong;
-            sLat = wheelCollider.sLat;
-            fLongMax = wheelCollider.fLongMax;
-            fLatMax = wheelCollider.fLatMax;
-            tTractMax = wheelCollider.tTractMax;
-            fTractMax = wheelCollider.fTractMax;
-            tDrive = wheelCollider.tDrive;
-            tBrake = wheelCollider.tBrake;
-            tRoll = wheelCollider.tRoll;
-            tTract = wheelCollider.tTract;
-            tTotal = wheelCollider.tTotal;
-            wAccel = wheelCollider.wAccel;
-            fLong = wheelCollider.fLong;
-            fLat = wheelCollider.fLat;
+            wheelRPM = wheelCollider.rpm;
+            sLong = wheelCollider.longitudinalSlip;
+            sLat = wheelCollider.lateralSlip;
+            fLong = wheelCollider.longitudinalForce;
+            fLat = wheelCollider.lateralForce;
         }
 
         public void OnValidate()
         {
             if (wheelCollider != null)
             {
-                wheelCollider.wheelRadius = wheelRadius;
-                wheelCollider.wheelMass = wheelMass;
-                wheelCollider.suspensionLength = suspensionLength;
+                wheelCollider.radius = wheelRadius;
+                wheelCollider.mass = wheelMass;
+                wheelCollider.length = suspensionLength;
                 wheelCollider.target = target;
                 wheelCollider.spring = spring;
                 wheelCollider.damper = damper;
-                wheelCollider.motorTorque = motorTorque;
-                wheelCollider.brakeTorque = brakeTorque;
-                wheelCollider.maxSteerAngle = maxSteerAngle;
-                wheelCollider.fwdFrictionConst = fwdFrictionConst;
-                wheelCollider.sideFrictionConst = sideFrictionConst;
+                wheelCollider.motorTorque = maxMotorTorque;
+                wheelCollider.brakeTorque = maxBrakeTorque;
+                wheelCollider.forwardFrictionCoefficient = forwardFrictionCoefficient;
+                wheelCollider.sideFrictionCoefficient = sideFrictionCoefficient;
                 wheelCollider.sphereCast = sphereCast;
             }
         }
-
-        //private void drawDebug()
-        //{
-        //    Vector3 rayStart = gameObject.transform.position;
-        //    Vector3 rayEnd = rayStart - gameObject.transform.up * (suspensionLength + wheelRadius);
-        //    Vector3 velocity = rigidBody.velocity * Time.deltaTime;
-
-        //    Debug.DrawLine(rayStart + velocity, rayEnd + velocity, Color.green);//Y-axis of WC
-
-        //    Debug.DrawLine(gameObject.transform.position - gameObject.transform.right * 0.25f + velocity, gameObject.transform.position + gameObject.transform.right * 0.25f + velocity, Color.red);//X-axis of wheel collider transform
-        //    Debug.DrawLine(gameObject.transform.position - gameObject.transform.forward * 0.25f + velocity, gameObject.transform.position + gameObject.transform.forward * 0.25f + velocity, Color.blue);//Z-axis of wheel collider transform
-
-        //    Vector3 lineStart = gameObject.transform.position + (-gameObject.transform.up * suspensionLength * (1f - target));
-        //    Debug.DrawLine(lineStart - gameObject.transform.right * 0.25f + velocity, lineStart + gameObject.transform.right * 0.25f + velocity, Color.red);//X-axis of wheel collider transform
-        //    Debug.DrawLine(lineStart - gameObject.transform.forward * 0.25f + velocity, lineStart + gameObject.transform.forward * 0.25f + velocity, Color.blue);//Z-axis of wheel collider transform
-
-        //    if (wheelCollider.grounded)
-        //    {
-        //        rayStart = wheelCollider.wheel.transform.position + velocity;
-        //        rayEnd = rayStart + (wheelCollider.wheelUp * 10);
-        //        Debug.DrawLine(rayStart, rayEnd, Color.magenta);
-
-        //        rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.wheelForward * 10);
-        //        Debug.DrawLine(rayStart, rayEnd, Color.magenta);
-
-        //        rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.wheelRight * 10);
-        //        Debug.DrawLine(rayStart, rayEnd, Color.magenta);
-
-        //        rayEnd = wheelCollider.hit.point + velocity + (wheelCollider.forceToApply);
-        //        Debug.DrawLine(rayStart, rayEnd, Color.gray);
-
-        //        rayStart = rigidBody.position + velocity;
-        //        rayEnd = rayStart + rigidBody.velocity.normalized * 10f;
-        //        Debug.DrawLine(rayStart, rayEnd, Color.blue);
-        //    }
-
-        //    drawDebugWheel();
-        //}
-
-        //private void drawDebugWheel()
-        //{
-        //    //Draw the wheel
-        //    Vector3 velocity = rigidBody.velocity * Time.deltaTime;
-        //    Vector3 diff = -gameObject.transform.up * (suspensionLength - wheelCollider.compressionDistance) + velocity;
-        //    float radius = wheelRadius;
-        //    Vector3 point1;
-        //    Vector3 point0 = gameObject.transform.TransformPoint(radius * new Vector3(0, Mathf.Sin(0), Mathf.Cos(0))) + diff;
-        //    for (int i = 1; i <= 20; ++i)
-        //    {
-        //        point1 = gameObject.transform.TransformPoint(radius * new Vector3(0, Mathf.Sin(i / 20.0f * Mathf.PI * 2.0f), Mathf.Cos(i / 20.0f * Mathf.PI * 2.0f))) + diff;
-        //        Debug.DrawLine(point0, point1, Color.red);
-        //        point0 = point1;
-        //    }
-        //}
-
 
         /// <summary>
         /// Display a visual representation of the wheel in the editor. Unity has no inbuilt gizmo for 
@@ -301,15 +232,12 @@ namespace KSPWheel
         /// </summary>
         void OnDrawGizmosSelected()
         {
-            if (debug)
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawWireSphere(gameObject.transform.position, wheelRadius);
-                Vector3 pos2 = gameObject.transform.position + -gameObject.transform.up * suspensionLength;
-                if (wheelCollider != null) { pos2 += gameObject.transform.up * wheelCollider.compressionDistance; }
-                Gizmos.DrawWireSphere(pos2, wheelRadius);
-                Gizmos.DrawRay(gameObject.transform.position - gameObject.transform.up * wheelRadius, -gameObject.transform.up * suspensionLength);
-            }
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(gameObject.transform.position, wheelRadius);
+            Vector3 pos2 = gameObject.transform.position + -gameObject.transform.up * suspensionLength;
+            if (wheelCollider != null) { pos2 += gameObject.transform.up * wheelCollider.compressionDistance; }
+            Gizmos.DrawWireSphere(pos2, wheelRadius);
+            Gizmos.DrawRay(gameObject.transform.position - gameObject.transform.up * wheelRadius, -gameObject.transform.up * suspensionLength);
         }
 
     }
