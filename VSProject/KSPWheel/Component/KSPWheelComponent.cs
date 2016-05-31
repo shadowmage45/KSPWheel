@@ -110,33 +110,13 @@ namespace KSPWheel
         public float currentSteerAngle;
         public Vector3 worldVelocity;
         public Vector3 localVelocity;
-        public Vector3 totalWorldForce;
         public Vector3 totalLocalForce;
         public Vector3 hitNormal;
 
         public float wheelRPM;
 
-        public float iWheel;
-        public float wWheel;
-        public float vLong;
-        public float vLat;
-        public float vWheel;
         public float sLong;
         public float sLat;
-        public float fLatMax;
-        public float fLongMax;
-
-        public float wDelta;
-        public float vDelta;
-        public float tTractMax;
-        public float fTractMax;
-
-        public float tDrive;
-        public float tBrake;
-        public float tRoll;
-        public float tTract;
-        public float tTotal;
-        public float wAccel;
 
         public float fLong;
         public float fLat;
@@ -147,6 +127,14 @@ namespace KSPWheel
         private float fwdInput;
         private float rotInput;
         private float brakeInput;
+
+        private float throttleResponse = 2;
+        private float steeringResponse = 2;
+        private float brakeResponse = 2;
+
+        private float curThrottle;
+        private float curSteer;
+        private float curBrake;
 
         public void Start()
         {
@@ -170,71 +158,57 @@ namespace KSPWheel
                 if (fwdInput > 1) { fwdInput = 1; }
                 if (fwdInput < -1) { fwdInput = -1; }
             }
+            curThrottle = Mathf.Lerp(curThrottle, fwdInput * motorTorque, throttleResponse);
+            curSteer = Mathf.Lerp(curSteer, rotInput * maxSteerAngle, steeringResponse);
+            curBrake = Mathf.Lerp(curBrake, brakeInput * brakeTorque, brakeResponse);
         }
 
         public void FixedUpdate()
         {
             sampleInput();
-            wheelCollider.setInputState(fwdInput, rotInput, brakeInput);//TODO brakes...
-            wheelCollider.UpdateWheel();
-            currentSteerAngle = wheelCollider.currentSteerAngle;
+            wheelCollider.motorTorque = curThrottle;
+            wheelCollider.steeringAngle = curSteer;
+            wheelCollider.brakeTorque = curBrake;
+            wheelCollider.updateWheel();
             if (steeringTransform != null)
             {
                 steeringTransform.localRotation = Quaternion.AngleAxis(currentSteerAngle, steeringTransform.up);
             }
             if (suspensionTransform != null)
             {
-                suspensionTransform.position = wheelCollider.wheelMeshPosition;                
+                suspensionTransform.position = gameObject.transform.position - (suspensionLength - wheelCollider.compressionDistance) * gameObject.transform.up;
             }
             if (wheelTransform != null)
             {
-                wheelTransform.Rotate(wheelTransform.right, wheelCollider.getWheelFrameRotation(), Space.World);
+                wheelTransform.Rotate(wheelTransform.right, wheelCollider.perFrameRotation, Space.World);
             }
-            totalWorldForce = wheelCollider.forceToApply;
-            totalLocalForce = gameObject.transform.InverseTransformDirection(totalWorldForce);
+            totalLocalForce = wheelCollider.calculatedForces;
             hitNormal = wheelCollider.hit.normal;
             worldVelocity = wheelCollider.worldVelocityAtHit;
             localVelocity = wheelCollider.wheelLocalVelocity;
             springForce = wheelCollider.springForce;
             dampForce = wheelCollider.dampForce;
-            wheelRPM = wheelCollider.wheelRPM;
-
-            iWheel = wheelCollider.iWheel;
-            wWheel = wheelCollider.wWheel;
-            vLong = wheelCollider.vLong;
-            vLat = wheelCollider.vLat;
-            vWheel = wheelCollider.vWheel;
-            sLong = wheelCollider.sLong;
-            sLat = wheelCollider.sLat;
-            fLongMax = wheelCollider.fLongMax;
-            fLatMax = wheelCollider.fLatMax;
-            tTractMax = wheelCollider.tTractMax;
-            fTractMax = wheelCollider.fTractMax;
-            tDrive = wheelCollider.tDrive;
-            tBrake = wheelCollider.tBrake;
-            tRoll = wheelCollider.tRoll;
-            tTract = wheelCollider.tTract;
-            tTotal = wheelCollider.tTotal;
-            wAccel = wheelCollider.wAccel;
-            fLong = wheelCollider.fLong;
-            fLat = wheelCollider.fLat;
+            wheelRPM = wheelCollider.rpm;
+            sLong = wheelCollider.longitudinalSlip;
+            sLat = wheelCollider.lateralSlip;
+            fLong = wheelCollider.longitudinalForce;
+            fLat = wheelCollider.lateralForce;
         }
 
         public void OnValidate()
         {
             if (wheelCollider != null)
             {
-                wheelCollider.wheelRadius = wheelRadius;
-                wheelCollider.wheelMass = wheelMass;
-                wheelCollider.suspensionLength = suspensionLength;
+                wheelCollider.radius = wheelRadius;
+                wheelCollider.mass = wheelMass;
+                wheelCollider.length = suspensionLength;
                 wheelCollider.target = target;
                 wheelCollider.spring = spring;
                 wheelCollider.damper = damper;
                 wheelCollider.motorTorque = motorTorque;
                 wheelCollider.brakeTorque = brakeTorque;
-                wheelCollider.maxSteerAngle = maxSteerAngle;
-                wheelCollider.fwdFrictionConst = fwdFrictionConst;
-                wheelCollider.sideFrictionConst = sideFrictionConst;
+                wheelCollider.forwardFrictionCoefficient = fwdFrictionConst;
+                wheelCollider.sideFrictionCoefficient = sideFrictionConst;
                 wheelCollider.sphereCast = sphereCast;
             }
         }

@@ -344,17 +344,13 @@ namespace KSPWheel
         {
             //delaying until Start as the part.rigidbody is not initialized until ?? (need to find out when...)
             wheel = new KSPWheelCollider(wheelColliderTransform.gameObject, part.gameObject.GetComponent<Rigidbody>());
-            wheel.wheel = wheelColliderTransform.gameObject;
-            wheel.wheelRadius = wheelRadius;
-            wheel.wheelMass = wheelMass;
-            wheel.suspensionLength = suspensionTravel;
+            wheel.radius = wheelRadius;
+            wheel.mass = wheelMass;
+            wheel.length = suspensionTravel;
             wheel.target = suspensionTarget;
             wheel.spring = suspensionSpring;
             wheel.damper = suspensionDamper;
-            wheel.motorTorque = motorTorque;
-            wheel.brakeTorque = brakeTorque;
-            wheel.grounded = grounded;
-            wheel.maxSteerAngle = maxSteeringAngle;
+            //wheel.isGrounded = grounded;
             wheel.setImpactCallback(onWheelImpact);
         }
 
@@ -381,13 +377,13 @@ namespace KSPWheel
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
             if (wheelState != KSPWheelState.BROKEN && wheelState != KSPWheelState.RETRACTED)
             {
-                wheel.UpdateWheel();
+                wheel.updateWheel();
             }
-            fLong = wheel.fLong;
-            fLat = wheel.fLat;
-            rpm = wheel.wheelRPM;
-            steer = wheel.currentSteerAngle;
-            grounded = wheel.grounded;
+            fLong = wheel.longitudinalForce;
+            fLat = wheel.lateralForce;
+            rpm = wheel.rpm;
+            steer = wheel.steeringAngle;
+            grounded = wheel.isGrounded;
             //part.GroundContact = grounded;
             //vessel.checkLanded();
             colliderHit = grounded ? wheel.hit.collider.name : "None";
@@ -412,7 +408,7 @@ namespace KSPWheel
             }
             if (steeringMesh != null)
             {
-                float angle = wheel.currentSteerAngle;
+                float angle = wheel.steeringAngle;
                 steeringMesh.localRotation = Quaternion.Euler(0, angle, 0);
             }
             if (wheelMesh != null)
@@ -424,7 +420,7 @@ namespace KSPWheel
             }
             if (wheelPivotTransform != null)
             {
-                wheelPivotTransform.Rotate(wheel.getWheelFrameRotation(), 0, 0, Space.Self);
+                wheelPivotTransform.Rotate(wheel.perFrameRotation, 0, 0, Space.Self);
             }
         }
 
@@ -451,7 +447,9 @@ namespace KSPWheel
                 if (fwdInput > 1) { fwdInput = 1; }
                 if (fwdInput < -1) { fwdInput = -1; }
             }
-            wheel.setInputState(fwdInput, rotInput, brakeInput);
+            wheel.motorTorque = motorTorque * fwdInput;
+            wheel.steeringAngle = maxSteeringAngle * rotInput;
+            wheel.brakeTorque = brakeTorque * brakeInput;
         }
 
         /// <summary>
