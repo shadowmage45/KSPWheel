@@ -3,9 +3,10 @@
 namespace KSPWheel
 {
     /// <summary>
-    /// This class is a wrapper around the KSPWheelCollider class to allow for easier use while in the Unity Editor.<para/>
+    /// This class is a wrapper around the KSPWheelCollider class to allow for easier use while debugging in the Unity Editor.<para/>
     /// It will merely instantiate a KSPWheelCollider object and update its internal variables with the ones entered into the Editor Inspector panel.<para/>
-    /// Also includes a few display-only variables for debugging in the editor
+    /// Also includes a few display-only variables for debugging in the editor<para/>
+    /// Not intended to be useful aside from the intial debugging period, or as a basic example that can be used in the editor; this class has no use in KSP
     /// </summary>
     [AddComponentMenu("Physics/KSPWheel")]
     public class KSPWheelComponent : MonoBehaviour
@@ -60,6 +61,14 @@ namespace KSPWheel
         /// The maximum torque the motor can exhert against the wheel
         /// </summary>
         public float maxMotorTorque = 0;
+
+        /// <summary>
+        /// Max RPM limit for wheel; this aids in making sure slips aren't infinite.
+        /// Normally the RPM would be limited by the motor redline / max RPM and the current gearing
+        /// but simplifying to a singular max-wheel-rpm value for this simple wheel component
+        ///   -- yes, even electric motors have a max RPM regardless of power input
+        /// </summary>
+        public float rpmLimit = 600f;
 
         /// <summary>
         /// The maximum torque the brakes can exhert against the wheel while attempting to bring its angular velocity to zero
@@ -125,17 +134,16 @@ namespace KSPWheel
 
         // these variables are updated every fixed-tick after the wheel has been updated
         // used merely to display some info while in the editor for debugging purposes
+
         #region REGION - Unity Editor Display-Only Variables
 
-        public Vector3 worldVelocity;
         public Vector3 localVelocity;
-        public Vector3 totalLocalForce;
-        public Vector3 hitNormal;
-        public float springForce;
-        public float dampForce;
-        public float wheelRPM;        
+        public Vector3 localAcceleration;
+        public float rpm;
         public float sLong;
         public float sLat;
+        public float fSpring;
+        public float fDamp;
         public float fLong;
         public float fLat;
 
@@ -143,9 +151,9 @@ namespace KSPWheel
 
         private KSPWheelCollider wheelCollider;
         
-        private float curMotorTorque;
-        private float curSteer;
-        private float curBrakeTorque;
+        private float currentMotorTorque;
+        private float currentSteer;
+        private float currentBrakeTorque;
 
         public void Start()
         {
@@ -170,21 +178,24 @@ namespace KSPWheel
                 if (forwardInput > 1) { forwardInput = 1; }
                 if (forwardInput < -1) { forwardInput = -1; }
             }
-            curMotorTorque = Mathf.Lerp(curMotorTorque, forwardInput * maxMotorTorque, throttleResponse);
-            curSteer = Mathf.Lerp(curSteer, turnInput * maxSteerAngle, steeringResponse);
-            curBrakeTorque = Mathf.Lerp(curBrakeTorque, brakeInput * maxBrakeTorque, brakeResponse);
+            float rpm = wheelCollider.rpm;
+            if (rpm >= rpmLimit && forwardInput > 0) { forwardInput = 0; }
+            else if (rpm <= -rpmLimit && forwardInput < 0) { forwardInput = 0; }
+            currentMotorTorque = Mathf.Lerp(currentMotorTorque, forwardInput * maxMotorTorque, throttleResponse*Time.fixedDeltaTime);
+            currentSteer = Mathf.Lerp(currentSteer, turnInput * maxSteerAngle, steeringResponse * Time.fixedDeltaTime);
+            currentBrakeTorque = Mathf.Lerp(currentBrakeTorque, brakeInput * maxBrakeTorque, brakeResponse * Time.fixedDeltaTime);
         }
 
         public void FixedUpdate()
         {
             sampleInput();
-            wheelCollider.motorTorque = curMotorTorque;
-            wheelCollider.steeringAngle = curSteer;
-            wheelCollider.brakeTorque = curBrakeTorque;
+            wheelCollider.motorTorque = currentMotorTorque;
+            wheelCollider.steeringAngle = currentSteer;
+            wheelCollider.brakeTorque = currentBrakeTorque;
             wheelCollider.updateWheel();
             if (steeringTransform != null)
             {
-                steeringTransform.localRotation = Quaternion.AngleAxis(curSteer, steeringTransform.up);
+                steeringTransform.localRotation = Quaternion.AngleAxis(currentSteer, steeringTransform.up);
             }
             if (suspensionTransform != null)
             {
@@ -194,13 +205,12 @@ namespace KSPWheel
             {
                 wheelTransform.Rotate(wheelTransform.right, wheelCollider.perFrameRotation, Space.World);
             }
-            totalLocalForce = wheelCollider.calculatedForces;
-            hitNormal = wheelCollider.hit.normal;
-            worldVelocity = wheelCollider.worldVelocityAtHit;
+            Vector3 prevVel = localVelocity;
             localVelocity = wheelCollider.wheelLocalVelocity;
-            springForce = wheelCollider.springForce;
-            dampForce = wheelCollider.dampForce;
-            wheelRPM = wheelCollider.rpm;
+            localAcceleration = (prevVel - localVelocity) / Time.fixedDeltaTime;
+            fSpring = wheelCollider.springForce;
+            fDamp = wheelCollider.dampForce;
+            rpm = wheelCollider.rpm;
             sLong = wheelCollider.longitudinalSlip;
             sLat = wheelCollider.lateralSlip;
             fLong = wheelCollider.longitudinalForce;

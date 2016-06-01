@@ -961,6 +961,7 @@ MonoBehaviour:
   spring: 40
   damper: 200
   maxMotorTorque: 0
+  rpmLimit: 300
   maxBrakeTorque: 0
   maxSteerAngle: 20
   throttleResponse: 2
@@ -973,15 +974,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &301343513
@@ -1271,6 +1270,7 @@ MonoBehaviour:
   spring: 40
   damper: 200
   maxMotorTorque: 0
+  rpmLimit: 300
   maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
@@ -1283,15 +1283,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &360438514
@@ -1419,8 +1417,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -1432,15 +1431,13 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &377664100
@@ -1496,8 +1493,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -1509,15 +1507,13 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &441339093
@@ -1676,8 +1672,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -1689,15 +1686,13 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1001 &523005883
@@ -1922,27 +1917,26 @@ MonoBehaviour:
   spring: 30000
   damper: 3000
   maxMotorTorque: 0
-  maxBrakeTorque: 5000
+  rpmLimit: 600
+  maxBrakeTorque: 1500
   maxSteerAngle: 35
-  throttleResponse: 2
-  steeringResponse: 2
+  throttleResponse: 5
+  steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
+  forwardFrictionCoefficient: 2
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
-  sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
+  sphereCast: 1
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!54 &523005900
@@ -1982,27 +1976,26 @@ MonoBehaviour:
   spring: 30000
   damper: 3000
   maxMotorTorque: 0
-  maxBrakeTorque: 5000
+  rpmLimit: 600
+  maxBrakeTorque: 1500
   maxSteerAngle: 35
-  throttleResponse: 2
-  steeringResponse: 2
+  throttleResponse: 5
+  steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
+  forwardFrictionCoefficient: 2
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
-  sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
+  sphereCast: 1
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!64 &523005902
@@ -2050,11 +2043,12 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 1200
-  maxBrakeTorque: 5000
+  maxMotorTorque: 1100
+  rpmLimit: 600
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  throttleResponse: 2
-  steeringResponse: 2
+  throttleResponse: 5
+  steeringResponse: 8
   brakeResponse: 2
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
@@ -2062,16 +2056,14 @@ MonoBehaviour:
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
-  sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
+  sphereCast: 1
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!114 &523005905
@@ -2095,11 +2087,12 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 1200
-  maxBrakeTorque: 5000
+  maxMotorTorque: 1100
+  rpmLimit: 600
+  maxBrakeTorque: 1000
   maxSteerAngle: 0
-  throttleResponse: 2
-  steeringResponse: 2
+  throttleResponse: 5
+  steeringResponse: 8
   brakeResponse: 2
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
@@ -2107,16 +2100,14 @@ MonoBehaviour:
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
-  sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
+  sphereCast: 1
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!4 &523005907 stripped
@@ -2174,6 +2165,7 @@ MonoBehaviour:
   spring: 40
   damper: 200
   maxMotorTorque: 0
+  rpmLimit: 300
   maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
@@ -2186,15 +2178,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &593581620
@@ -2572,8 +2562,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -2585,15 +2576,13 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &683615209
@@ -2882,6 +2871,7 @@ MonoBehaviour:
   spring: 40
   damper: 200
   maxMotorTorque: 0
+  rpmLimit: 300
   maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
@@ -2894,15 +2884,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &764206516
@@ -2955,8 +2943,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -2968,15 +2957,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &769263970
@@ -3701,8 +3688,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -3714,15 +3702,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &933400985
@@ -3952,8 +3938,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -3965,15 +3952,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1017201675
@@ -4261,6 +4246,7 @@ MonoBehaviour:
   spring: 40
   damper: 200
   maxMotorTorque: 0
+  rpmLimit: 300
   maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
@@ -4273,15 +4259,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1136791720
@@ -4415,8 +4399,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -4428,15 +4413,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1150879878
@@ -4811,8 +4794,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -4824,15 +4808,13 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1272550555
@@ -4989,6 +4971,7 @@ MonoBehaviour:
   spring: 40
   damper: 200
   maxMotorTorque: 0
+  rpmLimit: 300
   maxBrakeTorque: 0
   maxSteerAngle: 20
   throttleResponse: 2
@@ -5001,15 +4984,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1356012564
@@ -5947,6 +5928,7 @@ MonoBehaviour:
   spring: 40
   damper: 200
   maxMotorTorque: 0
+  rpmLimit: 300
   maxBrakeTorque: 0
   maxSteerAngle: 20
   throttleResponse: 2
@@ -5959,15 +5941,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1608088954
@@ -6608,6 +6588,7 @@ MonoBehaviour:
   spring: 40
   damper: 200
   maxMotorTorque: 0
+  rpmLimit: 300
   maxBrakeTorque: 0
   maxSteerAngle: 20
   throttleResponse: 2
@@ -6620,15 +6601,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &1986604049
@@ -6705,8 +6684,9 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 250
-  maxBrakeTorque: 1000
+  maxMotorTorque: 0
+  rpmLimit: 300
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -6718,15 +6698,13 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   sphereCast: 0
-  worldVelocity: {x: 0, y: 0, z: 0}
   localVelocity: {x: 0, y: 0, z: 0}
-  totalLocalForce: {x: 0, y: 0, z: 0}
-  hitNormal: {x: 0, y: 0, z: 0}
-  springForce: 0
-  dampForce: 0
-  wheelRPM: 0
+  localAcceleration: {x: 0, y: 0, z: 0}
+  rpm: 0
   sLong: 0
   sLat: 0
+  fSpring: 0
+  fDamp: 0
   fLong: 0
   fLat: 0
 --- !u!1 &2038602079
