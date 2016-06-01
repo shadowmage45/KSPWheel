@@ -453,7 +453,11 @@ namespace KSPWheel
             calculatedForces += hit.normal * fSpring;
             calculatedForces += fLong * wheelForward;
             calculatedForces += fLat * wheelRight;
-            rigidBody.AddForceAtPosition(calculatedForces, wheel.transform.position, ForceMode.Force);
+            rigidBody.AddForceAtPosition(calculatedForces, hit.point, ForceMode.Force);
+            if (hit.collider.attachedRigidbody != null && !hit.collider.attachedRigidbody.isKinematic)
+            {
+                hit.collider.attachedRigidbody.AddForceAtPosition(-calculatedForces, hit.point, ForceMode.Force);
+            }
         }
 
         /// <summary>
