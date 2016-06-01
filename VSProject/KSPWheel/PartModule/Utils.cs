@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace KSPWheel
 {
+    /// <summary>
+    /// Generic utility class for extension and util methods that do not clearly belong in any other class.
+    /// Mostly this entails some helper methods for getting typed values from ConfigNode, and some Transform extensions to recursively locate transforms
+    /// </summary>
     public static class Utils
     {
         public static Transform FindRecursive(this Transform transform, String name)
@@ -17,6 +22,24 @@ namespace KSPWheel
                 if (tr != null) { return tr; }
             }
             return null;
+        }
+
+        public static void FindRecursiveMulti(this Transform transform, String name, List<Transform> addTo)
+        {
+            if (transform.name == name) { addTo.Add(transform); }
+            foreach (Transform child in transform)
+            {
+                FindRecursiveMulti(child, name, addTo);
+            }
+        }
+
+        private static void locateTransformRecurse(Transform tr, String name, List<Transform> addTo)
+        {
+            if (tr.name == name) { addTo.Add(tr); }
+            foreach (Transform child in tr)
+            {
+                locateTransformRecurse(child, name, addTo);
+            }
         }
         
         public static String[] GetStringValues(this ConfigNode node, String name)

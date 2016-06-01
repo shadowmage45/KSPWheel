@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace KSPWheel
 {
+    /// <summary>
+    /// Container class for handling animation states; separated from PartModule class to cut down on the clutter and enforce some encapsulation
+    /// </summary>
     public class WheelAnimationHandler
     {
         private readonly KSPWheelModule module;
@@ -17,6 +20,9 @@ namespace KSPWheel
             this.animationData = new AnimationData(module.part, animationName, animationSpeed, animationLayer);
         }
         
+        /// <summary>
+        /// Should be called every Update() frame from PartModule; updates current internal 'playing' state and issues callback to PartModule when animation state changes (transition from deploying to deployed, retracting to retracted)
+        /// </summary>
         public void updateAnimationState()
         {
             if (currentAnimState == KSPWheelState.RETRACTING || currentAnimState == KSPWheelState.DEPLOYING)

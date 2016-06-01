@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace KSPWheel
@@ -19,7 +20,7 @@ namespace KSPWheel
 
         /// <summary>
         /// Name of the transform that should be rotated around its X axis for wheel rotation<para/>
-        /// May be null if no transform should be rotated
+        /// May be null if no transform should be rotated.  Will accept CSV list if multiple wheels should be animated.
         /// </summary>
         [KSPField]
         public string wheelPivotName;
@@ -57,6 +58,22 @@ namespace KSPWheel
         /// </summary>
         [KSPField]
         public bool tankSteering;
+
+        /// <summary>
+        /// Determines the max impact velocity that this parts suspension can withstand; impacts above this velocity will result in part destruction;
+        /// this is checked anytime the wheel transitions from a non-grounded to a grounded state
+        /// </summary>
+        [KSPField]
+        public float impactTolerance;
+
+        /// <summary>
+        /// Determines how far above the initial position in the model that the wheel-collider should be located.
+        /// This is needed as the setup for stock models varies widely for wheel-collider positioning; 
+        /// some have it near the top of suspension travel, others at the bottom.
+        /// Needs to be set on a per-part/model basis.
+        /// </summary>
+        [KSPField]
+        public float wheelColliderOffset;
 
         /// <summary>
         /// If true, steering will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
@@ -138,8 +155,8 @@ namespace KSPWheel
         #endregion
 
         #region REGION - Private working/cached variables
-        private Transform wheelColliderTransform;
-        private Transform wheelPivotTransform;
+        private Transform wheelColliderTransform;//the transform that the wheel-collider is attached to
+        private Transform[] wheelPivotTransforms;//
         private Transform wheelMesh;
         private Transform bustedWheelMesh;
         private Transform suspensionMesh;
@@ -162,6 +179,10 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0.05f, maxValue = 10, stepIncrement = 0.05f, suppressEditorShipModified =true)]
         public float dampMult = 1f;
 
+        //TODO -- implement dynamic load-setting; min and max range should be configurable through part config file
+        // allow the user to adjust the suspension spring/damper indirectly by specifying the load the wheel should be rated for.
+        // should likey only be available in the editor after initial testing/development is done.
+        //TODO -- auto-calc spring/damper from suspension length, target, input load, and desired damping ratio (1=critical damping)
         [KSPField(guiName = "LoadRating", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0.05f, maxValue = 5, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float loadRating = 0.05f;
@@ -281,7 +302,7 @@ namespace KSPWheel
             base.OnStart(state);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
             wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
-            wheelPivotTransform = part.transform.FindRecursive(wheelPivotName);
+            locateWheelPivotTransforms();            
             wheelMesh = part.transform.FindRecursive(wheelName);
             bustedWheelMesh = part.transform.FindRecursive(bustedWheelName);
             suspensionMesh = part.transform.FindRecursive(suspensionName);
@@ -384,9 +405,10 @@ namespace KSPWheel
             rpm = wheel.rpm;
             steer = wheel.steeringAngle;
             grounded = wheel.isGrounded;
-            //part.GroundContact = grounded;
-            //vessel.checkLanded();
             colliderHit = grounded ? wheel.hit.collider.name : "None";
+            updateLightState();//TODO may only need to be called on state transitions
+            updateResourceDrain();//TODO should only be called when motor is engaged?
+            updateLandedState();//TODO...
         }
 
         /// <summary>
@@ -396,10 +418,8 @@ namespace KSPWheel
         {
             if (!FlightGlobals.ready || !FlightDriver.fetch) { return; }
             if (animationControl != null) { animationControl.updateAnimationState(); }
-            //TODO reset input state on animation state changes, re-orient wheels to default when retracted/ing?
-            if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }
-
-            //TODO -- input handling/updating
+            //TODO reset input state on animation state changes, re-orient wheels to default (zero steering rotation) when retracted/ing?
+            if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }            
             if (suspensionMesh != null)
             {
                 float offset = wheel.compressionDistance + suspensionOffset;
@@ -411,16 +431,13 @@ namespace KSPWheel
                 float angle = wheel.steeringAngle;
                 steeringMesh.localRotation = Quaternion.Euler(0, angle, 0);
             }
-            if (wheelMesh != null)
+            if (wheelPivotTransforms != null && wheelPivotTransforms.Length>0)
             {
-                //might not actually be necessary to update the wheel mesh position explicitly; it should be a child of suspension and thus positioned properly from the suspension positioning code                
-                //however, it -does- need to be rotated according to the wheel current RPM
-                //wheelMesh.transform.position = wheel.wheelMeshPosition + wheel.rigidBody.velocity * TimeWarp.fixedDeltaTime;
-                //wheelMesh.Rotate(wheel.wheelRPM, 0, 0, Space.Self);
-            }
-            if (wheelPivotTransform != null)
-            {
-                wheelPivotTransform.Rotate(wheel.perFrameRotation, 0, 0, Space.Self);
+                int len = wheelPivotTransforms.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    wheelPivotTransforms[i].Rotate(wheel.perFrameRotation, 0, 0, Space.Self);
+                }
             }
         }
 
@@ -428,15 +445,33 @@ namespace KSPWheel
 
         #region REGION - Custom update methods
 
+        //TODO...
+        private void updateLandedState()
+        {
+
+        }
+
+        //TODO -- update the on/off state of the lights on the part (if present) for the current wheel/animation state
+        //TODO -- do some wheels have brake-lights that need activating when brakes are on?
+        private void updateLightState()
+        {
+
+        }
+
+        //TODO -- handle resource drain for motor-enabled parts
+        private void updateResourceDrain()
+        {
+
+        }
+
         /// <summary>
         /// Temporary very basic input handling code
         /// </summary>
         private void sampleInput()
         {
-
             fwdInput = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             rotInput = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
-            //brakeInput = part.vessel.ActionGroups.
+            brakeInput = part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
             if (motorLocked) { fwdInput = 0; }
             if (steeringLocked) { rotInput = 0; }
             if (invertSteering) { rotInput = -rotInput; }
@@ -485,6 +520,22 @@ namespace KSPWheel
         {
             spring = (load * 10)/(1-target)/length;
             damper = 2 * Mathf.Sqrt(load * spring) * dampRatio;
+        }
+
+        /// <summary>
+        /// Locate the wheel-pivot transforms from the list of wheel-pivot names (may be singular or CSV list), will find multiple same-named transforms
+        /// ALL of them must rotate on the same axis (x-axis by default, currently not configurable)
+        /// </summary>
+        private void locateWheelPivotTransforms()
+        {
+            String[] pivotNames = wheelPivotName.Split(',');
+            List<Transform> transforms = new List<Transform>();
+            int len = pivotNames.Length;
+            for (int i = 0; i < len; i++)
+            {
+                part.transform.FindRecursiveMulti(pivotNames[i].Trim(), transforms);
+            }
+            wheelPivotTransforms = transforms.ToArray();
         }
 
         //debug code...
