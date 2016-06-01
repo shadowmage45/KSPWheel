@@ -87,7 +87,6 @@
     <Compile Include="Component\KSPWheelFrictionCurve.cs" />
     <Compile Include="Component\LFWheelGrip.cs" />
     <Compile Include="PartModule\KSPWheelAnimationState.cs" />
-    <Compile Include="PartModule\KSPWheelInfo.cs" />
     <Compile Include="PartModule\KSPWheelState.cs" />
     <Compile Include="PartModule\Utils.cs" />
     <Compile Include="PartModule\WheelAnimationHandler.cs" />
