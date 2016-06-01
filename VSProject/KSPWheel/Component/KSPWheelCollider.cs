@@ -32,7 +32,7 @@ namespace KSPWheel
         public Vector3 worldVelocityAtHit;
 
         /// <summary>
-        /// The summed forces that will be/have been applied to the rigidbody at the point of contact with the surface
+        /// The summed forces that have been applied to the rigidbody at the point of contact with the surface this frame
         /// </summary>
         public Vector3 calculatedForces;
 
@@ -60,7 +60,7 @@ namespace KSPWheel
         private float currentBrakeTorque = 0f;
         private float currentSuspensionCompression = 0f;
         private float currentAngularVelocity = 0f;//angular velocity of wheel; rotations in radians per second
-        private float currentMomentOfInertia = 1.0f*0.5f*0.5f*0.5f;//moment of inertia of wheel; used for mass in acceleration calculations regarding wheel angular velocity
+        private float currentMomentOfInertia = 1.0f*0.5f*0.5f*0.5f;//moment of inertia of wheel; used for mass in acceleration calculations regarding wheel angular velocity.  MOI of a solid cylinder = ((m*r*r)/2)
         private int currentRaycastMask = ~(1 << 26);//default cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask (26 = KSP WheelColliderIgnore layer)
         private bool currentlyGrounded = false;
         private bool useSphereCast = false;
@@ -118,30 +118,45 @@ namespace KSPWheel
             fwdFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);
         }
 
+        /// <summary>
+        /// Get/Set the current spring stiffness value.  This is the configurable value that influences the 'springForce' used in suspension calculations
+        /// </summary>
         public float spring
         {
             get { return currentSpring; }
             set { currentSpring = value; }
         }
 
+        /// <summary>
+        /// Get/Set the current damper resistance value.  This is the configurable value that influences the 'dampForce' used in suspension calculations
+        /// </summary>
         public float damper
         {
             get { return currentDamper; }
             set { currentDamper = value; }
         }
 
+        /// <summary>
+        /// Get/Set the current length of the suspension.  This is a ray that extends from the bottom of the wheel as positioned at the wheel collider
+        /// </summary>
         public float length
         {
             get { return currentSuspenionLength; }
             set { currentSuspenionLength = value; }
         }
 
+        /// <summary>
+        /// Get/Set the current target value.  This is a 0-1 value that determines how far up the suspension the wheel should be kept. Below this point there is no spring force, only damper forces.
+        /// </summary>
         public float target
         {
             get { return currentSuspensionTarget; }
             set { currentSuspensionTarget = value; }
         }
 
+        /// <summary>
+        /// Get/Set the current wheel mass.  This determines wheel acceleration from torque (not vehicle acceleration; that is determined by down-force).  Lighter wheels will slip easier from brake and motor torque.
+        /// </summary>
         public float mass
         {
             get { return currentWheelMass; }
@@ -154,6 +169,9 @@ namespace KSPWheel
             }
         }
 
+        /// <summary>
+        /// Get/Set the wheel radius.  This determines the simulated size of the wheel, and along with mass determines the wheel moment-of-inertia which plays into wheel acceleration
+        /// </summary>
         public float radius
         {
             get { return currentWheelRadius; }
@@ -166,12 +184,18 @@ namespace KSPWheel
             }
         }
 
+        /// <summary>
+        /// Get/Set the current forward friction curve.  This determines the maximum available traction force for a given slip ratio.  See the KSPWheelFrictionCurve class for more info.
+        /// </summary>
         public KSPWheelFrictionCurve forwardFrictionCurve
         {
             get { return fwdFrictionCurve; }
             set { if (value != null) { fwdFrictionCurve = value; } }
         }
 
+        /// <summary>
+        /// Get/Set the current sideways friction curve.  This determines the maximum available traction force for a given slip ratio.  See the KSPWheelFrictionCurve class for more info.
+        /// </summary>
         public KSPWheelFrictionCurve sidewaysFrictionCurve
         {
             get { return sideFrictionCurve; }
@@ -420,6 +444,9 @@ namespace KSPWheel
 
         #region REGION - Private/internal update methods
 
+        /// <summary>
+        /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.
+        /// </summary>
         private void integrateForces()
         {
             calcFriction(fSpring);
@@ -429,11 +456,16 @@ namespace KSPWheel
             rigidBody.AddForceAtPosition(calculatedForces, wheel.transform.position, ForceMode.Force);
         }
 
+        /// <summary>
+        /// Integrate drive and brake torques into wheel velocity for when -not- grounded.
+        /// This allows for wheels to change velocity from user input while the vehicle is not in contact with the surface.
+        /// Not-yet-implemented are torques on the rigidbody due to wheel accelerations.
+        /// </summary>
         private void integrateUngroundedTorques()
         {
             //velocity change due to motor; if brakes are engaged they can cancel this out the same tick
-            currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;//acceleration is in radians/second; only operating on 1 * fixedDeltaTime seconds, so only update for that length of time
-
+            //acceleration is in radians/second; only operating on fixedDeltaTime seconds, so only update for that length of time
+            currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;
             // maximum torque exerted by brakes onto wheel this frame
             float wBrake = currentBrakeTorque * inertiaInverse * Time.fixedDeltaTime;
             // clamp the max brake angular change to the current angular velocity
@@ -489,12 +521,20 @@ namespace KSPWheel
             }
         }
 
+        /// <summary>
+        /// Uses either ray- or sphere-cast to check for suspension contact with the ground, calculates current suspension compression, and caches the world-velocity at the contact point
+        /// </summary>
+        /// <returns></returns>
         private bool checkSuspensionContact()
         {
             if (useSphereCast) { return spherecastSuspension(); }
             return raycastSuspension();
         }
 
+        /// <summary>
+        /// Check suspension contact using a ray-cast; return true/false for if contact was detected
+        /// </summary>
+        /// <returns></returns>
         private bool raycastSuspension()
         {
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, length + radius, currentRaycastMask))
@@ -506,6 +546,10 @@ namespace KSPWheel
             return false;            
         }
 
+        /// <summary>
+        /// Check suspension contact using a sphere-cast; return true/false for if contact was detected.
+        /// </summary>
+        /// <returns></returns>
         private bool spherecastSuspension()
         {
             if (Physics.SphereCast(wheel.transform.position + wheel.transform.up*radius, radius, -wheel.transform.up, out hit, length + radius, currentRaycastMask))
