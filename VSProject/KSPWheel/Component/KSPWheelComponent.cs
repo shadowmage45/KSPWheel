@@ -184,8 +184,11 @@ namespace KSPWheel
             if (rpm >= rpmLimit && forwardInput > 0) { forwardInput = 0; }
             else if (rpm <= -rpmLimit && forwardInput < 0) { forwardInput = 0; }
             currentMotorTorque = Mathf.Lerp(currentMotorTorque, forwardInput * maxMotorTorque, throttleResponse*Time.fixedDeltaTime);
+            if (forwardInput == 0 && Mathf.Abs(currentMotorTorque) < 0.25) { currentMotorTorque = 0f; }
             currentSteer = Mathf.Lerp(currentSteer, turnInput * maxSteerAngle, steeringResponse * Time.fixedDeltaTime);
+            if (turnInput == 0 && Mathf.Abs(currentSteer) < 0.25) { currentSteer = 0f; }
             currentBrakeTorque = Mathf.Lerp(currentBrakeTorque, brakeInput * maxBrakeTorque, brakeResponse * Time.fixedDeltaTime);
+            if (brakeInput == 0 && currentBrakeTorque < 0.25) { currentBrakeTorque = 0f; }
         }
 
         public void FixedUpdate()

@@ -611,10 +611,17 @@ namespace KSPWheel
             sLong = calcLongSlip(vLong, vWheel);
             //lat slip ratio
             sLat = calcLatSlip(vLong, vLat);
+
+            // this was an attempt to normalize the friction available; a wheel only has so much friction it can exert, split between forwards and sideways directions
+            // sadly this results in a constant yawing of the vehicle as the drive wheels are constantly delivering different amounts of traction-force
+            //Vector3 wheelVel = new Vector3(vLat, 0, vDelta);
+            //float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef * Mathf.Abs(wheelVel.normalized.z);
+            //float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef * Mathf.Abs(wheelVel.normalized.x);
+
             //raw max longitudinal force based purely on the slip ratio
-            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
+            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;// * Mathf.Abs(wheelVel.normalized.z);
             //raw max lateral force based purely on the slip ratio
-            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef;
+            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef;// * Mathf.Abs(wheelVel.normalized.x);
 
             //TODO actual sprung mass can be derived (mostly?) by the delta between current and prev spring velocity
             // and the previous spring force (e.g. the previous spring (F) force effected (A) change in velocity, thus the mass must by (M))
@@ -624,6 +631,7 @@ namespace KSPWheel
             // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
             fLat = fLatMax;
             if (fLat > Mathf.Abs(vLat) * downForce * 2f) { fLat = Mathf.Abs(vLat) * downForce * 2f; }
+            //if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
             fLat *= -Mathf.Sign(vLat);// sign it opposite to the current vLat
 
             //linear velocity delta between wheel and surface in meters per second
@@ -636,7 +644,6 @@ namespace KSPWheel
             // float fDelta = tDelta * radiusInverse; // unused
             //absolute value of the torque needed to bring the wheel to road speed instantaneously/this frame
             float tTractMax = Mathf.Abs(tDelta) / Time.fixedDeltaTime;
-
             //newtons needed to bring wheel to ground velocity this frame; radius inverse used to avoid div operations
             float fTractMax = tTractMax * radiusInverse;
             //final maximum force value is the smallest of the two force values;
@@ -658,6 +665,7 @@ namespace KSPWheel
                 wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
                 float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs( fLong ));
                 float fMax2 = Mathf.Max(0, currentSprungMass * 10 * Mathf.Abs(vLong) - Mathf.Abs(fLong));
+                //float fMax2 = Mathf.Max(0, ((currentSprungMass * Mathf.Abs(vLong)) / Time.fixedDeltaTime) - Mathf.Abs(fLong));
                 float fBrakeMax = Mathf.Min(fMax, fMax2);
                 fLong += fBrakeMax * -Mathf.Sign(vLong);
             }
