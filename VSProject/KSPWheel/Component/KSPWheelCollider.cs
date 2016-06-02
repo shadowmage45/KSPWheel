@@ -22,6 +22,11 @@ namespace KSPWheel
         public Rigidbody rigidBody;
 
         /// <summary>
+        /// The current gravity force, used to calculate sprung mass dynamically from spring force and acceleration
+        /// </summary>
+        public Vector3 gravityForce = new Vector3(0, -9.81f, 0);
+
+        /// <summary>
         /// The velocity of the wheel as seen by the surface at the point of contact, taking into account steering angle and angle of the collider to the surface.
         /// </summary>
         public Vector3 wheelLocalVelocity;
@@ -61,6 +66,7 @@ namespace KSPWheel
         private float currentSuspensionCompression = 0f;
         private float currentAngularVelocity = 0f;//angular velocity of wheel; rotations in radians per second
         private float currentMomentOfInertia = 1.0f*0.5f*0.5f*0.5f;//moment of inertia of wheel; used for mass in acceleration calculations regarding wheel angular velocity.  MOI of a solid cylinder = ((m*r*r)/2)
+        private float currentSprungMass = 1f;
         private int currentRaycastMask = ~(1 << 26);//default cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask (26 = KSP WheelColliderIgnore layer)
         private bool currentlyGrounded = false;
         private bool useSphereCast = false;
@@ -387,6 +393,11 @@ namespace KSPWheel
             get { return sLat; }
         }
 
+        public float sprungMass
+        {
+            get { return currentSprungMass; }
+        }
+
         /// <summary>
         /// UpdateWheel() should be called by the controlling component/container on every FixedUpdate that this wheel should apply forces for.<para/>
         /// Collider and physics integration can be disabled by simply no longer calling UpdateWheel
@@ -398,6 +409,8 @@ namespace KSPWheel
             wheelUp = wheel.transform.up;
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             prevSuspensionCompression = currentSuspensionCompression;
+            float prevFSpring = fSpring;
+            float prevVSpring = vSpring;
             bool prevGrounded = currentlyGrounded;
             if (checkSuspensionContact())//suspension compression is updated in the suspension contact check
             {
@@ -410,6 +423,8 @@ namespace KSPWheel
                 //calculate damper force from the current compression velocity of the spring; damp force can be negative
                 vSpring = (currentSuspensionCompression - prevSuspensionCompression) / Time.fixedDeltaTime;//per second velocity
                 fDamp = damper * vSpring;
+
+                calcSprungMass(prevVSpring, vSpring, wheel.transform.InverseTransformVector(gravityForce).y, prevFSpring);
 
                 //calculate spring force basically from displacement * spring
                 fSpring = (currentSuspensionCompression - (length * target)) * spring;
@@ -637,8 +652,19 @@ namespace KSPWheel
             //apply acceleration to wheel angular velocity
             currentAngularVelocity += angularAcceleration;
             //second integration pass of brakes, to allow for locked-wheels after friction calculation
-            if (Mathf.Abs(currentAngularVelocity) < wBrakeDelta) { currentAngularVelocity = 0; }//brakes have locked up the tire
-            else { currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta; }//
+            if (Mathf.Abs(currentAngularVelocity) < wBrakeDelta)
+            {
+                currentAngularVelocity = 0;
+                wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
+                float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs( fLong ));
+                float fMax2 = Mathf.Max(0, currentSprungMass * 10 * Mathf.Abs(vLong) - Mathf.Abs(fLong));
+                float fBrakeMax = Mathf.Min(fMax, fMax2);
+                fLong += fBrakeMax * -Mathf.Sign(vLong);
+            }
+            else
+            {
+                currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;
+            }
         }
 
         /// <summary>
@@ -681,13 +707,17 @@ namespace KSPWheel
             return sLat;
         }
 
-        //TODO hmmm... not sure if this will work without knowing the velocity contribution from gravity;
-        // in the absence of gravity, the sprung mass = force / acceleration
-        // else mass = force / (acceleration - gravity)
+        /// <summary>
+        /// Not the most 'accurate'... but it does return proper sprung mass after things have equalized.
+        /// </summary>
+        /// <param name="prevVSpring"></param>
+        /// <param name="vSpring"></param>
+        /// <param name="vGrav"></param>
+        /// <param name="prevFSpring"></param>
         private void calcSprungMass(float prevVSpring, float vSpring, float vGrav, float prevFSpring)
         {
             float vDelta = prevVSpring - vSpring - vGrav;
-            float sprungMass = prevFSpring / vDelta;
+            currentSprungMass = prevFSpring / vDelta;
         }
 
         #endregion ENDREGION - Friction calculations methods based on alternate source: 

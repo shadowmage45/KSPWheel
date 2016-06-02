@@ -416,6 +416,7 @@ namespace KSPWheel
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
             if (wheelState != KSPWheelState.BROKEN && wheelState != KSPWheelState.RETRACTED)
             {
+                wheel.gravityForce = FlightIntegrator.ActiveVesselFI.geeForce;
                 wheel.updateWheel();
             }
             fLong = wheel.longitudinalForce;

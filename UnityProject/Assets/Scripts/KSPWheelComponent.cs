@@ -146,6 +146,8 @@ namespace KSPWheel
         public float fDamp;
         public float fLong;
         public float fLat;
+        public float sprungMass;
+        public Vector3 grav;
 
         #endregion ENDREGION - Unity Editor Display Variables
 
@@ -192,6 +194,7 @@ namespace KSPWheel
             wheelCollider.motorTorque = currentMotorTorque;
             wheelCollider.steeringAngle = currentSteer;
             wheelCollider.brakeTorque = currentBrakeTorque;
+            wheelCollider.gravityForce = Physics.gravity;
             wheelCollider.updateWheel();
             if (steeringTransform != null)
             {
@@ -215,6 +218,8 @@ namespace KSPWheel
             sLat = wheelCollider.lateralSlip;
             fLong = wheelCollider.longitudinalForce;
             fLat = wheelCollider.lateralForce;
+            sprungMass = wheelCollider.sprungMass;
+            grav = Physics.gravity;
         }
 
         public void OnValidate()

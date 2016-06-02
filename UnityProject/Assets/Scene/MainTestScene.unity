@@ -702,6 +702,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &191296913
 GameObject:
   m_ObjectHideFlags: 0
@@ -1117,6 +1119,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &301343513
 GameObject:
   m_ObjectHideFlags: 0
@@ -1453,6 +1457,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &360438514
 GameObject:
   m_ObjectHideFlags: 0
@@ -1601,6 +1607,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &377664100
 GameObject:
   m_ObjectHideFlags: 0
@@ -1677,6 +1685,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &441339093
 GameObject:
   m_ObjectHideFlags: 0
@@ -1856,6 +1866,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1001 &523005883
 Prefab:
   m_ObjectHideFlags: 0
@@ -1929,7 +1941,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -2083,7 +2095,7 @@ MonoBehaviour:
   maxSteerAngle: 35
   throttleResponse: 5
   steeringResponse: 8
-  brakeResponse: 2
+  brakeResponse: 10
   forwardFrictionCoefficient: 2
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -2100,6 +2112,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!54 &523005900
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2142,7 +2156,7 @@ MonoBehaviour:
   maxSteerAngle: 35
   throttleResponse: 5
   steeringResponse: 8
-  brakeResponse: 2
+  brakeResponse: 10
   forwardFrictionCoefficient: 2
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -2159,6 +2173,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!64 &523005902
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -2210,7 +2226,7 @@ MonoBehaviour:
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 8
-  brakeResponse: 2
+  brakeResponse: 10
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -2227,6 +2243,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!114 &523005905
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2254,7 +2272,7 @@ MonoBehaviour:
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 8
-  brakeResponse: 2
+  brakeResponse: 10
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -2271,6 +2289,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!4 &523005907 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -2356,6 +2376,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &593581620
 GameObject:
   m_ObjectHideFlags: 0
@@ -2454,7 +2476,6 @@ Transform:
   - {fileID: 1019480985}
   - {fileID: 1165243934}
   - {fileID: 1365321867}
-  - {fileID: 1002216906}
   m_Father: {fileID: 1564703897}
   m_RootOrder: 0
 --- !u!1 &621788248
@@ -2755,6 +2776,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &683615209
 GameObject:
   m_ObjectHideFlags: 0
@@ -3063,6 +3086,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &764206516
 GameObject:
   m_ObjectHideFlags: 0
@@ -3136,6 +3161,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &769263970
 GameObject:
   m_ObjectHideFlags: 0
@@ -3881,6 +3908,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &933400985
 GameObject:
   m_ObjectHideFlags: 0
@@ -4057,81 +4086,6 @@ Transform:
 Transform:
   m_PrefabParentObject: {fileID: 400022, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
   m_PrefabInternal: {fileID: 1168877092}
---- !u!1 &1002216905
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
-  m_Component:
-  - 4: {fileID: 1002216906}
-  - 33: {fileID: 1002216909}
-  - 65: {fileID: 1002216908}
-  - 23: {fileID: 1002216907}
-  m_Layer: 0
-  m_Name: Bump (9)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1002216906
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1002216905}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 222.669998, y: -.0179999992, z: 291.179993}
-  m_LocalScale: {x: 5, y: 10, z: 1}
-  m_Children: []
-  m_Father: {fileID: 617458322}
-  m_RootOrder: 9
---- !u!23 &1002216907
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1002216905}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
-  m_SubsetIndices: 
-  m_StaticBatchRoot: {fileID: 0}
-  m_UseLightProbes: 1
-  m_ReflectionProbeUsage: 1
-  m_ProbeAnchor: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_PreserveUVs: 1
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: .5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingOrder: 0
---- !u!65 &1002216908
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1002216905}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!33 &1002216909
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1002216905}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &1005703196
 GameObject:
   m_ObjectHideFlags: 0
@@ -4214,6 +4168,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1017201675
 GameObject:
   m_ObjectHideFlags: 0
@@ -4521,6 +4477,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1136791720
 GameObject:
   m_ObjectHideFlags: 0
@@ -4675,6 +4633,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1150879878
 GameObject:
   m_ObjectHideFlags: 0
@@ -4898,7 +4858,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -5230,6 +5190,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!4 &1270874160 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400010, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -5410,6 +5372,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1356012564
 GameObject:
   m_ObjectHideFlags: 0
@@ -6371,6 +6335,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1608088954
 GameObject:
   m_ObjectHideFlags: 0
@@ -6536,6 +6502,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1700694767 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 100018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -6760,6 +6728,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1792337766
 GameObject:
   m_ObjectHideFlags: 0
@@ -6958,6 +6928,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!4 &1871359694 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400014, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -7195,6 +7167,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1986604049
 GameObject:
   m_ObjectHideFlags: 0
@@ -7292,6 +7266,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  sprungMass: 0
+  grav: {x: 0, y: 0, z: 0}
 --- !u!1 &2038602079
 GameObject:
   m_ObjectHideFlags: 0
