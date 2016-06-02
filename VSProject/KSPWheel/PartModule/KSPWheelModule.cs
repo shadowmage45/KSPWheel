@@ -211,6 +211,9 @@ namespace KSPWheel
         [KSPField(guiName = "fLat", guiActive = true)]
         public float fLat;
 
+        [KSPField(guiName = "comp", guiActive = true)]
+        public float comp;
+
         #endregion
 
         #region REGION - GUI Handling methods
@@ -302,22 +305,21 @@ namespace KSPWheel
             base.OnStart(state);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
             wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
-            locateWheelPivotTransforms();            
-            wheelMesh = part.transform.FindRecursive(wheelName);
-            bustedWheelMesh = part.transform.FindRecursive(bustedWheelName);
-            suspensionMesh = part.transform.FindRecursive(suspensionName);
-            suspensionLocalOrigin = suspensionMesh.transform.localPosition;
-            steeringMesh = part.transform.FindRecursive(steeringName);
-            if (!string.IsNullOrEmpty(animationName)) { animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, wheelState); }
+            locateWheelPivotTransforms();
+            if (!String.IsNullOrEmpty(wheelName)){ wheelMesh = part.transform.FindRecursive(wheelName); }
+            if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
+            if (!String.IsNullOrEmpty(suspensionName)) { suspensionMesh = part.transform.FindRecursive(suspensionName); }
+            if (!String.IsNullOrEmpty(steeringName)) { steeringMesh = part.transform.FindRecursive(steeringName); }
+            if (!String.IsNullOrEmpty(animationName)) { animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, wheelState); }
             WheelCollider collider = wheelColliderTransform.GetComponent<WheelCollider>();
             if (collider != null)
             {
-                wheelRadius = collider.radius;
+                wheelRadius = wheelRadius == -1 ? collider.radius : wheelRadius;
+                wheelMass = wheelMass == -1 ? collider.mass : wheelMass;
                 suspensionTravel = suspensionTravel == -1? collider.suspensionDistance : suspensionTravel;
                 suspensionTarget = suspensionTarget == -1? collider.suspensionSpring.targetPosition : suspensionTarget;
                 suspensionSpring = suspensionSpring == -1 ? collider.suspensionSpring.spring : suspensionSpring ;
                 suspensionDamper = suspensionDamper == -1 ? collider.suspensionSpring.damper : suspensionDamper;
-                wheelMass = wheelMass == -1 ? collider.mass : wheelMass;
             }
             Component.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
             if (animationControl != null) { animationControl.setToAnimationState(wheelState, false); }
@@ -336,7 +338,9 @@ namespace KSPWheel
                 int len = colliders.Length;
                 for (int i = 0; i < len; i++)
                 {
+                    //set all colliders in the part to wheel-collider-ignore layer; no stock models that I've investigated have colliders on the same object as meshes, they all use separate colliders
                     colliders[i].gameObject.layer = 26;//wheelcollidersignore
+                    //remove stock 'collisionEnhancer' collider from wheels, if present; these things screw with wheel updates/raycasting, and cause improper collisions on wheels
                     if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
                     {
                         GameObject.Destroy(colliders[i].gameObject);
@@ -345,7 +349,13 @@ namespace KSPWheel
             }
             part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
 
-            wheelColliderTransform.localPosition += Vector3.up * (suspensionTravel - (suspensionTravel*suspensionTarget));
+            wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;
+
+            if (suspensionMesh != null)
+            {
+                suspensionLocalOrigin = suspensionMesh.transform.localPosition;
+            }
+
             if (wheelState == KSPWheelState.BROKEN)
             {
                 if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
@@ -359,37 +369,32 @@ namespace KSPWheel
         }
 
         /// <summary>
-        /// Creates the replacement wheel-collider component and initializes its config parameters from those loaded from the u5-WC component
-        /// </summary>
-        public void Start()
-        {
-            //delaying until Start as the part.rigidbody is not initialized until ?? (need to find out when...)
-            wheel = new KSPWheelCollider(wheelColliderTransform.gameObject, part.gameObject.GetComponent<Rigidbody>());
-            wheel.radius = wheelRadius;
-            wheel.mass = wheelMass;
-            wheel.length = suspensionTravel;
-            wheel.target = suspensionTarget;
-            wheel.spring = suspensionSpring;
-            wheel.damper = suspensionDamper;
-            //wheel.isGrounded = grounded;
-            wheel.setImpactCallback(onWheelImpact);
-        }
-
-        /// <summary>
         /// Updates the wheel collider component physics if it is not broken or retracted
         /// </summary>
         public void FixedUpdate()
         {
             if (!HighLogic.LoadedSceneIsFlight) { return; }
             if (!FlightGlobals.ready || !FlightDriver.fetch) { return; }
-            if (wheel.rigidBody == null)
+            if (wheel == null)
             {
-                wheel.rigidBody = part.GetComponent<Rigidbody>();
-            }
-            if (wheel.rigidBody == null)
-            {
-                MonoBehaviour.print("Part rigidbody is null, cannot update!");
-                return;
+                Rigidbody rb = part.GetComponent<Rigidbody>();
+                if (rb == null)
+                {
+                    return;
+                }
+                else
+                {
+                    //delaying until Start as the part.rigidbody is not initialized until ?? (need to find out when...)
+                    wheel = new KSPWheelCollider(wheelColliderTransform.gameObject, part.gameObject.GetComponent<Rigidbody>());
+                    wheel.radius = wheelRadius;
+                    wheel.mass = wheelMass;
+                    wheel.length = suspensionTravel;
+                    wheel.target = suspensionTarget;
+                    wheel.spring = suspensionSpring;
+                    wheel.damper = suspensionDamper;
+                    //wheel.isGrounded = grounded;
+                    wheel.setImpactCallback(onWheelImpact);
+                }
             }
             if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }            
             sampleInput();
@@ -405,6 +410,7 @@ namespace KSPWheel
             rpm = wheel.rpm;
             steer = wheel.steeringAngle;
             grounded = wheel.isGrounded;
+            comp = wheel.compressionDistance;
             colliderHit = grounded ? wheel.hit.collider.name : "None";
             updateLightState();//TODO may only need to be called on state transitions
             updateResourceDrain();//TODO should only be called when motor is engaged?
@@ -416,7 +422,7 @@ namespace KSPWheel
         /// </summary>
         public void Update()
         {
-            if (!FlightGlobals.ready || !FlightDriver.fetch) { return; }
+            if (!FlightGlobals.ready || !FlightDriver.fetch || wheel==null) { return; }
             if (animationControl != null) { animationControl.updateAnimationState(); }
             //TODO reset input state on animation state changes, re-orient wheels to default (zero steering rotation) when retracted/ing?
             if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }            
@@ -518,7 +524,7 @@ namespace KSPWheel
         /// <param name="load"></param>
         private void calcSuspension(float load, float length, float target, float dampRatio, out float spring, out float damper)
         {
-            spring = (load * 10)/(1-target)/length;
+            spring = (load * 15)/(1-target)/length;
             damper = 2 * Mathf.Sqrt(load * spring) * dampRatio;
         }
 
