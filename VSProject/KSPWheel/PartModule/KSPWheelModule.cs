@@ -67,15 +67,6 @@ namespace KSPWheel
         public float impactTolerance;
 
         /// <summary>
-        /// Determines how far above the initial position in the model that the wheel-collider should be located.
-        /// This is needed as the setup for stock models varies widely for wheel-collider positioning; 
-        /// some have it near the top of suspension travel, others at the bottom.
-        /// Needs to be set on a per-part/model basis.
-        /// </summary>
-        [KSPField]
-        public float wheelColliderOffset;
-
-        /// <summary>
         /// If true, steering will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
         /// </summary>
         [KSPField(guiName ="Invert Steering", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -106,16 +97,20 @@ namespace KSPWheel
         #endregion
 
         #region REGION - Optional wheel parameters that may vary on a part to part basis
+
+        /// <summary>
+        /// Determines how far above the initial position in the model that the wheel-collider should be located.
+        /// This is needed as the setup for stock models varies widely for wheel-collider positioning;
+        /// some have it near the top of suspension travel, others at the bottom.
+        /// Needs to be set on a per-part/model basis.
+        /// </summary>
+        [KSPField]
+        public float wheelColliderOffset;
         [KSPField]
         public float maxSteeringAngle;
         [KSPField]
-        public float maxMotorTorque;
-        [KSPField]
-        public float maxBrakeTorque;
-        [KSPField]
-        public float minBrakeTorque;//for landing legs, brakes==always on
-        [KSPField]
         public float suspensionOffset = 0f;
+
         #endregion
 
         #region REGION - Optional wheel parameters that may be loaded from the WheelCollider if present
@@ -139,11 +134,11 @@ namespace KSPWheel
 
         #region REGION - Animation handling
         [KSPField]
-        public string animationName;
+        public string animationName = String.Empty;
         [KSPField]
-        public float animationSpeed;
+        public float animationSpeed=1;
         [KSPField]
-        public int animationLayer;
+        public int animationLayer=1;
         #endregion
 
         #region REGION - Persistent data
@@ -165,6 +160,8 @@ namespace KSPWheel
         private KSPWheelCollider wheel;
         private KSPWheelState wheelState = KSPWheelState.DEPLOYED;
         private WheelAnimationHandler animationControl;
+        private ModuleLight lightModule;
+        private ModuleStatusLight statusLightModule;
 
         private Vector3 suspensionLocalOrigin;
         #endregion
@@ -237,7 +234,7 @@ namespace KSPWheel
             wheel.damper = suspensionDamper * dampMult;
         }
         
-        [KSPAction("Toggle Gear")]
+        [KSPAction("Toggle Gear", KSPActionGroup.Gear)]
         public void toggleGearAction(KSPActionParam param)
         {
             if (param.type == KSPActionType.Activate) { deploy(); }
@@ -269,14 +266,20 @@ namespace KSPWheel
 
         private void toggleDeploy()
         {
-            if (animationControl == null) { return; }
+            if (animationControl == null)
+            {
+                MonoBehaviour.print("Animation control is null!");
+                return;
+            }
             if (wheelState == KSPWheelState.DEPLOYED || wheelState == KSPWheelState.DEPLOYING)
             {
-                animationControl.setToAnimationState(KSPWheelState.RETRACTING, false);
+                wheelState = KSPWheelState.RETRACTING;
+                animationControl.setToAnimationState(wheelState, false);
             }
             else if (wheelState == KSPWheelState.RETRACTED || wheelState == KSPWheelState.RETRACTING)
             {
-                animationControl.setToAnimationState(KSPWheelState.DEPLOYING, false);
+                wheelState = KSPWheelState.DEPLOYING;
+                animationControl.setToAnimationState(wheelState, false);
             }
         }
 
@@ -368,6 +371,16 @@ namespace KSPWheel
             }
         }
 
+        public void Start()
+        {
+            lightModule = part.GetComponent<ModuleLight>();
+            if (lightModule != null && wheelState == KSPWheelState.DEPLOYED)
+            {
+                lightModule.LightsOn();
+            }
+            statusLightModule = part.GetComponent<ModuleStatusLight>();
+        }
+
         /// <summary>
         /// Updates the wheel collider component physics if it is not broken or retracted
         /// </summary>
@@ -412,7 +425,6 @@ namespace KSPWheel
             grounded = wheel.isGrounded;
             comp = wheel.compressionDistance;
             colliderHit = grounded ? wheel.hit.collider.name : "None";
-            updateLightState();//TODO may only need to be called on state transitions
             updateResourceDrain();//TODO should only be called when motor is engaged?
             updateLandedState();//TODO...
         }
@@ -422,8 +434,8 @@ namespace KSPWheel
         /// </summary>
         public void Update()
         {
-            if (!FlightGlobals.ready || !FlightDriver.fetch || wheel==null) { return; }
             if (animationControl != null) { animationControl.updateAnimationState(); }
+            if (!FlightGlobals.ready || !FlightDriver.fetch || wheel==null) { return; }
             //TODO reset input state on animation state changes, re-orient wheels to default (zero steering rotation) when retracted/ing?
             if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }            
             if (suspensionMesh != null)
@@ -445,6 +457,10 @@ namespace KSPWheel
                     wheelPivotTransforms[i].Rotate(wheel.perFrameRotation, 0, 0, Space.Self);
                 }
             }
+            if (statusLightModule != null)
+            {
+                statusLightModule.SetStatus(brakeInput != 0);
+            }
         }
 
         #endregion
@@ -453,13 +469,6 @@ namespace KSPWheel
 
         //TODO...
         private void updateLandedState()
-        {
-
-        }
-
-        //TODO -- update the on/off state of the lights on the part (if present) for the current wheel/animation state
-        //TODO -- do some wheels have brake-lights that need activating when brakes are on?
-        private void updateLightState()
         {
 
         }
@@ -499,10 +508,16 @@ namespace KSPWheel
         /// <param name="state"></param>
         public void onAnimationStateChanged(KSPWheelState state)
         {
+            MonoBehaviour.print("Recv callback from anim state change, new state: " + state);
             wheelState = state;
             if (state == KSPWheelState.RETRACTED)
             {
                 //TODO reset suspension and steering transforms to neutral?
+                if (lightModule != null) { lightModule.LightsOff(); }
+            }
+            else if (state == KSPWheelState.DEPLOYED)
+            {
+                if (lightModule != null) { lightModule.LightsOn(); }
             }
         }
 
