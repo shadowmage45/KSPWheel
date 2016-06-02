@@ -2003,6 +2003,18 @@ Prefab:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 400032, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: .981000006
+      objectReference: {fileID: 0}
+    - target: {fileID: 400024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: .981000006
+      objectReference: {fileID: 0}
+    - target: {fileID: 400032, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: .39631629
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2300008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
     - {fileID: 2300006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -2094,7 +2106,7 @@ MonoBehaviour:
   maxBrakeTorque: 1500
   maxSteerAngle: 35
   throttleResponse: 5
-  steeringResponse: 8
+  steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 2
   sideFrictionCoefficient: 1
@@ -2155,7 +2167,7 @@ MonoBehaviour:
   maxBrakeTorque: 1500
   maxSteerAngle: 35
   throttleResponse: 5
-  steeringResponse: 8
+  steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 2
   sideFrictionCoefficient: 1
@@ -2225,7 +2237,7 @@ MonoBehaviour:
   maxBrakeTorque: 1000
   maxSteerAngle: 0
   throttleResponse: 5
-  steeringResponse: 8
+  steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
@@ -2271,7 +2283,7 @@ MonoBehaviour:
   maxBrakeTorque: 1000
   maxSteerAngle: 0
   throttleResponse: 5
-  steeringResponse: 8
+  steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
@@ -2295,6 +2307,25 @@ MonoBehaviour:
 Transform:
   m_PrefabParentObject: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
   m_PrefabInternal: {fileID: 523005883}
+--- !u!114 &523005915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 523005893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 104d2143481a4444bafa56eff89bc80a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  colliders: []
+  sprungMasses: []
+  rb: {fileID: 523005900}
+  cLen: 0
+  sm1: 0
+  sm2: 0
+  sm3: 0
+  sm4: 0
 --- !u!4 &552666938 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400026, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}

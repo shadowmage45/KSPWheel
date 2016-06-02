@@ -74,7 +74,7 @@ namespace KSPWheel
         //sticky-friction vars;
         //TODO -- add get/set methods for these to expose them for configuration
         //TODO -- finish implementing sticky friction stuff =\
-        private float maxStickyVelocity = 0.00f;
+        private float maxStickyVelocity = 0.0f;
         private float sideStickyTimeMax = 0.25f;
         private float fwdStickyTimeMax = 0.25f;
 
@@ -513,11 +513,17 @@ namespace KSPWheel
                 stickyJoint.secondaryAxis = Vector3.up;
             }
             stickyJoint.connectedAnchor = hit.point;
-            stickyJoint.breakForce = downForce;
-            stickyJoint.breakTorque = downForce;
+            stickyJoint.breakForce = 0.001f;
+            stickyJoint.breakTorque = 0.001f;
 
-            if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity && currentMotorTorque == 0) { fwdStickyTimer+=Time.fixedDeltaTime; }
-            else { fwdStickyTimer = 0; }
+            if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity && currentMotorTorque == 0)
+            {
+                fwdStickyTimer += Time.fixedDeltaTime;
+            }
+            else
+            {
+                fwdStickyTimer = 0;
+            }
 
             if (Math.Abs(wheelLocalVelocity.x) < maxStickyVelocity) { sideStickyTimer+=Time.fixedDeltaTime; }
             else { sideStickyTimer = 0; }
