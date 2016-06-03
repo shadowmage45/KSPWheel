@@ -52,11 +52,17 @@
     <Reference Include="UnityEngine">
       <HintPath>Library\UnityAssemblies\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.Advertisements">
+      <HintPath>Library\UnityAssemblies\UnityEngine.Advertisements.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>Library\UnityAssemblies\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Networking">
       <HintPath>Library\UnityAssemblies\UnityEngine.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Analytics">
+      <HintPath>Library\UnityAssemblies\UnityEngine.Analytics.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor">
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
@@ -72,13 +78,8 @@
     <Compile Include="Assets\Scripts\KSPFrictionCurve.cs" />
     <Compile Include="Assets\Scripts\KSPWheelCollider.cs" />
     <Compile Include="Assets\Scripts\KSPWheelComponent.cs" />
-    <Compile Include="Assets\Scripts\KSPWheelDefaultFrictionModel.cs" />
     <Compile Include="Assets\Scripts\KSPWheelFrictionCurve.cs" />
-    <Compile Include="Assets\Scripts\KSPWheelPhysicsModel.cs" />
     <Compile Include="Assets\Scripts\LFWheelGrip.cs" />
-    <Compile Include="Assets\Scripts\UnityVehicleController.cs" />
-    <Compile Include="Assets\Scripts\WheelColliderSource.cs" />
-    <Compile Include="Assets\Scripts\WheelHitSource.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Terrain\GrassTextures\license.txt" />

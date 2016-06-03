@@ -146,6 +146,8 @@ namespace KSPWheel
         public float fDamp;
         public float fLong;
         public float fLat;
+        public float comp;
+        public float fBumpStop;
         public float sprungMass;
         public Vector3 grav;
 
@@ -221,6 +223,8 @@ namespace KSPWheel
             sLat = wheelCollider.lateralSlip;
             fLong = wheelCollider.longitudinalForce;
             fLat = wheelCollider.lateralForce;
+            comp = wheelCollider.compressionDistance;
+            fBumpStop = wheelCollider.extCompForce * wheelCollider.extCompTime;
             sprungMass = wheelCollider.sprungMass;
             grav = Physics.gravity;
         }

@@ -459,11 +459,41 @@ namespace KSPWheel
 
         #region REGION - Private/internal update methods
 
+        public float extCompTime=0;
+        public float extCompForce = 10000;
+        public float bumpStopForce = 100000;
         /// <summary>
         /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.
         /// </summary>
         private void integrateForces()
         {
+            //if (currentSuspensionCompression > currentSuspenionLength)
+            //{
+            //    float d = currentSuspensionCompression - currentSuspenionLength;
+            //    fSpring += bumpStopForce * d;
+            //}
+            if (currentSuspensionCompression > currentSuspenionLength)
+            {
+                if (currentSuspensionCompression > prevSuspensionCompression)//increase force
+                {
+                    extCompTime += Time.fixedDeltaTime;
+                }
+                else if (currentSuspensionCompression == prevSuspensionCompression)
+                {
+                    //NOOP, equilibrium reached
+                }
+                else
+                {
+                    //extCompTime -= Time.fixedDeltaTime;
+                }
+                float add = extCompTime * extCompForce;
+                if (add < 0) { add = 0; }
+                fSpring += add;
+            }
+            else
+            {
+                extCompTime -= Time.fixedDeltaTime;
+            }
             calcFriction(fSpring);
             calculatedForces += hit.normal * fSpring;
             calculatedForces += fLong * wheelForward;
