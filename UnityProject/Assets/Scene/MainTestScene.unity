@@ -702,6 +702,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &191296913
@@ -1119,6 +1121,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &301343513
@@ -1457,6 +1461,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &360438514
@@ -1607,6 +1613,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &377664100
@@ -1685,6 +1693,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &441339093
@@ -1866,6 +1876,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1001 &523005883
@@ -2099,16 +2111,16 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
+  spring: 35000
   damper: 3000
   maxMotorTorque: 0
-  rpmLimit: 600
+  rpmLimit: 10000
   maxBrakeTorque: 1500
   maxSteerAngle: 35
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
-  forwardFrictionCoefficient: 2
+  forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
@@ -2124,6 +2136,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!54 &523005900
@@ -2160,16 +2174,16 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
+  spring: 35000
   damper: 3000
   maxMotorTorque: 0
-  rpmLimit: 600
+  rpmLimit: 10000
   maxBrakeTorque: 1500
   maxSteerAngle: 35
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
-  forwardFrictionCoefficient: 2
+  forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
@@ -2185,6 +2199,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!64 &523005902
@@ -2230,10 +2246,10 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
+  spring: 40000
   damper: 3000
   maxMotorTorque: 1100
-  rpmLimit: 600
+  rpmLimit: 10000
   maxBrakeTorque: 1000
   maxSteerAngle: 0
   throttleResponse: 5
@@ -2255,6 +2271,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!114 &523005905
@@ -2276,10 +2294,10 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
+  spring: 40000
   damper: 3000
   maxMotorTorque: 1100
-  rpmLimit: 600
+  rpmLimit: 10000
   maxBrakeTorque: 1000
   maxSteerAngle: 0
   throttleResponse: 5
@@ -2301,31 +2319,14 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!4 &523005907 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
   m_PrefabInternal: {fileID: 523005883}
---- !u!114 &523005915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 523005893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 104d2143481a4444bafa56eff89bc80a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  colliders: []
-  sprungMasses: []
-  rb: {fileID: 523005900}
-  cLen: 0
-  sm1: 0
-  sm2: 0
-  sm3: 0
-  sm4: 0
 --- !u!4 &552666938 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400026, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -2407,6 +2408,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &593581620
@@ -2807,6 +2810,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &683615209
@@ -3117,6 +3122,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &764206516
@@ -3192,6 +3199,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &769263970
@@ -3939,6 +3948,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &933400985
@@ -4199,6 +4210,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1017201675
@@ -4508,6 +4521,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1136791720
@@ -4664,6 +4679,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1150879878
@@ -5221,6 +5238,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!4 &1270874160 stripped
@@ -5403,6 +5422,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1356012564
@@ -6366,6 +6387,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1608088954
@@ -6533,6 +6556,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1700694767 stripped
@@ -6759,6 +6784,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1792337766
@@ -6959,6 +6986,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!4 &1871359694 stripped
@@ -7198,6 +7227,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &1986604049
@@ -7297,6 +7328,8 @@ MonoBehaviour:
   fDamp: 0
   fLong: 0
   fLat: 0
+  comp: 0
+  fBumpStop: 0
   sprungMass: 0
   grav: {x: 0, y: 0, z: 0}
 --- !u!1 &2038602079

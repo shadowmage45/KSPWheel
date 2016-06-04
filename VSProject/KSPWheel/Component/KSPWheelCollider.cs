@@ -633,8 +633,8 @@ namespace KSPWheel
             float velMag = Mathf.Sqrt( vLat * vLat + vLong * vLong);
             float normZ = velMag==0? 0 : Mathf.Abs(vLong) / velMag;
             float normX = velMag == 0 ? 0 : Mathf.Abs(vLat) / velMag;
-            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef * normZ;
-            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef * normX;            
+            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;// * normZ;
+            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef;// * normX;            
 
             //TODO actual sprung mass can be derived (mostly?) by the delta between current and prev spring velocity
             // and the previous spring force (e.g. the previous spring (F) force effected (A) change in velocity, thus the mass must by (M))
@@ -674,16 +674,38 @@ namespace KSPWheel
             {
                 currentAngularVelocity = 0;
                 wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
-                float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs( fLong ));
+                float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs( fLong ));//remaining 'max' traction left
                 float fMax2 = Mathf.Max(0, downForce * Mathf.Abs(vLong) * 2 - Mathf.Abs(fLong));
                 float fBrakeMax = Mathf.Min(fMax, fMax2);
                 fLong += fBrakeMax * -Mathf.Sign(vLong);
             }
             else
             {
-                currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;
+                currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;//traction from this will be applied next frame from wheel slip, but we're integrating here basically for rendering purposes
             }
 
+            //normalize actual force outputs rather than max forces... test code...
+            //float rLong = 0;// fLong == 0 ? 1 : Mathf.Abs(fLat) / Mathf.Abs(fLong);
+            //float rLat = 0;// fLat == 0 ? 1 : Mathf.Abs(fLong) / Mathf.Abs(fLat);
+            //float fLongAbs = Mathf.Abs(fLong);
+            //float fLatAbs = Mathf.Abs(fLat);
+            //if (fLatAbs > fLongAbs)
+            //{
+            //    rLong = fLongAbs / fLatAbs;
+            //    rLat = 1 - rLong;
+            //}
+            //else if (fLongAbs > fLatAbs)
+            //{
+            //    rLat = fLatAbs / fLongAbs;
+            //    rLong = 1 - rLat;
+            //}
+            //else//equal...erm, probably zeros, but otherwise we'll just give them both half...
+            //{
+            //    rLong = 0.5f;
+            //    rLat = 0.5f;
+            //}            
+            //fLong *= rLong;
+            //fLat *= rLat;
 
             if (currentSuspensionCompression > currentSuspenionLength)
             {
