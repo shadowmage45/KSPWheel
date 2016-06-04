@@ -597,12 +597,12 @@ namespace KSPWheel
         public float fBump = 0;
 
         /// <summary>
-        /// Working, but incomplete; fwd traction input/output needs attention
+        /// Calculate the longitudinal and lateral forces for the input suspension force
         /// </summary>
-        /// <param name="downForce"></param>
         private void calcFriction(float downForce)
         {
             //initial motor/brake torque integration, brakes integrated further after friction applied
+            //motor torque applied directly
             currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;//acceleration is in radians/second; only operating on 1 * fixedDeltaTime seconds, so only update for that length of time
             // maximum torque exerted by brakes onto wheel this frame
             float wBrakeMax = currentBrakeTorque * inertiaInverse * Time.fixedDeltaTime;
@@ -611,7 +611,7 @@ namespace KSPWheel
             // sign it opposite of current wheel spin direction
             // and finally, integrate it into wheel angular velocity
             currentAngularVelocity += wBrake * -Mathf.Sign(currentAngularVelocity);
-            // this is the remaining brake torque that can be used to counteract acceleration caused by traction friction
+            // this is the remaining brake angular acceleration/torque that can be used to counteract wheel acceleration caused by traction friction
             float wBrakeDelta = wBrakeMax - wBrake;
 
             //long velocity
@@ -620,21 +620,21 @@ namespace KSPWheel
             float vLat = wheelLocalVelocity.x;
             //linear velocity of wheel
             float vWheel = currentAngularVelocity * currentWheelRadius;
-            //long slip ratio
+            //linear velocity delta between wheel and surface in meters per second
+            float vDelta = vWheel - vLong;
+            //long slip ratio, 
+            // calculated prior to any integration this frame; from a stand-still a wheel will always have a slip ratio of 0 the first frame, and no friction
             sLong = calcLongSlip(vLong, vWheel);
             //lat slip ratio
             sLat = calcLatSlip(vLong, vLat);
 
-            // this was an attempt to normalize the friction available; a wheel only has so much friction it can exert, split between forwards and sideways directions
-            // sadly this results in a constant yawing of the vehicle as the drive wheels are constantly delivering different amounts of traction-force
-            Vector3 wheelVel = new Vector3(vLat, 0, vLong);
-            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef * Mathf.Abs(wheelVel.normalized.z);
-            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef * Mathf.Abs(wheelVel.normalized.x);
-
-            //raw max longitudinal force based purely on the slip ratio
-            //float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
-            //raw max lateral force based purely on the slip ratio
-            //float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef;
+            // the normalizing function allows for wheel-spinout, and basically enforces the 'max-friction-per-tire' limit, sharing the long and lat friction depenant upon their relative velocities
+            // TODO the normalizing for vLong should probably be done for vDelta instead...
+            float velMag = Mathf.Sqrt( vLat * vLat + vLong * vLong);
+            float normZ = velMag==0? 0 : Mathf.Abs(vLong) / velMag;
+            float normX = velMag == 0 ? 0 : Mathf.Abs(vLat) / velMag;
+            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef * normZ;
+            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef * normX;            
 
             //TODO actual sprung mass can be derived (mostly?) by the delta between current and prev spring velocity
             // and the previous spring force (e.g. the previous spring (F) force effected (A) change in velocity, thus the mass must by (M))
@@ -647,8 +647,6 @@ namespace KSPWheel
             //if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
             fLat *= -Mathf.Sign(vLat);// sign it opposite to the current vLat
 
-            //linear velocity delta between wheel and surface in meters per second
-            float vDelta = vWheel - vLong;
             //angular velocity delta between wheel and surface in radians per second; radius inverse used to avoid div operations
             float wDelta = vDelta * radiusInverse;
             //amount of torque needed to bring wheel to surface speed over one second
@@ -661,7 +659,7 @@ namespace KSPWheel
             float fTractMax = tTractMax * radiusInverse;
             //final maximum force value is the smallest of the two force values;
             // if fTractMax is used the wheel will be brought to surface velocity,
-            // otherwise fLongMax is used and the wheel is still slipping
+            // otherwise fLongMax is used and the wheel is still slipping but maximum traction force will be exerted
             fTractMax = Mathf.Min(fTractMax, fLongMax);
             // convert the clamped traction value into a torque value and apply to the wheel
             float tractionTorque = fTractMax * currentWheelRadius * -Mathf.Sign(vDelta);
@@ -691,7 +689,7 @@ namespace KSPWheel
             {
                 float d = currentSuspensionCompression - currentSuspenionLength;
                 fBump = bumpStopForce * d * 2f;
-                fSpring += fBump;
+                this.fSpring += fBump;
             }
         }
 
