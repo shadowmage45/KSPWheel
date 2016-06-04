@@ -459,41 +459,11 @@ namespace KSPWheel
 
         #region REGION - Private/internal update methods
 
-        public float extCompTime=0;
-        public float extCompForce = 10000;
-        public float bumpStopForce = 100000;
         /// <summary>
         /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.
         /// </summary>
         private void integrateForces()
         {
-            //if (currentSuspensionCompression > currentSuspenionLength)
-            //{
-            //    float d = currentSuspensionCompression - currentSuspenionLength;
-            //    fSpring += bumpStopForce * d;
-            //}
-            if (currentSuspensionCompression > currentSuspenionLength)
-            {
-                if (currentSuspensionCompression > prevSuspensionCompression)//increase force
-                {
-                    extCompTime += Time.fixedDeltaTime;
-                }
-                else if (currentSuspensionCompression == prevSuspensionCompression)
-                {
-                    //NOOP, equilibrium reached
-                }
-                else
-                {
-                    //extCompTime -= Time.fixedDeltaTime;
-                }
-                float add = extCompTime * extCompForce;
-                if (add < 0) { add = 0; }
-                fSpring += add;
-            }
-            else
-            {
-                extCompTime -= Time.fixedDeltaTime;
-            }
             calcFriction(fSpring);
             calculatedForces += hit.normal * fSpring;
             calculatedForces += fLong * wheelForward;
@@ -616,8 +586,15 @@ namespace KSPWheel
             }
             return false;
         }
-        
+
         #region REGION - Friction model calculations methods based on : http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+
+        //TODO -- clean up these vars, and this function in general
+        // need to find the force necessary to bring the suspension out of overcompression
+        // still cannot rely on knowing the mass, and this will have to be done iteratively
+        // also, should investigate usage of the sticky-friction joints to work as anti-punchthrough
+        public float bumpStopForce = 100000;
+        public float fBump = 0;
 
         /// <summary>
         /// Working, but incomplete; fwd traction input/output needs attention
@@ -650,14 +627,14 @@ namespace KSPWheel
 
             // this was an attempt to normalize the friction available; a wheel only has so much friction it can exert, split between forwards and sideways directions
             // sadly this results in a constant yawing of the vehicle as the drive wheels are constantly delivering different amounts of traction-force
-            //Vector3 wheelVel = new Vector3(vLat, 0, vDelta);
-            //float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef * Mathf.Abs(wheelVel.normalized.z);
-            //float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef * Mathf.Abs(wheelVel.normalized.x);
+            Vector3 wheelVel = new Vector3(vLat, 0, vLong);
+            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef * Mathf.Abs(wheelVel.normalized.z);
+            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef * Mathf.Abs(wheelVel.normalized.x);
 
             //raw max longitudinal force based purely on the slip ratio
-            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;// * Mathf.Abs(wheelVel.normalized.z);
+            //float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
             //raw max lateral force based purely on the slip ratio
-            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef;// * Mathf.Abs(wheelVel.normalized.x);
+            //float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef;
 
             //TODO actual sprung mass can be derived (mostly?) by the delta between current and prev spring velocity
             // and the previous spring force (e.g. the previous spring (F) force effected (A) change in velocity, thus the mass must by (M))
@@ -700,14 +677,21 @@ namespace KSPWheel
                 currentAngularVelocity = 0;
                 wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
                 float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs( fLong ));
-                float fMax2 = Mathf.Max(0, currentSprungMass * 10 * Mathf.Abs(vLong) - Mathf.Abs(fLong));
-                //float fMax2 = Mathf.Max(0, ((currentSprungMass * Mathf.Abs(vLong)) / Time.fixedDeltaTime) - Mathf.Abs(fLong));
+                float fMax2 = Mathf.Max(0, downForce * Mathf.Abs(vLong) * 2 - Mathf.Abs(fLong));
                 float fBrakeMax = Mathf.Min(fMax, fMax2);
                 fLong += fBrakeMax * -Mathf.Sign(vLong);
             }
             else
             {
                 currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;
+            }
+
+
+            if (currentSuspensionCompression > currentSuspenionLength)
+            {
+                float d = currentSuspensionCompression - currentSuspenionLength;
+                fBump = bumpStopForce * d * 2f;
+                fSpring += fBump;
             }
         }
 

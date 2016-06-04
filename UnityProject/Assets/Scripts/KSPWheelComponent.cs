@@ -224,7 +224,7 @@ namespace KSPWheel
             fLong = wheelCollider.longitudinalForce;
             fLat = wheelCollider.lateralForce;
             comp = wheelCollider.compressionDistance;
-            fBumpStop = wheelCollider.extCompForce * wheelCollider.extCompTime;
+            fBumpStop = wheelCollider.fBump;
             sprungMass = wheelCollider.sprungMass;
             grav = Physics.gravity;
         }
