@@ -110,6 +110,16 @@ namespace KSPWheel
         public float maxSteeringAngle;
         [KSPField]
         public float suspensionOffset = 0f;
+        [KSPField]
+        public Vector3 wheelColliderRotation = Vector3.zero;
+        [KSPField]
+        public Vector3 suspensionAxis = Vector3.up;
+
+        [KSPField]
+        public float minLoadRating = 0.05f;
+
+        [KSPField]
+        public float maxLoadRating = 5f;
 
         #endregion
 
@@ -127,9 +137,9 @@ namespace KSPWheel
         [KSPField]
         public float suspensionDamper = -1;
         [KSPField]
-        public float motorTorque = -1;
+        public float maxMotorTorque = -1;
         [KSPField]
-        public float brakeTorque = -1;
+        public float maxBrakeTorque = -1;
         #endregion
 
         #region REGION - Animation handling
@@ -323,6 +333,8 @@ namespace KSPWheel
                 suspensionTarget = suspensionTarget == -1? collider.suspensionSpring.targetPosition : suspensionTarget;
                 suspensionSpring = suspensionSpring == -1 ? collider.suspensionSpring.spring : suspensionSpring ;
                 suspensionDamper = suspensionDamper == -1 ? collider.suspensionSpring.damper : suspensionDamper;
+                maxBrakeTorque = maxBrakeTorque == -1 ? collider.brakeTorque : maxBrakeTorque;
+                maxMotorTorque = maxMotorTorque == -1 ? collider.motorTorque : maxMotorTorque;
             }
             Component.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
             if (animationControl != null) { animationControl.setToAnimationState(wheelState, false); }
@@ -351,7 +363,8 @@ namespace KSPWheel
                 }
             }
             part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
-
+            
+            wheelColliderTransform.Rotate(wheelColliderRotation, Space.Self);
             wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;
 
             if (suspensionMesh != null)
@@ -416,7 +429,7 @@ namespace KSPWheel
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
             if (wheelState != KSPWheelState.BROKEN && wheelState != KSPWheelState.RETRACTED)
             {
-                wheel.gravityForce = FlightIntegrator.ActiveVesselFI.geeForce;
+                //wheel.gravityForce = FlightIntegrator.ActiveVesselFI.geeForce;
                 wheel.updateWheel();
             }
             fLong = wheel.longitudinalForce;
@@ -443,7 +456,7 @@ namespace KSPWheel
             {
                 float offset = wheel.compressionDistance + suspensionOffset;
                 if (offset < 0) { offset = 0; }
-                suspensionMesh.localPosition = suspensionLocalOrigin + suspensionMesh.up * offset;
+                suspensionMesh.localPosition = suspensionLocalOrigin + suspensionAxis * offset;
             }
             if (steeringMesh != null)
             {
@@ -498,9 +511,9 @@ namespace KSPWheel
                 if (fwdInput > 1) { fwdInput = 1; }
                 if (fwdInput < -1) { fwdInput = -1; }
             }
-            wheel.motorTorque = motorTorque * fwdInput;
+            wheel.motorTorque = maxMotorTorque * fwdInput;
             wheel.steeringAngle = maxSteeringAngle * rotInput;
-            wheel.brakeTorque = brakeTorque * brakeInput;
+            wheel.brakeTorque = maxBrakeTorque * brakeInput;
         }
 
         /// <summary>
@@ -540,7 +553,8 @@ namespace KSPWheel
         /// <param name="load"></param>
         private void calcSuspension(float load, float length, float target, float dampRatio, out float spring, out float damper)
         {
-            spring = (load * 15)/(1-target)/length;
+            float targetDistance = length - (target * length);
+            spring = (load * 10) / targetDistance;            
             damper = 2 * Mathf.Sqrt(load * spring) * dampRatio;
         }
 
