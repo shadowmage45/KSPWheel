@@ -443,7 +443,7 @@ namespace KSPWheel
             {
                 float offset = wheel.compressionDistance + suspensionOffset;
                 if (offset < 0) { offset = 0; }
-                suspensionMesh.localPosition = suspensionLocalOrigin + Vector3.up * offset;
+                suspensionMesh.localPosition = suspensionLocalOrigin + suspensionMesh.up * offset;
             }
             if (steeringMesh != null)
             {
