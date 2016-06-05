@@ -409,7 +409,7 @@ namespace KSPWheel
             wheelUp = wheel.transform.up;
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             prevSuspensionCompression = currentSuspensionCompression;
-            float prevFSpring = fSpring;
+            prevFSpring = fSpring;
             float prevVSpring = vSpring;
             bool prevGrounded = currentlyGrounded;
             if (checkSuspensionContact())//suspension compression is updated in the suspension contact check
@@ -459,12 +459,21 @@ namespace KSPWheel
 
         #region REGION - Private/internal update methods
 
+        private float prevFSpring;
+        private float springResponse = 50;
+        private float prevFlong, prevFlat;
+
         /// <summary>
         /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.
         /// </summary>
         private void integrateForces()
         {
+            prevFlong = fLong;
+            prevFlat = fLat;
+            fSpring = Mathf.Lerp(prevFSpring, fSpring, springResponse * Time.fixedDeltaTime);
             calcFriction(fSpring);
+            fLong = Mathf.Lerp(prevFlong, fLong, springResponse * Time.fixedDeltaTime);
+            fLat = Mathf.Lerp(prevFlat, fLat, springResponse * Time.fixedDeltaTime);
             calculatedForces += hit.normal * fSpring;
             calculatedForces += fLong * wheelForward;
             calculatedForces += fLat * wheelRight;
@@ -587,6 +596,49 @@ namespace KSPWheel
             return false;
         }
 
+        /// <summary>
+        /// less efficient and less optimal solution for skinny wheels, but avoids the edge cases caused by sphere colliders<para/>
+        /// uses 2 capsule-casts in a V shape downward for the wheel instead of a sphere; 
+        /// for some collisions the wheel may push into the surface slightly, up to about 1/3 radius.  
+        /// Could be expanded to use more capsules at the cost of performance, but at increased collision fidelity, by simulating more 'edges' of a n-gon circle.  
+        /// Sadly, unity lacks a collider-sweep function, or this could be a bit more efficient.
+        /// </summary>
+        /// <returns></returns>
+        private bool dualCapsulecastSuspension()
+        {
+            //create two capsule casts, basically in a v-shape
+            //take whichever collides first
+            //have to start above the wheel, due to the 'no cath if already in collision' clause
+            //this is where anti-punchthrough is needed, to stop overcompression, so that you don't need to start above the wheel (or maybe only slightly)
+            float wheelWidth = 0.3f;
+            float capRadius = wheelWidth * 0.5f;
+
+            RaycastHit hit1;
+            RaycastHit hit2;
+            bool hit1b;
+            bool hit2b;
+            Vector3 startPos = wheel.transform.position;
+            float length = currentSuspenionLength+currentWheelRadius;
+            float capLen = currentWheelRadius - capRadius;
+            Vector3 offset = wheel.transform.up * currentWheelRadius;//offset it above the wheel by wheel-radius, in case of overcompression (see noes above)
+            Vector3 capEnd1 = wheel.transform.position + wheel.transform.forward * capLen;
+            Vector3 capEnd2 = wheel.transform.position - wheel.transform.forward * capLen;
+            Vector3 capBottom = wheel.transform.position - wheel.transform.up * capLen;
+            hit1b = Physics.CapsuleCast(capEnd1 + offset, capBottom + offset, capRadius, -wheel.transform.up, out hit1, length, currentRaycastMask);
+            hit2b = Physics.CapsuleCast(capEnd2 + offset, capBottom + offset, capRadius, -wheel.transform.up, out hit2, length, currentRaycastMask);
+            if (hit1b || hit2b)
+            {
+                if (hit1b && hit2b) { hit = hit1.distance < hit2.distance ? hit1 : hit2; }
+                else if (hit1b) { hit = hit1; }
+                else if (hit2b) { hit = hit2; }
+                currentSuspensionCompression = currentSuspenionLength - hit.distance + currentWheelRadius;
+                Vector3 hitPos = wheel.transform.position - (currentSuspenionLength - currentSuspensionCompression) * wheel.transform.up - wheel.transform.up * radius;
+                worldVelocityAtHit = rigidBody.GetPointVelocity(hitPos);
+                return true;
+            }
+            return false;
+        }
+
         #region REGION - Friction model calculations methods based on : http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
 
         //TODO -- clean up these vars, and this function in general
@@ -643,8 +695,9 @@ namespace KSPWheel
             // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame
             // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
             fLat = fLatMax;
+            // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero; the 2x multiplier is just because it helped with response but didn't induce oscillations; higher multipliers can
             if (fLat > Mathf.Abs(vLat) * downForce * 2f) { fLat = Mathf.Abs(vLat) * downForce * 2f; }
-            //if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
+            // if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
             fLat *= -Mathf.Sign(vLat);// sign it opposite to the current vLat
 
             //angular velocity delta between wheel and surface in radians per second; radius inverse used to avoid div operations
@@ -684,35 +737,51 @@ namespace KSPWheel
                 currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;//traction from this will be applied next frame from wheel slip, but we're integrating here basically for rendering purposes
             }
 
-            //normalize actual force outputs rather than max forces... test code...
-            //float rLong = 0;// fLong == 0 ? 1 : Mathf.Abs(fLat) / Mathf.Abs(fLong);
-            //float rLat = 0;// fLat == 0 ? 1 : Mathf.Abs(fLong) / Mathf.Abs(fLat);
-            //float fLongAbs = Mathf.Abs(fLong);
-            //float fLatAbs = Mathf.Abs(fLat);
-            //if (fLatAbs > fLongAbs)
-            //{
-            //    rLong = fLongAbs / fLatAbs;
-            //    rLat = 1 - rLong;
-            //}
-            //else if (fLongAbs > fLatAbs)
-            //{
-            //    rLat = fLatAbs / fLongAbs;
-            //    rLong = 1 - rLat;
-            //}
-            //else//equal...erm, probably zeros, but otherwise we'll just give them both half...
-            //{
-            //    rLong = 0.5f;
-            //    rLat = 0.5f;
-            //}            
-            //fLong *= rLong;
-            //fLat *= rLat;
+            // unfunctional test-code
+            // limit lateral friction based on remainder after long friction used
+            // extremely unbalanced, results in bad yaw and jitters
+            //float fLatMax2 = fLatMax - Mathf.Abs(fLong);
+            //if (Mathf.Abs(fLat) > fLatMax2) { fLat = Mathf.Sign(fLat) * fLatMax2; }
 
-            if (currentSuspensionCompression > currentSuspenionLength)
+            // partially functional test-code
+            // normalize based on slip ratios... has yawing problem
+            //float mag = Mathf.Sqrt(sLong * sLong + sLat * sLat);
+            //float nSlong = mag == 0 ? 0 : sLong / mag;
+            //float nSlat = mag == 0 ? 0 : sLat / mag;
+            //fLong *= nSlong;
+            //fLat *= nSlat;
+
+            // normalize actual force outputs rather than max forces... test code...
+            float rLong = 0;// fLong == 0 ? 1 : Mathf.Abs(fLat) / Mathf.Abs(fLong);
+            float rLat = 0;// fLat == 0 ? 1 : Mathf.Abs(fLong) / Mathf.Abs(fLat);
+            float fLongAbs = Mathf.Abs(fLong);
+            float fLatAbs = Mathf.Abs(fLat);
+            if (fLatAbs > fLongAbs)
             {
-                float d = currentSuspensionCompression - currentSuspenionLength;
-                fBump = bumpStopForce * d * 2f;
-                this.fSpring += fBump;
+                rLong = fLongAbs / fLatAbs;
+                rLat = 1 - rLong;
             }
+            else if (fLongAbs > fLatAbs)
+            {
+                rLat = fLatAbs / fLongAbs;
+                rLong = 1 - rLat;
+            }
+            else//equal...erm, probably zeros, but otherwise we'll just give them both half...
+            {
+                rLong = 0.5f;
+                rLat = 0.5f;
+            }
+            fLong *= rLong;
+            fLat *= rLat;
+
+
+            // bump stop test code
+            //if (currentSuspensionCompression > currentSuspenionLength)
+            //{
+            //    float d = currentSuspensionCompression - currentSuspenionLength;
+            //    fBump = bumpStopForce * d * 2f;
+            //    this.fSpring += fBump;
+            //}
         }
 
         /// <summary>
@@ -768,8 +837,16 @@ namespace KSPWheel
             currentSprungMass = prevFSpring / vDelta;
         }
 
-        #endregion ENDREGION - Friction calculations methods based on alternate source: 
+        #endregion ENDREGION - Friction calculations methods based on alternate
+
+        #region REGION - Friction calculation based on: http://www.racer.nl/reference/pacejka.htm
+        //also http://www.mathworks.com/help/physmod/sdl/ref/tireroadinteractionmagicformula.html?requestedDomain=es.mathworks.com
+        //and http://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
+        // http://www.edy.es/dev/2011/12/facts-and-myths-on-the-pacejka-curves/
+        // http://www-cdr.stanford.edu/dynamic/bywire/tires.pdf
         
+        #endregion ENDREGION - Alternate friction model 2
+
         #endregion ENDREGION - Private/internal update methods
 
     }

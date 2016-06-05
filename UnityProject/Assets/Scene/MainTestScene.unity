@@ -1588,11 +1588,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -1668,11 +1668,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -1851,11 +1851,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -2250,7 +2250,7 @@ MonoBehaviour:
   damper: 3000
   maxMotorTorque: 1100
   rpmLimit: 10000
-  maxBrakeTorque: 1000
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 10
@@ -2298,7 +2298,7 @@ MonoBehaviour:
   damper: 3000
   maxMotorTorque: 1100
   rpmLimit: 10000
-  maxBrakeTorque: 1000
+  maxBrakeTorque: 0
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 10
@@ -2785,11 +2785,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -3174,11 +3174,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -3923,11 +3923,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -4185,11 +4185,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -4654,11 +4654,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -5213,11 +5213,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2
@@ -7303,11 +7303,11 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 30000
-  damper: 3000
-  maxMotorTorque: 0
+  spring: 8000
+  damper: 2000
+  maxMotorTorque: 250
   rpmLimit: 600
-  maxBrakeTorque: 0
+  maxBrakeTorque: 350
   maxSteerAngle: 0
   throttleResponse: 2
   steeringResponse: 2

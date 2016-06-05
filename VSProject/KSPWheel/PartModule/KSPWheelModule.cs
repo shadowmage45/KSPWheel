@@ -53,6 +53,16 @@ namespace KSPWheel
         [KSPField]
         public string steeringName;
 
+        //bogey functions are used for aligning the 'foot' to the ground
+        [KSPField]
+        public string bogeyName;
+
+        [KSPField]
+        public Vector3 bogeyRotAxis=Vector3.right;
+
+        [KSPField]
+        public Vector3 bogeyUpAxis = Vector3.up;
+
         /// <summary>
         /// Determines if this wheel should use tank-steering.  This will adjust the fwd/reverse input for steering input rather than manipulating the orientation of the wheel.
         /// </summary>
@@ -114,12 +124,17 @@ namespace KSPWheel
         public Vector3 wheelColliderRotation = Vector3.zero;
         [KSPField]
         public Vector3 suspensionAxis = Vector3.up;
+        [KSPField]
+        public Vector3 steeringAxis = Vector3.up;
 
         [KSPField]
         public float minLoadRating = 0.05f;
 
         [KSPField]
         public float maxLoadRating = 5f;
+
+        [KSPField]
+        public bool brakesLocked = false;
 
         #endregion
 
@@ -166,6 +181,7 @@ namespace KSPWheel
         private Transform bustedWheelMesh;
         private Transform suspensionMesh;
         private Transform steeringMesh;
+        private Transform bogeyMesh;
 
         private KSPWheelCollider wheel;
         private KSPWheelState wheelState = KSPWheelState.DEPLOYED;
@@ -324,6 +340,7 @@ namespace KSPWheel
             if (!String.IsNullOrEmpty(suspensionName)) { suspensionMesh = part.transform.FindRecursive(suspensionName); }
             if (!String.IsNullOrEmpty(steeringName)) { steeringMesh = part.transform.FindRecursive(steeringName); }
             if (!String.IsNullOrEmpty(animationName)) { animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, wheelState); }
+            if (!String.IsNullOrEmpty(bogeyName)) { bogeyMesh = part.transform.FindRecursive(bogeyName); }
             WheelCollider collider = wheelColliderTransform.GetComponent<WheelCollider>();
             if (collider != null)
             {
@@ -454,14 +471,14 @@ namespace KSPWheel
             if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }            
             if (suspensionMesh != null)
             {
-                float offset = wheel.compressionDistance + suspensionOffset;
+                float offset = wheel.compressionDistance;
                 if (offset < 0) { offset = 0; }
+                offset += suspensionOffset;
                 suspensionMesh.localPosition = suspensionLocalOrigin + suspensionAxis * offset;
             }
             if (steeringMesh != null)
             {
-                float angle = wheel.steeringAngle;
-                steeringMesh.localRotation = Quaternion.Euler(0, angle, 0);
+                steeringMesh.localRotation = Quaternion.Euler(steeringAxis * wheel.steeringAngle);
             }
             if (wheelPivotTransforms != null && wheelPivotTransforms.Length>0)
             {
@@ -474,6 +491,17 @@ namespace KSPWheel
             if (statusLightModule != null)
             {
                 statusLightModule.SetStatus(brakeInput != 0);
+            }
+            if (bogeyMesh != null)
+            {
+                if (wheel.isGrounded)//orient foot to ground
+                {
+                    Vector3 bogeyUp = wheel.hit.normal;
+                }
+                else
+                {
+                    //default orientation?
+                }                
             }
         }
 
@@ -500,7 +528,7 @@ namespace KSPWheel
         {
             fwdInput = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             rotInput = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
-            brakeInput = part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
+            brakeInput = brakesLocked ? 1 : part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
             if (motorLocked) { fwdInput = 0; }
             if (steeringLocked) { rotInput = 0; }
             if (invertSteering) { rotInput = -rotInput; }
