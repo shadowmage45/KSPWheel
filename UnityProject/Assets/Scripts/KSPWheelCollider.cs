@@ -46,6 +46,8 @@ namespace KSPWheel
         /// </summary>
         public RaycastHit hit;
 
+        public bool useSticky = true;
+
         #endregion ENDREGION - Public Accessible values
 
         #region REGION - Private variables
@@ -74,7 +76,7 @@ namespace KSPWheel
         //sticky-friction vars;
         //TODO -- add get/set methods for these to expose them for configuration
         //TODO -- finish implementing sticky friction stuff =\
-        private float maxStickyVelocity = 0.0f;
+        private float maxStickyVelocity = 0.00f;
         private float sideStickyTimeMax = 0.25f;
         private float fwdStickyTimeMax = 0.25f;
 
@@ -436,7 +438,14 @@ namespace KSPWheel
                 if (fSpring < 0) { fSpring = 0; }
 
                 integrateForces();
-                updateStickyJoint(fSpring);
+                if (useSticky)
+                {
+                    updateStickyJoint(fSpring);
+                }
+                else if(stickyJoint!=null)
+                {
+                    Component.Destroy(stickyJoint);
+                }
                 if (!prevGrounded && onImpactCallback != null)//if was not previously grounded, call-back with impact data
                 {
                     onImpactCallback.Invoke(wheelLocalVelocity);
@@ -452,6 +461,7 @@ namespace KSPWheel
                 worldVelocityAtHit = Vector3.zero;
                 wheelLocalVelocity = Vector3.zero;
                 Component.Destroy(stickyJoint);
+                stickyJoint = null;
             }
         }
 
@@ -472,9 +482,14 @@ namespace KSPWheel
             prevFlat = fLat;
             fSpring = Mathf.Lerp(prevFSpring, fSpring, springResponse * Time.fixedDeltaTime);
             calcFriction(fSpring);
+            //calcFrictionPacejka(fSpring);
             fLong = Mathf.Lerp(prevFlong, fLong, springResponse * Time.fixedDeltaTime);
             fLat = Mathf.Lerp(prevFlat, fLat, springResponse * Time.fixedDeltaTime);
-            calculatedForces += hit.normal * fSpring;
+
+            //no clue if this is correct or not, but does seem to clean up some suspension force application problems at high incident angles
+            float suspensionDot = Vector3.Dot(hit.normal, wheel.transform.up);
+
+            calculatedForces += hit.normal * fSpring * suspensionDot;
             calculatedForces += fLong * wheelForward;
             calculatedForces += fLat * wheelRight;
             rigidBody.AddForceAtPosition(calculatedForces, hit.point, ForceMode.Force);
@@ -519,11 +534,28 @@ namespace KSPWheel
                 stickyJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
                 stickyJoint.anchor = wheel.transform.localPosition;
                 stickyJoint.axis = Vector3.right;
+                stickyJoint.autoConfigureConnectedAnchor = false;
                 stickyJoint.secondaryAxis = Vector3.up;
+
+                // bump-stop code, borrowed from lo-fi's join implementation
+                // seems to work precisely as intended
+                stickyJoint.yMotion = ConfigurableJointMotion.Limited;
+                SoftJointLimitSpring bumpStopLimitSpring = new SoftJointLimitSpring();
+                bumpStopLimitSpring.spring = 0;
+                bumpStopLimitSpring.damper = 0;
+                stickyJoint.linearLimitSpring = bumpStopLimitSpring;
+
+                SoftJointLimit bumpStopLimit = new SoftJointLimit();
+                bumpStopLimit.bounciness = 0;
+                bumpStopLimit.limit = currentSuspenionLength; //this sets the hard limit, or what are often called bump stops
+                bumpStopLimit.contactDistance = 0;
+                stickyJoint.linearLimit = bumpStopLimit;
             }
             stickyJoint.connectedAnchor = hit.point;
-            stickyJoint.breakForce = 0.001f;
-            stickyJoint.breakTorque = 0.001f;
+            stickyJoint.breakForce = 100f;
+            stickyJoint.breakTorque = 100f;
+
+
 
             if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity && currentMotorTorque == 0)
             {
@@ -534,10 +566,16 @@ namespace KSPWheel
                 fwdStickyTimer = 0;
             }
 
-            if (Math.Abs(wheelLocalVelocity.x) < maxStickyVelocity) { sideStickyTimer+=Time.fixedDeltaTime; }
-            else { sideStickyTimer = 0; }
+            if (Math.Abs(wheelLocalVelocity.x) < maxStickyVelocity && Mathf.Abs(fLat) < springForce * 0.1f)
+            {
+                sideStickyTimer +=Time.fixedDeltaTime;
+            }
+            else
+            {
+                sideStickyTimer = 0;
+            }
 
-            if (fwdStickyTimer > fwdStickyTimeMax)
+            if (fwdStickyTimer >= fwdStickyTimeMax)
             {
                 stickyJoint.zMotion = ConfigurableJointMotion.Locked;
             }
@@ -545,7 +583,7 @@ namespace KSPWheel
             {
                 stickyJoint.zMotion = ConfigurableJointMotion.Free;
             }
-            if (sideStickyTimer > sideStickyTimeMax)
+            if (sideStickyTimer >= sideStickyTimeMax)
             {
                 stickyJoint.xMotion = ConfigurableJointMotion.Locked;
             }
@@ -774,6 +812,10 @@ namespace KSPWheel
             fLong *= rLong;
             fLat *= rLat;
 
+            // tire self-aligning forces test code; add torque to rigidbody relative to lateral slip ratio and lateral friction force
+            // torque direction = opposite of the slip direction
+            //float tTest = fLat * 0.5f * (1f - sLat);
+            //fLat += tTest;
 
             // bump stop test code
             //if (currentSuspensionCompression > currentSuspenionLength)
@@ -839,13 +881,61 @@ namespace KSPWheel
 
         #endregion ENDREGION - Friction calculations methods based on alternate
 
-        #region REGION - Friction calculation based on: http://www.racer.nl/reference/pacejka.htm
-        //also http://www.mathworks.com/help/physmod/sdl/ref/tireroadinteractionmagicformula.html?requestedDomain=es.mathworks.com
-        //and http://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
-        // http://www.edy.es/dev/2011/12/facts-and-myths-on-the-pacejka-curves/
-        // http://www-cdr.stanford.edu/dynamic/bywire/tires.pdf
-        
-        #endregion ENDREGION - Alternate friction model 2
+        #region REGION - Alternate Friction model
+        // based on http://www.racer.nl/reference/pacejka.htm
+        // and also http://www.mathworks.com/help/physmod/sdl/ref/tireroadinteractionmagicformula.html?requestedDomain=es.mathworks.com
+        // and http://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
+        // and http://www.edy.es/dev/2011/12/facts-and-myths-on-the-pacejka-curves/
+        // and http://www-cdr.stanford.edu/dynamic/bywire/tires.pdf
+
+        public void calcFrictionPacejka(float downForce)
+        {
+            currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;
+
+            //long velocity
+            float vLong = 0f;// wheelLocalVelocity.z;
+            //lat velocity
+            float vLat = wheelLocalVelocity.x;
+            //linear velocity of wheel
+            float vWheel = currentAngularVelocity * currentWheelRadius;
+            //linear velocity delta between wheel and surface in meters per second
+            float vDelta = vWheel - vLong;
+            //long slip ratio, 
+            // calculated prior to any integration this frame; from a stand-still a wheel will always have a slip ratio of 0 the first frame, and no friction
+            sLong = calcLongSlip(vLong, vWheel);
+            //lat slip ratio
+            sLat = calcLatSlip(vLong, vLat);
+
+            // 'simple' magic-formula
+            // implemented as-per http://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
+            float B = 10f;//stiffness
+            float C = 1.9f;
+            float Clat = 1.3f;
+            float Clong = 1.65f;
+            float D = 1;
+            float E = 0.97f;
+            // F = Fz * D * sin(C * atan(B*slip - E * (B*slip - atan(B*slip))))
+            float Fz = downForce;
+            float slipLat = sLat * 100f;
+            float slipLong = sLong * 100f;
+            fLat = Fz * D * Mathf.Sin(Clat * Mathf.Atan(B * slipLat - E * (B * slipLat - Mathf.Atan(B * slipLat)))) * -Mathf.Sign(vLat);
+            fLong = Fz * D * Mathf.Sin(Clong * Mathf.Atan(B * slipLong - E * (B * slipLong - Mathf.Atan(B * slipLong)))) - -Mathf.Sign(vLong);
+
+            //currentAngularVelocity = vLong * radiusInverse;
+            currentAngularVelocity += fLong * currentWheelRadius * inertiaInverse;
+        }
+
+        #endregion ENDREGION - Alternate friction model
+
+        #region REGION - Alternate Friction Model 2
+        // based on http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf
+
+        public void calcFrictionPhysX(float downForce)
+        {
+
+        }
+
+        #endregion ENDREGION - Alternate Friction Model 2
 
         #endregion ENDREGION - Private/internal update methods
 
