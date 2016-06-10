@@ -125,10 +125,9 @@ namespace KSPWheel
         /// </summary>
         public bool invertMotor = false;
 
-        /// <summary>
-        /// If true, will use sphere-casts instead of ray-casts
-        /// </summary>
-        public bool sphereCast = false;
+        public KSPWheelFrictionType frictionModel = KSPWheelFrictionType.STANDARD;
+
+        public KSPWheelSweepType sweepType = KSPWheelSweepType.RAY;
 
         public bool useSticky = true;
 
@@ -149,9 +148,6 @@ namespace KSPWheel
         public float fLong;
         public float fLat;
         public float comp;
-        public float fBumpStop;
-        public float sprungMass;
-        public Vector3 grav;
 
         #endregion ENDREGION - Unity Editor Display Variables
 
@@ -201,7 +197,6 @@ namespace KSPWheel
             wheelCollider.motorTorque = currentMotorTorque;
             wheelCollider.steeringAngle = currentSteer;
             wheelCollider.brakeTorque = currentBrakeTorque;
-            wheelCollider.gravityForce = Physics.gravity;
             wheelCollider.updateWheel();
             if (steeringTransform != null)
             {
@@ -216,7 +211,7 @@ namespace KSPWheel
                 wheelTransform.Rotate(wheelTransform.right, wheelCollider.perFrameRotation, Space.World);
             }
             Vector3 prevVel = localVelocity;
-            localVelocity = wheelCollider.wheelLocalVelocity;
+            localVelocity = wheelCollider.contactData.localVelocity;
             localAcceleration = (prevVel - localVelocity) / Time.fixedDeltaTime;
             fSpring = wheelCollider.springForce;
             fDamp = wheelCollider.dampForce;
@@ -226,9 +221,6 @@ namespace KSPWheel
             fLong = wheelCollider.longitudinalForce;
             fLat = wheelCollider.lateralForce;
             comp = wheelCollider.compressionDistance;
-            fBumpStop = wheelCollider.fBump;
-            sprungMass = wheelCollider.sprungMass;
-            grav = Physics.gravity;
         }
 
         public void OnValidate()
@@ -245,7 +237,8 @@ namespace KSPWheel
                 wheelCollider.brakeTorque = maxBrakeTorque;
                 wheelCollider.forwardFrictionCoefficient = forwardFrictionCoefficient;
                 wheelCollider.sideFrictionCoefficient = sideFrictionCoefficient;
-                wheelCollider.sphereCast = sphereCast;
+                wheelCollider.sweepType = sweepType;
+                wheelCollider.frictionModel = frictionModel;
                 wheelCollider.useSticky = useSticky;
             }
         }

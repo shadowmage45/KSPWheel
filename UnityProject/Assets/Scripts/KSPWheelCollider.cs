@@ -21,31 +21,6 @@ namespace KSPWheel
         /// </summary>
         public Rigidbody rigidBody;
 
-        /// <summary>
-        /// The current gravity force, used to calculate sprung mass dynamically from spring force and acceleration
-        /// </summary>
-        public Vector3 gravityForce = new Vector3(0, -9.81f, 0);
-
-        /// <summary>
-        /// The velocity of the wheel as seen by the surface at the point of contact, taking into account steering angle and angle of the collider to the surface.
-        /// </summary>
-        public Vector3 wheelLocalVelocity;
-
-        /// <summary>
-        /// The velocity of the wheel in world space at the point of contact
-        /// </summary>
-        public Vector3 worldVelocityAtHit;
-
-        /// <summary>
-        /// The summed forces that have been applied to the rigidbody at the point of contact with the surface this frame
-        /// </summary>
-        public Vector3 calculatedForces;
-
-        /// <summary>
-        /// If grounded == true, this is populated with a reference to the raycast hit information
-        /// </summary>
-        public RaycastHit hit;
-
         public bool useSticky = true;
 
         #endregion ENDREGION - Public Accessible values
@@ -68,10 +43,9 @@ namespace KSPWheel
         private float currentSuspensionCompression = 0f;
         private float currentAngularVelocity = 0f;//angular velocity of wheel; rotations in radians per second
         private float currentMomentOfInertia = 1.0f*0.5f*0.5f*0.5f;//moment of inertia of wheel; used for mass in acceleration calculations regarding wheel angular velocity.  MOI of a solid cylinder = ((m*r*r)/2)
-        private float currentSprungMass = 1f;
         private int currentRaycastMask = ~(1 << 26);//default cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask (26 = KSP WheelColliderIgnore layer)
-        private bool currentlyGrounded = false;
-        private bool useSphereCast = false;
+        private KSPWheelFrictionType currentFrictionModel = KSPWheelFrictionType.STANDARD;
+        private KSPWheelSweepType currentSweepType = KSPWheelSweepType.RAY;
 
         //sticky-friction vars;
         //TODO -- add get/set methods for these to expose them for configuration
@@ -80,21 +54,18 @@ namespace KSPWheel
         private float sideStickyTimeMax = 0.25f;
         private float fwdStickyTimeMax = 0.25f;
 
+        //debug vars, not yet fully integrated into simulation
+        private float prevFSpring;
+        private float springResponse = 50;
+        private float prevFlong, prevFlat;
+
         //cached per-update variables
-        private Vector3 wheelForward;//cached wheel forward axis (longitudinal axis)
-        private Vector3 wheelRight;//cached wheel right axis (lateral axis)
-        private Vector3 wheelUp;//cached wheel up axis (suspension axis)
         private float prevSuspensionCompression;//cached value of previous suspension compression, used to determine damper value
         private float inertiaInverse;//cached inertia inverse used to eliminate division operations from per-tick update code
         private float radiusInverse;//cached radius inverse used to eliminate division operations from per-tick update code
         private float massInverse;//cached mass inverse used to eliminate division operations from per-tick update code
         private float vSpring;//linear velocity of spring in m/s, derived from prevPos - currentPos along suspension axis
-        private float fSpring;//force exerted by spring this physics frame, in newtons
         private float fDamp;//force exerted by the damper this physics frame, in newto
-        private float sLong;//fwd slip ratio
-        private float sLat;//side slip rations
-        private float fLong;//final longitudinal force calculated from friction model
-        private float fLat;//final lateral force calculated from friction model
         private float sideStickyTimer = 0;
         private float fwdStickyTimer = 0;
 
@@ -102,12 +73,14 @@ namespace KSPWheel
         private ConfigurableJoint stickyJoint;//the joint used for sticky friction
         private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity
 
-        private KSPWheelFrictionCurve fwdFrictionCurve;
+        private KSPWheelFrictionCurve fwdFrictionCurve;//current forward friction curve
         private KSPWheelFrictionCurve sideFrictionCurve;//current sideways friction curve
+
+        private KSPWheelContactPatch contactPatch = new KSPWheelContactPatch();//all information related to the wheel contact; slips, velocities, forces
 
         #endregion ENDREGION - Private variables
 
-        #region REGION - Public accessible methods, API get/set methods
+        #region REGION - Public accessible methods, Constructor, API get/set methods
 
         /// <summary>
         /// Initialize a wheel-collider object for the given GameObject (the wheel collider), and the given rigidbody (the RB that the wheel-collider will apply forces to)<para/>
@@ -275,7 +248,7 @@ namespace KSPWheel
         /// </summary>
         public bool isGrounded
         {
-            get { return currentlyGrounded; }
+            get { return contactPatch.grounded; }
         }
 
         /// <summary>
@@ -338,21 +311,12 @@ namespace KSPWheel
         }
 
         /// <summary>
-        /// Get/set toggle for if should use sphere-cast or raycast; can be toggled at runtime/inbetween updates
-        /// </summary>
-        public bool sphereCast
-        {
-            get { return useSphereCast; }
-            set { useSphereCast = value; }
-        }
-
-        /// <summary>
         /// Returns the last calculated value for spring force, in newtons; this is the force that is exerted on rigidoby along suspension axis<para/>
         /// This already has dampForce applied to it; for raw spring force = springForce-dampForce
         /// </summary>
         public float springForce
         {
-            get { return fSpring; }
+            get { return contactPatch.localForce.y; }
         }
 
         /// <summary>
@@ -368,7 +332,7 @@ namespace KSPWheel
         /// </summary>
         public float longitudinalForce
         {
-            get { return fLong; }
+            get { return contactPatch.localForce.z; }
         }
 
         /// <summary>
@@ -376,7 +340,7 @@ namespace KSPWheel
         /// </summary>
         public float lateralForce
         {
-            get { return fLat; }
+            get { return contactPatch.localForce.x; }
         }
 
         /// <summary>
@@ -384,7 +348,7 @@ namespace KSPWheel
         /// </summary>
         public float longitudinalSlip
         {
-            get { return sLong; }
+            get { return contactPatch.sLong; }
         }
 
         /// <summary>
@@ -392,12 +356,24 @@ namespace KSPWheel
         /// </summary>
         public float lateralSlip
         {
-            get { return sLat; }
+            get { return contactPatch.sLat; }
         }
 
-        public float sprungMass
+        public KSPWheelContactPatch contactData
         {
-            get { return currentSprungMass; }
+            get { return contactPatch; }
+        }
+
+        public KSPWheelSweepType sweepType
+        {
+            get { return this.currentSweepType; }
+            set { currentSweepType = value; }
+        }
+
+        public KSPWheelFrictionType frictionModel
+        {
+            get { return currentFrictionModel; }
+            set { currentFrictionModel = value; }
         }
 
         /// <summary>
@@ -406,41 +382,35 @@ namespace KSPWheel
         /// </summary>
         public void updateWheel()
         {
-            calculatedForces = Vector3.zero;
-            wheelForward = Quaternion.AngleAxis(currentSteerAngle, wheel.transform.up) * wheel.transform.forward;
-            wheelUp = wheel.transform.up;
-            wheelRight = -Vector3.Cross(wheelForward, wheelUp);
+            contactPatch.wheelForward = Quaternion.AngleAxis(currentSteerAngle, wheel.transform.up) * wheel.transform.forward; ;
+            contactPatch.wheelUp = wheel.transform.up;
+            contactPatch.wheelRight = -Vector3.Cross(contactPatch.wheelForward, contactPatch.wheelUp);
+
             prevSuspensionCompression = currentSuspensionCompression;
-            prevFSpring = fSpring;
+            prevFSpring = contactPatch.localForce.y;
             float prevVSpring = vSpring;
-            bool prevGrounded = currentlyGrounded;
+            bool prevGrounded = contactPatch.grounded;
             if (checkSuspensionContact())//suspension compression is updated in the suspension contact check
             {
-                currentlyGrounded = true;
-                float mag = worldVelocityAtHit.magnitude;
-                wheelLocalVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, wheelForward) * mag;
-                wheelLocalVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * mag;
-                wheelLocalVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheel.transform.up) * mag;
 
                 //calculate damper force from the current compression velocity of the spring; damp force can be negative
                 vSpring = (currentSuspensionCompression - prevSuspensionCompression) / Time.fixedDeltaTime;//per second velocity
                 fDamp = damper * vSpring;
 
-                calcSprungMass(prevVSpring, vSpring, wheel.transform.InverseTransformVector(gravityForce).y, prevFSpring);
-
                 //calculate spring force basically from displacement * spring
-                fSpring = (currentSuspensionCompression - (length * target)) * spring;
+                contactPatch.localForce.y = (currentSuspensionCompression - (length * target)) * spring;
                 //if spring would be negative at this point, zero it to allow the damper to still function; this normally occurs when target > 0, at the lower end of wheel droop below target position
-                if (fSpring < 0) { fSpring = 0; }
+                if (contactPatch.localForce.y < 0) { contactPatch.localForce.y = 0; }
                 //integrate damper value into spring force
-                fSpring += fDamp;
+                contactPatch.localForce.y += fDamp;
                 //if final spring value is negative, zero it out; negative springs are not possible without attachment to the ground; gravity is our negative spring :)
-                if (fSpring < 0) { fSpring = 0; }
+                if (contactPatch.localForce.y < 0) { contactPatch.localForce.y = 0; }
 
                 integrateForces();
+
                 if (useSticky)
                 {
-                    updateStickyJoint(fSpring);
+                    updateStickyJoint(contactPatch.localForce.y);
                 }
                 else if(stickyJoint!=null)
                 {
@@ -448,18 +418,19 @@ namespace KSPWheel
                 }
                 if (!prevGrounded && onImpactCallback != null)//if was not previously grounded, call-back with impact data
                 {
-                    onImpactCallback.Invoke(wheelLocalVelocity);
+                    onImpactCallback.Invoke(contactPatch.localVelocity);
                 }
             }
             else
             {
                 integrateUngroundedTorques();
-                currentlyGrounded = false;
-                fSpring = fDamp = 0;
-                prevSuspensionCompression = 0;
-                currentSuspensionCompression = 0;
-                worldVelocityAtHit = Vector3.zero;
-                wheelLocalVelocity = Vector3.zero;
+                contactPatch.grounded = false;
+                prevVSpring = prevFSpring = prevFlat = prevFlong = fDamp = prevSuspensionCompression = currentSuspensionCompression = 0;
+                contactPatch.localForce = Vector3.zero;
+                contactPatch.hitNormal = Vector3.zero;
+                contactPatch.hitPosition = Vector3.zero;
+                contactPatch.colliderHit = null;
+                contactPatch.localVelocity = Vector3.zero;
                 Component.Destroy(stickyJoint);
                 stickyJoint = null;
             }
@@ -469,33 +440,29 @@ namespace KSPWheel
 
         #region REGION - Private/internal update methods
 
-        private float prevFSpring;
-        private float springResponse = 50;
-        private float prevFlong, prevFlat;
 
         /// <summary>
         /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.
         /// </summary>
         private void integrateForces()
         {
-            prevFlong = fLong;
-            prevFlat = fLat;
-            fSpring = Mathf.Lerp(prevFSpring, fSpring, springResponse * Time.fixedDeltaTime);
-            calcFriction(fSpring);
-            //calcFrictionPacejka(fSpring);
-            fLong = Mathf.Lerp(prevFlong, fLong, springResponse * Time.fixedDeltaTime);
-            fLat = Mathf.Lerp(prevFlat, fLat, springResponse * Time.fixedDeltaTime);
+            prevFlong = contactPatch.localForce.z;
+            prevFlat = contactPatch.localForce.x;
+            contactPatch.localForce.y = Mathf.Lerp(prevFSpring, contactPatch.localForce.y, springResponse * Time.fixedDeltaTime);
+            calcFriction(contactPatch);
+            contactPatch.localForce.z = Mathf.Lerp(prevFlong, contactPatch.localForce.z, springResponse * Time.fixedDeltaTime);
+            contactPatch.localForce.x = Mathf.Lerp(prevFlat, contactPatch.localForce.x, springResponse * Time.fixedDeltaTime);
 
             //no clue if this is correct or not, but does seem to clean up some suspension force application problems at high incident angles
-            float suspensionDot = Vector3.Dot(hit.normal, wheel.transform.up);
+            float suspensionDot = Vector3.Dot(contactPatch.hitNormal, wheel.transform.up);
 
-            calculatedForces += hit.normal * fSpring * suspensionDot;
-            calculatedForces += fLong * wheelForward;
-            calculatedForces += fLat * wheelRight;
-            rigidBody.AddForceAtPosition(calculatedForces, hit.point, ForceMode.Force);
-            if (hit.collider.attachedRigidbody != null && !hit.collider.attachedRigidbody.isKinematic)
+            Vector3 calculatedForces = contactPatch.hitNormal * contactPatch.localForce.y * suspensionDot;
+            calculatedForces += contactPatch.localForce.z * contactPatch.wheelForward;
+            calculatedForces += contactPatch.localForce.x * contactPatch.wheelRight;
+            rigidBody.AddForceAtPosition(calculatedForces, contactPatch.hitPosition, ForceMode.Force);
+            if (contactPatch.colliderHit.attachedRigidbody != null && !contactPatch.colliderHit.attachedRigidbody.isKinematic)
             {
-                hit.collider.attachedRigidbody.AddForceAtPosition(-calculatedForces, hit.point, ForceMode.Force);
+                contactPatch.colliderHit.attachedRigidbody.AddForceAtPosition(-calculatedForces, contactPatch.hitPosition, ForceMode.Force);
             }
         }
 
@@ -520,10 +487,6 @@ namespace KSPWheel
 
         /// <summary>
         /// Per-fixed-update configuration of the rigidbody joints that are used for sticky friction and anti-punchthrough behaviour
-        /// //TODO -- anti-punchthrough setup; somehow ensure the part cannot actually punch-through by using joint constraints
-        /// //TODO -- how to tell if it was a punch-through or the surface was moved? Perhaps start the raycast slightly above the wheel?
-        /// //TODO -- or, start at center of wheel and validate that it cannot compress suspension past (travel-radius), 
-        /// //TODO -- so there will be at least (radius*1) between the wheel origin and the surface
         /// </summary>
         /// <param name="fwd"></param>
         /// <param name="side"></param>
@@ -551,13 +514,11 @@ namespace KSPWheel
                 bumpStopLimit.contactDistance = 0;
                 stickyJoint.linearLimit = bumpStopLimit;
             }
-            stickyJoint.connectedAnchor = hit.point;
+            stickyJoint.connectedAnchor = contactPatch.hitPosition;
             stickyJoint.breakForce = 100f;
             stickyJoint.breakTorque = 100f;
 
-
-
-            if (Math.Abs(wheelLocalVelocity.z) < maxStickyVelocity && currentMotorTorque == 0)
+            if (Math.Abs(contactPatch.localVelocity.z) < maxStickyVelocity && currentMotorTorque == 0)
             {
                 fwdStickyTimer += Time.fixedDeltaTime;
             }
@@ -566,7 +527,7 @@ namespace KSPWheel
                 fwdStickyTimer = 0;
             }
 
-            if (Math.Abs(wheelLocalVelocity.x) < maxStickyVelocity && Mathf.Abs(fLat) < springForce * 0.1f)
+            if (Math.Abs(contactPatch.localVelocity.x) < maxStickyVelocity && Mathf.Abs(contactPatch.localForce.x) < springForce * 0.1f)
             {
                 sideStickyTimer +=Time.fixedDeltaTime;
             }
@@ -599,22 +560,43 @@ namespace KSPWheel
         /// <returns></returns>
         private bool checkSuspensionContact()
         {
-            if (useSphereCast) { return spherecastSuspension(); }
-            return raycastSuspension();
+            switch (currentSweepType)
+            {
+                case KSPWheelSweepType.RAY:
+                    return suspensionSweepRaycast();
+                case KSPWheelSweepType.SPHERE:
+                    return suspensionSweepSpherecast();
+                case KSPWheelSweepType.CAPSULE:
+                    return suspensionSweepCapsuleCast();
+                default:
+                    return suspensionSweepRaycast();
+            }
         }
 
         /// <summary>
         /// Check suspension contact using a ray-cast; return true/false for if contact was detected
         /// </summary>
         /// <returns></returns>
-        private bool raycastSuspension()
+        private bool suspensionSweepRaycast()
         {
+            RaycastHit hit;
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, length + radius, currentRaycastMask))
             {
-                worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
+                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
                 currentSuspensionCompression = length + radius - hit.distance;
+
+                contactPatch.hitNormal = hit.normal;
+                contactPatch.colliderHit = hit.collider;
+                contactPatch.hitPosition = hit.point;
+
+                float mag = worldVelocityAtHit.magnitude;
+                contactPatch.localVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelForward) * mag;
+                contactPatch.localVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelRight) * mag;
+                contactPatch.localVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelUp) * mag;
+                contactPatch.grounded = true;
                 return true;
             }
+            contactPatch.grounded = false;
             return false;            
         }
 
@@ -622,18 +604,32 @@ namespace KSPWheel
         /// Check suspension contact using a sphere-cast; return true/false for if contact was detected.
         /// </summary>
         /// <returns></returns>
-        private bool spherecastSuspension()
+        private bool suspensionSweepSpherecast()
         {
+            RaycastHit hit;
             if (Physics.SphereCast(wheel.transform.position + wheel.transform.up*radius, radius, -wheel.transform.up, out hit, length + radius, currentRaycastMask))
             {
                 currentSuspensionCompression = length - hit.distance + radius;
                 Vector3 hitPos = wheel.transform.position - (length - currentSuspensionCompression) * wheel.transform.up - wheel.transform.up * radius;
-                worldVelocityAtHit = rigidBody.GetPointVelocity(hitPos);
+                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hitPos);
+
+                contactPatch.hitNormal = hit.normal;
+                contactPatch.colliderHit = hit.collider;
+                contactPatch.hitPosition = hit.point;
+
+                float mag = worldVelocityAtHit.magnitude;
+                contactPatch.localVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelForward) * mag;
+                contactPatch.localVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelRight) * mag;
+                contactPatch.localVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelUp) * mag;
+                contactPatch.grounded = true;
                 return true;
             }
+            contactPatch.grounded = false;
             return false;
         }
 
+        //TODO config specified 'wheel width'
+        //TODO config specified number of capsules
         /// <summary>
         /// less efficient and less optimal solution for skinny wheels, but avoids the edge cases caused by sphere colliders<para/>
         /// uses 2 capsule-casts in a V shape downward for the wheel instead of a sphere; 
@@ -642,15 +638,16 @@ namespace KSPWheel
         /// Sadly, unity lacks a collider-sweep function, or this could be a bit more efficient.
         /// </summary>
         /// <returns></returns>
-        private bool dualCapsulecastSuspension()
+        private bool suspensionSweepCapsuleCast()
         {
-            //create two capsule casts, basically in a v-shape
+            //create two capsule casts in a v-shape
             //take whichever collides first
             //have to start above the wheel, due to the 'no cath if already in collision' clause
             //this is where anti-punchthrough is needed, to stop overcompression, so that you don't need to start above the wheel (or maybe only slightly)
             float wheelWidth = 0.3f;
             float capRadius = wheelWidth * 0.5f;
 
+            RaycastHit hit;
             RaycastHit hit1;
             RaycastHit hit2;
             bool hit1b;
@@ -666,164 +663,53 @@ namespace KSPWheel
             hit2b = Physics.CapsuleCast(capEnd2 + offset, capBottom + offset, capRadius, -wheel.transform.up, out hit2, length, currentRaycastMask);
             if (hit1b || hit2b)
             {
+                hit = hit1;
                 if (hit1b && hit2b) { hit = hit1.distance < hit2.distance ? hit1 : hit2; }
                 else if (hit1b) { hit = hit1; }
                 else if (hit2b) { hit = hit2; }
                 currentSuspensionCompression = currentSuspenionLength - hit.distance + currentWheelRadius;
                 Vector3 hitPos = wheel.transform.position - (currentSuspenionLength - currentSuspensionCompression) * wheel.transform.up - wheel.transform.up * radius;
-                worldVelocityAtHit = rigidBody.GetPointVelocity(hitPos);
+                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hitPos);
+
+                contactPatch.hitNormal = hit.normal;
+                contactPatch.colliderHit = hit.collider;
+                contactPatch.hitPosition = hit.point;
+
+                float mag = worldVelocityAtHit.magnitude;
+                contactPatch.localVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelForward) * mag;
+                contactPatch.localVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelRight) * mag;
+                contactPatch.localVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, contactPatch.wheelUp) * mag;
+                contactPatch.grounded = true;
                 return true;
             }
+            contactPatch.grounded = false;
             return false;
         }
 
-        #region REGION - Friction model calculations methods based on : http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+        #region REGION - Friction model shared functions
 
-        //TODO -- clean up these vars, and this function in general
-        // need to find the force necessary to bring the suspension out of overcompression
-        // still cannot rely on knowing the mass, and this will have to be done iteratively
-        // also, should investigate usage of the sticky-friction joints to work as anti-punchthrough
-        public float bumpStopForce = 100000;
-        public float fBump = 0;
-
-        /// <summary>
-        /// Calculate the longitudinal and lateral forces for the input suspension force
-        /// </summary>
-        private void calcFriction(float downForce)
+        private void calcFriction(KSPWheelContactPatch cp)
         {
-            //initial motor/brake torque integration, brakes integrated further after friction applied
-            //motor torque applied directly
-            currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;//acceleration is in radians/second; only operating on 1 * fixedDeltaTime seconds, so only update for that length of time
-            // maximum torque exerted by brakes onto wheel this frame
-            float wBrakeMax = currentBrakeTorque * inertiaInverse * Time.fixedDeltaTime;
-            // clamp the max brake angular change to the current angular velocity
-            float wBrake = Mathf.Min(Mathf.Abs(currentAngularVelocity), wBrakeMax);
-            // sign it opposite of current wheel spin direction
-            // and finally, integrate it into wheel angular velocity
-            currentAngularVelocity += wBrake * -Mathf.Sign(currentAngularVelocity);
-            // this is the remaining brake angular acceleration/torque that can be used to counteract wheel acceleration caused by traction friction
-            float wBrakeDelta = wBrakeMax - wBrake;
+            cp.vWheel = currentAngularVelocity * currentWheelRadius;
+            cp.sLong = calcLongSlip(cp.localVelocity.z, cp.vWheel);
+            cp.sLat = calcLatSlip(cp.localVelocity.z, cp.localVelocity.x);
+            cp.vWheelDelta = cp.vWheel - cp.localVelocity.z;
 
-            //long velocity
-            float vLong = wheelLocalVelocity.z;
-            //lat velocity
-            float vLat = wheelLocalVelocity.x;
-            //linear velocity of wheel
-            float vWheel = currentAngularVelocity * currentWheelRadius;
-            //linear velocity delta between wheel and surface in meters per second
-            float vDelta = vWheel - vLong;
-            //long slip ratio, 
-            // calculated prior to any integration this frame; from a stand-still a wheel will always have a slip ratio of 0 the first frame, and no friction
-            sLong = calcLongSlip(vLong, vWheel);
-            //lat slip ratio
-            sLat = calcLatSlip(vLong, vLat);
-
-            // the normalizing function allows for wheel-spinout, and basically enforces the 'max-friction-per-tire' limit, sharing the long and lat friction depenant upon their relative velocities
-            // TODO the normalizing for vLong should probably be done for vDelta instead...
-            float velMag = Mathf.Sqrt( vLat * vLat + vLong * vLong);
-            float normZ = velMag==0? 0 : Mathf.Abs(vLong) / velMag;
-            float normX = velMag == 0 ? 0 : Mathf.Abs(vLat) / velMag;
-            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downForce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;// * normZ;
-            float fLatMax = sideFrictionCurve.evaluate(sLat) * downForce * currentSideFrictionCoef * currentSurfaceFrictionCoef;// * normX;            
-
-            //TODO actual sprung mass can be derived (mostly?) by the delta between current and prev spring velocity
-            // and the previous spring force (e.g. the previous spring (F) force effected (A) change in velocity, thus the mass must by (M))
-            // this 'mass' is important to know because it is needed to derive proper maximum bound for sideways friction
-            // 'limited' lateral force
-            // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame
-            // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
-            fLat = fLatMax;
-            // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero; the 2x multiplier is just because it helped with response but didn't induce oscillations; higher multipliers can
-            if (fLat > Mathf.Abs(vLat) * downForce * 2f) { fLat = Mathf.Abs(vLat) * downForce * 2f; }
-            // if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
-            fLat *= -Mathf.Sign(vLat);// sign it opposite to the current vLat
-
-            //angular velocity delta between wheel and surface in radians per second; radius inverse used to avoid div operations
-            float wDelta = vDelta * radiusInverse;
-            //amount of torque needed to bring wheel to surface speed over one second
-            float tDelta = wDelta * currentMomentOfInertia;
-            //newtons of force needed to bring wheel to surface speed over one second; radius inverse used to avoid div operations
-            // float fDelta = tDelta * radiusInverse; // unused
-            //absolute value of the torque needed to bring the wheel to road speed instantaneously/this frame
-            float tTractMax = Mathf.Abs(tDelta) / Time.fixedDeltaTime;
-            //newtons needed to bring wheel to ground velocity this frame; radius inverse used to avoid div operations
-            float fTractMax = tTractMax * radiusInverse;
-            //final maximum force value is the smallest of the two force values;
-            // if fTractMax is used the wheel will be brought to surface velocity,
-            // otherwise fLongMax is used and the wheel is still slipping but maximum traction force will be exerted
-            fTractMax = Mathf.Min(fTractMax, fLongMax);
-            // convert the clamped traction value into a torque value and apply to the wheel
-            float tractionTorque = fTractMax * currentWheelRadius * -Mathf.Sign(vDelta);
-            // and set the longitudinal force to the force calculated for the wheel/surface torque
-            fLong = fTractMax * Mathf.Sign(vDelta);
-            //use wheel inertia to determine final wheel acceleration from torques; inertia inverse used to avoid div operations; convert to delta-time, as accel is normally radians/s
-            float angularAcceleration = tractionTorque * inertiaInverse * Time.fixedDeltaTime;
-            //apply acceleration to wheel angular velocity
-            currentAngularVelocity += angularAcceleration;
-            //second integration pass of brakes, to allow for locked-wheels after friction calculation
-            if (Mathf.Abs(currentAngularVelocity) < wBrakeDelta)
+            switch (currentFrictionModel)
             {
-                currentAngularVelocity = 0;
-                wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
-                float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs( fLong ));//remaining 'max' traction left
-                float fMax2 = Mathf.Max(0, downForce * Mathf.Abs(vLong) * 2 - Mathf.Abs(fLong));
-                float fBrakeMax = Mathf.Min(fMax, fMax2);
-                fLong += fBrakeMax * -Mathf.Sign(vLong);
+                case KSPWheelFrictionType.STANDARD:
+                    calcFrictionStandard(cp);
+                    break;
+                case KSPWheelFrictionType.PACEJKA:
+                    calcFrictionPacejka(cp);
+                    break;
+                case KSPWheelFrictionType.PHSYX:
+                    calcFrictionPhysX(cp);
+                    break;
+                default:
+                    calcFrictionStandard(cp);
+                    break;
             }
-            else
-            {
-                currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;//traction from this will be applied next frame from wheel slip, but we're integrating here basically for rendering purposes
-            }
-
-            // unfunctional test-code
-            // limit lateral friction based on remainder after long friction used
-            // extremely unbalanced, results in bad yaw and jitters
-            //float fLatMax2 = fLatMax - Mathf.Abs(fLong);
-            //if (Mathf.Abs(fLat) > fLatMax2) { fLat = Mathf.Sign(fLat) * fLatMax2; }
-
-            // partially functional test-code
-            // normalize based on slip ratios... has yawing problem
-            //float mag = Mathf.Sqrt(sLong * sLong + sLat * sLat);
-            //float nSlong = mag == 0 ? 0 : sLong / mag;
-            //float nSlat = mag == 0 ? 0 : sLat / mag;
-            //fLong *= nSlong;
-            //fLat *= nSlat;
-
-            // normalize actual force outputs rather than max forces... test code...
-            float rLong = 0;// fLong == 0 ? 1 : Mathf.Abs(fLat) / Mathf.Abs(fLong);
-            float rLat = 0;// fLat == 0 ? 1 : Mathf.Abs(fLong) / Mathf.Abs(fLat);
-            float fLongAbs = Mathf.Abs(fLong);
-            float fLatAbs = Mathf.Abs(fLat);
-            if (fLatAbs > fLongAbs)
-            {
-                rLong = fLongAbs / fLatAbs;
-                rLat = 1 - rLong;
-            }
-            else if (fLongAbs > fLatAbs)
-            {
-                rLat = fLatAbs / fLongAbs;
-                rLong = 1 - rLat;
-            }
-            else//equal...erm, probably zeros, but otherwise we'll just give them both half...
-            {
-                rLong = 0.5f;
-                rLat = 0.5f;
-            }
-            fLong *= rLong;
-            fLat *= rLat;
-
-            // tire self-aligning forces test code; add torque to rigidbody relative to lateral slip ratio and lateral friction force
-            // torque direction = opposite of the slip direction
-            //float tTest = fLat * 0.5f * (1f - sLat);
-            //fLat += tTest;
-
-            // bump stop test code
-            //if (currentSuspensionCompression > currentSuspenionLength)
-            //{
-            //    float d = currentSuspensionCompression - currentSuspenionLength;
-            //    fBump = bumpStopForce * d * 2f;
-            //    this.fSpring += fBump;
-            //}
         }
 
         /// <summary>
@@ -866,71 +752,115 @@ namespace KSPWheel
             return sLat;
         }
 
-        /// <summary>
-        /// Not the most 'accurate'... but it does return proper sprung mass after things have equalized.
-        /// </summary>
-        /// <param name="prevVSpring"></param>
-        /// <param name="vSpring"></param>
-        /// <param name="vGrav"></param>
-        /// <param name="prevFSpring"></param>
-        private void calcSprungMass(float prevVSpring, float vSpring, float vGrav, float prevFSpring)
-        {
-            float vDelta = prevVSpring - vSpring - vGrav;
-            currentSprungMass = prevFSpring / vDelta;
-        }
-
         #endregion ENDREGION - Friction calculations methods based on alternate
 
-        #region REGION - Alternate Friction model
+        #region REGION - Standard Friction Model
+        // based on : http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+
+        public void calcFrictionStandard(KSPWheelContactPatch contactData)
+        {
+            //initial motor/brake torque integration, brakes integrated further after friction applied
+            //motor torque applied directly
+            currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;//acceleration is in radians/second; only operating on 1 * fixedDeltaTime seconds, so only update for that length of time
+            // maximum torque exerted by brakes onto wheel this frame
+            float wBrakeMax = currentBrakeTorque * inertiaInverse * Time.fixedDeltaTime;
+            // clamp the max brake angular change to the current angular velocity
+            float wBrake = Mathf.Min(Mathf.Abs(currentAngularVelocity), wBrakeMax);
+            // sign it opposite of current wheel spin direction
+            // and finally, integrate it into wheel angular velocity
+            currentAngularVelocity += wBrake * -Mathf.Sign(currentAngularVelocity);
+            // this is the remaining brake angular acceleration/torque that can be used to counteract wheel acceleration caused by traction friction
+            float wBrakeDelta = wBrakeMax - wBrake;
+
+            float fLongMax = fwdFrictionCurve.evaluate(contactData.sLong) * contactData.localForce.y * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
+            float fLatMax = sideFrictionCurve.evaluate(contactData.sLat) * contactData.localForce.y * currentSideFrictionCoef * currentSurfaceFrictionCoef;
+
+            // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame
+            // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
+            contactData.localForce.x = fLatMax;
+            // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero; the 2x multiplier is just because it helped with response but didn't induce oscillations; higher multipliers can
+            if (contactData.localForce.x > Mathf.Abs(contactData.localVelocity.x) * contactData.localForce.y * 2f) { contactData.localForce.x = Mathf.Abs(contactData.localVelocity.x) * contactData.localForce.y * 2f; }
+            // if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
+            contactData.localForce.x *= -Mathf.Sign(contactData.localVelocity.x);// sign it opposite to the current vLat
+
+            //angular velocity delta between wheel and surface in radians per second; radius inverse used to avoid div operations
+            float wDelta = contactData.vWheelDelta * radiusInverse;
+            //amount of torque needed to bring wheel to surface speed over one second
+            float tDelta = wDelta * currentMomentOfInertia;
+            //newtons of force needed to bring wheel to surface speed over one second; radius inverse used to avoid div operations
+            // float fDelta = tDelta * radiusInverse; // unused
+            //absolute value of the torque needed to bring the wheel to road speed instantaneously/this frame
+            float tTractMax = Mathf.Abs(tDelta) / Time.fixedDeltaTime;
+            //newtons needed to bring wheel to ground velocity this frame; radius inverse used to avoid div operations
+            float fTractMax = tTractMax * radiusInverse;
+            //final maximum force value is the smallest of the two force values;
+            // if fTractMax is used the wheel will be brought to surface velocity,
+            // otherwise fLongMax is used and the wheel is still slipping but maximum traction force will be exerted
+            fTractMax = Mathf.Min(fTractMax, fLongMax);
+            // convert the clamped traction value into a torque value and apply to the wheel
+            float tractionTorque = fTractMax * currentWheelRadius * -Mathf.Sign(contactData.vWheelDelta);
+            // and set the longitudinal force to the force calculated for the wheel/surface torque
+            contactData.localForce.z = fTractMax * Mathf.Sign(contactData.vWheelDelta);
+            //use wheel inertia to determine final wheel acceleration from torques; inertia inverse used to avoid div operations; convert to delta-time, as accel is normally radians/s
+            float angularAcceleration = tractionTorque * inertiaInverse * Time.fixedDeltaTime;
+            //apply acceleration to wheel angular velocity
+            currentAngularVelocity += angularAcceleration;
+            //second integration pass of brakes, to allow for locked-wheels after friction calculation
+            if (Mathf.Abs(currentAngularVelocity) < wBrakeDelta)
+            {
+                currentAngularVelocity = 0;
+                wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
+                float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs(contactData.localForce.z));//remaining 'max' traction left
+                float fMax2 = Mathf.Max(0, contactData.localForce.y * Mathf.Abs(contactData.localVelocity.z) * 2 - Mathf.Abs(contactData.localForce.z));
+                float fBrakeMax = Mathf.Min(fMax, fMax2);
+                contactData.localForce.z += fBrakeMax * -Mathf.Sign(contactData.localVelocity.z);
+            }
+            else
+            {
+                currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;//traction from this will be applied next frame from wheel slip, but we're integrating here basically for rendering purposes
+            }
+
+            // normalize forces based on slip ratios, to allow for powered slides
+            float mag = Mathf.Sqrt(contactData.sLong * contactData.sLong + contactData.sLat * contactData.sLat);
+            float nSlong = mag == 0 ? 0 : contactData.sLong / mag;
+            float nSlat = mag == 0 ? 0 : contactData.sLat / mag;
+            contactData.localForce.z *= nSlong;
+            contactData.localForce.x *= nSlat;
+        }
+
+        #endregion ENDREGION - Standard Friction Model
+
+        #region REGION - Alternate Friction Model - Pacejka
         // based on http://www.racer.nl/reference/pacejka.htm
         // and also http://www.mathworks.com/help/physmod/sdl/ref/tireroadinteractionmagicformula.html?requestedDomain=es.mathworks.com
         // and http://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
         // and http://www.edy.es/dev/2011/12/facts-and-myths-on-the-pacejka-curves/
         // and http://www-cdr.stanford.edu/dynamic/bywire/tires.pdf
 
-        public void calcFrictionPacejka(float downForce)
+        public void calcFrictionPacejka(KSPWheelContactPatch patch)
         {
-            currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;
-
-            //long velocity
-            float vLong = 0f;// wheelLocalVelocity.z;
-            //lat velocity
-            float vLat = wheelLocalVelocity.x;
-            //linear velocity of wheel
-            float vWheel = currentAngularVelocity * currentWheelRadius;
-            //linear velocity delta between wheel and surface in meters per second
-            float vDelta = vWheel - vLong;
-            //long slip ratio, 
-            // calculated prior to any integration this frame; from a stand-still a wheel will always have a slip ratio of 0 the first frame, and no friction
-            sLong = calcLongSlip(vLong, vWheel);
-            //lat slip ratio
-            sLat = calcLatSlip(vLong, vLat);
-
             // 'simple' magic-formula
             // implemented as-per http://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
             float B = 10f;//stiffness
-            float C = 1.9f;
+            // float C = 1.9f;
             float Clat = 1.3f;
             float Clong = 1.65f;
             float D = 1;
             float E = 0.97f;
             // F = Fz * D * sin(C * atan(B*slip - E * (B*slip - atan(B*slip))))
-            float Fz = downForce;
-            float slipLat = sLat * 100f;
-            float slipLong = sLong * 100f;
-            fLat = Fz * D * Mathf.Sin(Clat * Mathf.Atan(B * slipLat - E * (B * slipLat - Mathf.Atan(B * slipLat)))) * -Mathf.Sign(vLat);
-            fLong = Fz * D * Mathf.Sin(Clong * Mathf.Atan(B * slipLong - E * (B * slipLong - Mathf.Atan(B * slipLong)))) - -Mathf.Sign(vLong);
-
-            //currentAngularVelocity = vLong * radiusInverse;
-            currentAngularVelocity += fLong * currentWheelRadius * inertiaInverse;
+            float Fz = patch.localForce.y;
+            float slipLat = patch.sLat * 100f;
+            float slipLong = patch.sLong * 100f;
+            patch.localForce.x = Fz * D * Mathf.Sin(Clat * Mathf.Atan(B * slipLat - E * (B * slipLat - Mathf.Atan(B * slipLat)))) * -Mathf.Sign(patch.localVelocity.x);
+            patch.localForce.z = Fz * D * Mathf.Sin(Clong * Mathf.Atan(B * slipLong - E * (B * slipLong - Mathf.Atan(B * slipLong)))) - -Mathf.Sign(patch.vWheelDelta);
         }
 
         #endregion ENDREGION - Alternate friction model
 
-        #region REGION - Alternate Friction Model 2
+        #region REGION - Alternate Friction Model - PhysX
+        // TODO
         // based on http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf
-
-        public void calcFrictionPhysX(float downForce)
+        public void calcFrictionPhysX(KSPWheelContactPatch patch)
         {
 
         }
@@ -939,5 +869,39 @@ namespace KSPWheel
 
         #endregion ENDREGION - Private/internal update methods
 
+    }
+
+    public enum KSPWheelSweepType
+    {
+        RAY,
+        SPHERE,
+        CAPSULE
+    }
+
+    public enum KSPWheelFrictionType
+    {
+        STANDARD,
+        PACEJKA,
+        PHSYX
+    }
+
+    public class KSPWheelContactPatch
+    {
+        //basic params, populated every tick regardless of grounded state
+        public bool grounded = false;
+        public Vector3 wheelUp;
+        public Vector3 wheelForward;
+        public Vector3 wheelRight;
+
+        //params only calculated/populated if grounded==true
+        public Collider colliderHit;
+        public Vector3 hitNormal;
+        public Vector3 hitPosition;
+        public Vector3 localVelocity;
+        public Vector3 localForce;
+        public float vWheel;
+        public float vWheelDelta;
+        public float sLong;
+        public float sLat;
     }
 }
