@@ -456,8 +456,11 @@ namespace KSPWheel
             grounded = wheel.isGrounded;
             comp = wheel.compressionDistance;
             colliderHit = grounded ? wheel.hit.collider.name : "None";
-            updateResourceDrain();//TODO should only be called when motor is engaged?
-            updateLandedState();//TODO...
+            if (maxMotorTorque > 0 && fwdInput != 0)
+            {
+                updateResourceDrain();
+            }
+            updateLandedState();
         }
 
         /// <summary>
@@ -496,7 +499,9 @@ namespace KSPWheel
             {
                 if (wheel.isGrounded)//orient foot to ground
                 {
-                    Vector3 bogeyUp = wheel.hit.normal;
+                    Vector3 normal = wheel.hit.normal;
+                    float dot = Vector3.Dot(bogeyUpAxis, normal);
+                    //Quaternion.ro
                 }
                 else
                 {
@@ -512,13 +517,15 @@ namespace KSPWheel
         //TODO...
         private void updateLandedState()
         {
-
+            bool grounded = wheel.isGrounded;
+            part.GroundContact = grounded;
+            vessel.checkLanded();
         }
 
         //TODO -- handle resource drain for motor-enabled parts
         private void updateResourceDrain()
         {
-
+            float drain = maxMotorTorque * fwdInput;
         }
 
         /// <summary>
