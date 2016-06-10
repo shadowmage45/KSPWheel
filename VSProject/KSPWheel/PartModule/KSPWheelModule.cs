@@ -121,6 +121,8 @@ namespace KSPWheel
         [KSPField]
         public float suspensionOffset = 0f;
         [KSPField]
+        public float suspensionExtPos = 0f;
+        [KSPField]
         public Vector3 wheelColliderRotation = Vector3.zero;
         [KSPField]
         public Vector3 suspensionAxis = Vector3.up;
@@ -135,6 +137,8 @@ namespace KSPWheel
 
         [KSPField]
         public bool brakesLocked = false;
+
+        //public float 
 
         #endregion
 
@@ -188,8 +192,6 @@ namespace KSPWheel
         private WheelAnimationHandler animationControl;
         private ModuleLight lightModule;
         private ModuleStatusLight statusLightModule;
-
-        private Vector3 suspensionLocalOrigin;
         #endregion
 
         #region REGION - Debug fields
@@ -383,12 +385,7 @@ namespace KSPWheel
             
             wheelColliderTransform.Rotate(wheelColliderRotation, Space.Self);
             wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;
-
-            if (suspensionMesh != null)
-            {
-                suspensionLocalOrigin = suspensionMesh.transform.localPosition;
-            }
-
+            
             if (wheelState == KSPWheelState.BROKEN)
             {
                 if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
@@ -437,6 +434,7 @@ namespace KSPWheel
                     wheel.damper = suspensionDamper;
                     //wheel.isGrounded = grounded;
                     wheel.setImpactCallback(onWheelImpact);
+                    if (brakesLocked) { wheel.brakeTorque = maxBrakeTorque; }
                 }
             }
             if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }            
@@ -470,14 +468,25 @@ namespace KSPWheel
         {
             if (animationControl != null) { animationControl.updateAnimationState(); }
             if (!FlightGlobals.ready || !FlightDriver.fetch || wheel==null) { return; }
-            //TODO reset input state on animation state changes, re-orient wheels to default (zero steering rotation) when retracted/ing?
+            //TODO block/reset input state when not deployed, re-orient wheels to default (zero steering rotation) when retracted/ing?
             if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }            
             if (suspensionMesh != null)
             {
-                float offset = wheel.compressionDistance;
-                if (offset < 0) { offset = 0; }
-                offset += suspensionOffset;
-                suspensionMesh.localPosition = suspensionLocalOrigin + suspensionAxis * offset;
+                float offset = wheel.compressionDistance + suspensionOffset;
+                Vector3 pos = suspensionMesh.localPosition;
+                if (suspensionAxis.x != 0)
+                {
+                    pos.x = suspensionExtPos + offset * suspensionAxis.x;
+                }
+                else if (suspensionAxis.y != 0)
+                {
+                    pos.y = suspensionExtPos + offset * suspensionAxis.y;
+                }
+                else if (suspensionAxis.z !=0)
+                {
+                    pos.z = suspensionExtPos + offset * suspensionAxis.z;
+                }
+                suspensionMesh.localPosition = pos;
             }
             if (steeringMesh != null)
             {
@@ -505,7 +514,7 @@ namespace KSPWheel
                 }
                 else
                 {
-                    //default orientation?
+                    //default orientation? which would be?
                 }                
             }
         }
