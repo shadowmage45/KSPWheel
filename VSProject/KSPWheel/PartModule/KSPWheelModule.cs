@@ -453,7 +453,7 @@ namespace KSPWheel
             steer = wheel.steeringAngle;
             grounded = wheel.isGrounded;
             comp = wheel.compressionDistance;
-            colliderHit = grounded ? wheel.contactData.colliderHit.name : "None";
+            colliderHit = grounded ? wheel.contactColliderHit.name : "None";
             if (maxMotorTorque > 0 && fwdInput != 0)
             {
                 updateResourceDrain();
@@ -508,7 +508,7 @@ namespace KSPWheel
             {
                 if (wheel.isGrounded)//orient foot to ground
                 {
-                    Vector3 normal = wheel.contactData.hitNormal;
+                    Vector3 normal = wheel.contactNormal;
                     float dot = Vector3.Dot(bogeyUpAxis, normal);
                     //Quaternion.ro
                 }

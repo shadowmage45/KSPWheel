@@ -128,8 +128,8 @@ namespace KSPWheel
         public KSPWheelFrictionType frictionModel = KSPWheelFrictionType.STANDARD;
 
         public KSPWheelSweepType sweepType = KSPWheelSweepType.RAY;
-
-        public bool useSticky = true;
+        
+        public bool debug = false;
 
         #endregion ENDREGION - Unity Editor Inspector Assignable Fields
 
@@ -211,7 +211,7 @@ namespace KSPWheel
                 wheelTransform.Rotate(wheelTransform.right, wheelCollider.perFrameRotation, Space.World);
             }
             Vector3 prevVel = localVelocity;
-            localVelocity = wheelCollider.contactData.localVelocity;
+            localVelocity = wheelCollider.wheelLocalVelocity;
             localAcceleration = (prevVel - localVelocity) / Time.fixedDeltaTime;
             fSpring = wheelCollider.springForce;
             fDamp = wheelCollider.dampForce;
@@ -221,6 +221,10 @@ namespace KSPWheel
             fLong = wheelCollider.longitudinalForce;
             fLat = wheelCollider.lateralForce;
             comp = wheelCollider.compressionDistance;
+            if (debug)
+            {
+                MonoBehaviour.print("s/d: " + fSpring + " : " + fDamp);
+            }
         }
 
         public void OnValidate()
@@ -239,7 +243,6 @@ namespace KSPWheel
                 wheelCollider.sideFrictionCoefficient = sideFrictionCoefficient;
                 wheelCollider.sweepType = sweepType;
                 wheelCollider.frictionModel = frictionModel;
-                wheelCollider.useSticky = useSticky;
             }
         }
 
