@@ -130,6 +130,8 @@ namespace KSPWheel
         /// </summary>
         public bool sphereCast = false;
 
+        public bool useSticky = true;
+
         #endregion ENDREGION - Unity Editor Inspector Assignable Fields
 
         // these variables are updated every fixed-tick after the wheel has been updated
@@ -244,6 +246,7 @@ namespace KSPWheel
                 wheelCollider.forwardFrictionCoefficient = forwardFrictionCoefficient;
                 wheelCollider.sideFrictionCoefficient = sideFrictionCoefficient;
                 wheelCollider.sphereCast = sphereCast;
+                wheelCollider.useSticky = useSticky;
             }
         }
 
