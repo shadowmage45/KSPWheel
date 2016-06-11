@@ -246,6 +246,11 @@ namespace KSPWheel
             }
         }
 
+        public void LateUpdate()
+        {
+            wheelCollider.drawDebug();
+        }
+
         /// <summary>
         /// Display a visual representation of the wheel in the editor. Unity has no inbuilt gizmo for 
         /// circles, so a sphere is used. Unlike the original WC, I've represented the wheel at top and bottom 

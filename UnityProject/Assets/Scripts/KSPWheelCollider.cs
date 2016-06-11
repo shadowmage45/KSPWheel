@@ -51,6 +51,7 @@ namespace KSPWheel
         private float fwdStickyTimeMax = 0.25f;
         private float sideStickyTimer = 0;
         private float fwdStickyTimer = 0;
+        private Vector3 wF, wR;
         
         //internal friction model values
         private float prevFSpring;
@@ -400,16 +401,28 @@ namespace KSPWheel
         /// </summary>
         public void updateWheel()
         {
-            wheelForward = Quaternion.AngleAxis(currentSteerAngle, wheel.transform.up) * wheel.transform.forward; ;
+            wheelForward = Quaternion.AngleAxis(currentSteerAngle, wheel.transform.up) * wheel.transform.forward;
             wheelUp = wheel.transform.up;
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
-
             prevSuspensionCompression = currentSuspensionCompression;
             prevFSpring = localForce.y;
             float prevVSpring = vSpring;
             bool prevGrounded = grounded;
             if (checkSuspensionContact())//suspension compression is updated in the suspension contact check
             {
+                Vector3 localHitNormal = wheel.transform.InverseTransformVector(hitNormal);
+                Vector3 localHitAxis2 = new Vector3(-localHitNormal.y, -localHitNormal.x, -localHitNormal.z);
+                //now we know the vector differences in local space, and things become easier
+                Vector3 diff = Vector3.up - localHitNormal;
+                float xRot = 90f - Mathf.Atan2(Mathf.Abs(diff.z), Mathf.Abs(diff.y)) * Mathf.Rad2Deg;
+                //wF = Quaternion.AngleAxis(xRot, wheelRight) * wheelForward;
+                wR = wheel.transform.TransformVector(localHitAxis2);
+                wF = Vector3.Cross(wR, hitNormal);
+
+                //Vector3 hnr = new Vector3(hitNormal.x, hitNormal.z, hitNormal.y);
+                //Vector3 hnf = new Vector3(hitNormal.y, hitNormal.x, hitNormal.z);
+                //wR = hnr;
+                //wF = hnf;                
                 calcSpring();
                 integrateForces();
                 updateStickyJoint();
@@ -570,10 +583,10 @@ namespace KSPWheel
         private bool suspensionSweepRaycast()
         {
             RaycastHit hit;
-            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, length + radius, currentRaycastMask))
+            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, currentSuspenionLength + currentWheelRadius, currentRaycastMask))
             {
                 Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
-                currentSuspensionCompression = length + radius - hit.distance;
+                currentSuspensionCompression = currentSuspenionLength + currentWheelRadius - hit.distance;
 
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
@@ -597,11 +610,10 @@ namespace KSPWheel
         private bool suspensionSweepSpherecast()
         {
             RaycastHit hit;
-            if (Physics.SphereCast(wheel.transform.position + wheel.transform.up*radius, radius, -wheel.transform.up, out hit, length + radius, currentRaycastMask))
+            if (Physics.SphereCast(wheel.transform.position + wheel.transform.up * 0.1f, radius, -wheel.transform.up, out hit, length + radius, currentRaycastMask))
             {
-                currentSuspensionCompression = length - hit.distance + radius;
-                Vector3 hitPos = wheel.transform.position - (length - currentSuspensionCompression) * wheel.transform.up - wheel.transform.up * radius;
-                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hitPos);
+                currentSuspensionCompression = length + 0.1f - hit.distance;
+                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
 
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
@@ -632,8 +644,6 @@ namespace KSPWheel
         {
             //create two capsule casts in a v-shape
             //take whichever collides first
-            //have to start above the wheel, due to the 'no cath if already in collision' clause
-            //this is where anti-punchthrough is needed, to stop overcompression, so that you don't need to start above the wheel (or maybe only slightly)
             float wheelWidth = 0.3f;
             float capRadius = wheelWidth * 0.5f;
 
@@ -643,23 +653,26 @@ namespace KSPWheel
             bool hit1b;
             bool hit2b;
             Vector3 startPos = wheel.transform.position;
-            float length = currentSuspenionLength+currentWheelRadius;
+            float vOffset = currentWheelRadius;
+            float rayLength = currentSuspenionLength + vOffset;
             float capLen = currentWheelRadius - capRadius;
-            Vector3 offset = wheel.transform.up * currentWheelRadius;//offset it above the wheel by wheel-radius, in case of overcompression (see noes above)
+            Vector3 worldOffset = wheel.transform.up * vOffset;//offset it above the wheel by a small amount, in case of hitting bump-stop
             Vector3 capEnd1 = wheel.transform.position + wheel.transform.forward * capLen;
             Vector3 capEnd2 = wheel.transform.position - wheel.transform.forward * capLen;
             Vector3 capBottom = wheel.transform.position - wheel.transform.up * capLen;
-            hit1b = Physics.CapsuleCast(capEnd1 + offset, capBottom + offset, capRadius, -wheel.transform.up, out hit1, length, currentRaycastMask);
-            hit2b = Physics.CapsuleCast(capEnd2 + offset, capBottom + offset, capRadius, -wheel.transform.up, out hit2, length, currentRaycastMask);
+            hit1b = Physics.CapsuleCast(capEnd1 + worldOffset, capBottom + worldOffset, capRadius, -wheel.transform.up, out hit1, rayLength, currentRaycastMask);
+            hit2b = Physics.CapsuleCast(capEnd2 + worldOffset, capBottom + worldOffset, capRadius, -wheel.transform.up, out hit2, rayLength, currentRaycastMask);
             if (hit1b || hit2b)
             {
-                hit = hit1;
                 if (hit1b && hit2b) { hit = hit1.distance < hit2.distance ? hit1 : hit2; }
                 else if (hit1b) { hit = hit1; }
                 else if (hit2b) { hit = hit2; }
-                currentSuspensionCompression = currentSuspenionLength - hit.distance + currentWheelRadius;
-                Vector3 hitPos = wheel.transform.position - (currentSuspenionLength - currentSuspensionCompression) * wheel.transform.up - wheel.transform.up * radius;
-                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hitPos);
+                else
+                {
+                    hit = hit1;
+                }
+                currentSuspensionCompression = currentSuspenionLength + vOffset - hit.distance;
+                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
 
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
@@ -696,11 +709,6 @@ namespace KSPWheel
 
         private void calcFriction()
         {
-            vWheel = currentAngularVelocity * currentWheelRadius;
-            sLong = calcLongSlip(localVelocity.z, vWheel);
-            sLat = calcLatSlip(localVelocity.z, localVelocity.x);
-            vWheelDelta = vWheel - localVelocity.z;
-
             switch (currentFrictionModel)
             {
                 case KSPWheelFrictionType.STANDARD:
@@ -710,7 +718,7 @@ namespace KSPWheel
                     calcFrictionPacejka();
                     break;
                 case KSPWheelFrictionType.PHSYX:
-                    calcFrictionPhysX();
+                    calcFrictionPhysx();
                     break;
                 default:
                     calcFrictionStandard();
@@ -777,6 +785,11 @@ namespace KSPWheel
             currentAngularVelocity += wBrake * -Mathf.Sign(currentAngularVelocity);
             // this is the remaining brake angular acceleration/torque that can be used to counteract wheel acceleration caused by traction friction
             float wBrakeDelta = wBrakeMax - wBrake;
+            
+            vWheel = currentAngularVelocity * currentWheelRadius;
+            sLong = calcLongSlip(localVelocity.z, vWheel);
+            sLat = calcLatSlip(localVelocity.z, localVelocity.x);
+            vWheelDelta = vWheel - localVelocity.z;
 
             float fLongMax = fwdFrictionCurve.evaluate(sLong) * localForce.y * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
             float fLatMax = sideFrictionCurve.evaluate(sLat) * localForce.y * currentSideFrictionCoef * currentSurfaceFrictionCoef;
@@ -826,12 +839,11 @@ namespace KSPWheel
                 currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;//traction from this will be applied next frame from wheel slip, but we're integrating here basically for rendering purposes
             }
 
-            // normalize forces based on slip ratios, to allow for powered slides
-            float mag = Mathf.Sqrt(sLong * sLong + sLat * sLat);
-            float nSlong = mag == 0 ? 0 : sLong / mag;
-            float nSlat = mag == 0 ? 0 : sLat / mag;
-            localForce.z *= nSlong;
-            localForce.x *= nSlat;
+            // cap friction / combined friction
+            // in this simplified model, longitudinal force wins
+            float cap = Mathf.Max(fLatMax, fLongMax);
+            float latLimit = cap - Mathf.Abs(localForce.z);
+            if (Mathf.Abs(localForce.x) > latLimit) { localForce.x = latLimit * Mathf.Sign(localForce.x); }
         }
 
         #endregion ENDREGION - Standard Friction Model
@@ -845,8 +857,16 @@ namespace KSPWheel
 
         public void calcFrictionPacejka()
         {
+            // TODO
+            // really this should just be an adjustment to the curve parameters
+            // as all that the pacejka formulas do is define the curves used by slip ratio to calculate maximum force output
+            
+            vWheel = currentAngularVelocity * currentWheelRadius;
+            sLong = calcLongSlip(localVelocity.z, vWheel);
+            sLat = calcLatSlip(localVelocity.z, localVelocity.x);
+            vWheelDelta = vWheel - localVelocity.z;
+
             // 'simple' magic-formula
-            // implemented as-per http://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
             float B = 10f;//stiffness
             // float C = 1.9f;
             float Clat = 1.3f;
@@ -857,28 +877,59 @@ namespace KSPWheel
             float Fz = localForce.y;
             float slipLat = sLat * 100f;
             float slipLong = sLong * 100f;
-            localForce.x = Fz * D * Mathf.Sin(Clat * Mathf.Atan(B * slipLat - E * (B * slipLat - Mathf.Atan(B * slipLat))));
-            localForce.z = Fz * D * Mathf.Sin(Clong * Mathf.Atan(B * slipLong - E * (B * slipLong - Mathf.Atan(B * slipLong)))) * -Mathf.Sign(vWheelDelta);
+            float fLatMax = localForce.x = Fz * D * Mathf.Sin(Clat * Mathf.Atan(B * slipLat - E * (B * slipLat - Mathf.Atan(B * slipLat))));
+            float fLongMax = localForce.z = Fz * D * Mathf.Sin(Clong * Mathf.Atan(B * slipLong - E * (B * slipLong - Mathf.Atan(B * slipLong))));
 
-            // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero; the 2x multiplier is just because it helped with response but didn't induce oscillations; higher multipliers can
             if (localForce.x > Mathf.Abs(localVelocity.x) * localForce.y * 2f) { localForce.x = Mathf.Abs(localVelocity.x) * localForce.y * 2f; }
-            // if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
             localForce.x *= -Mathf.Sign(localVelocity.x);// sign it opposite to the current vLat
-
-            currentAngularVelocity -= localForce.z * inertiaInverse;
+            
+            //angular velocity delta between wheel and surface in radians per second; radius inverse used to avoid div operations
+            float wDelta = vWheelDelta * radiusInverse;
+            //amount of torque needed to bring wheel to surface speed over one second
+            float tDelta = wDelta * currentMomentOfInertia;
+            //newtons of force needed to bring wheel to surface speed over one update tick
+            float fDelta = tDelta * radiusInverse / Time.fixedDeltaTime;
+            localForce.z = Mathf.Min(Mathf.Abs(fDelta), localForce.z) * Mathf.Sign(fDelta);
+            float tTract = -localForce.z * currentWheelRadius;
+            currentAngularVelocity += tTract * Time.fixedDeltaTime * inertiaInverse;
+            currentAngularVelocity += currentMotorTorque * Time.fixedDeltaTime * inertiaInverse;
+            
+            float cap = Mathf.Max(fLatMax, fLongMax);
+            float latLimit = cap - Mathf.Abs(localForce.z);
+            if (Mathf.Abs(localForce.x) > latLimit) { localForce.x = latLimit * Mathf.Sign(localForce.x); }
         }
 
         #endregion ENDREGION - Alternate friction model
 
         #region REGION - Alternate Friction Model - PhysX
+
         // TODO
         // based on http://www.eggert.highpeakpress.com/ME485/Docs/CarSimEd.pdf
-        public void calcFrictionPhysX()
+        public void calcFrictionPhysx()
         {
-
+            calcFrictionStandard();
         }
 
         #endregion ENDREGION - Alternate Friction Model 2
+
+        public void drawDebug()
+        {
+            if (!grounded) { return; }
+            
+            Vector3 rayStart, rayEnd;
+            Vector3 vOffset = rigidBody.velocity * Time.fixedDeltaTime;
+
+            rayStart = hitPoint;
+            rayEnd = rayStart + wheel.transform.TransformVector(localForce.normalized) * 2f;
+            Debug.DrawLine(rayStart + vOffset, rayEnd + vOffset, Color.magenta);
+
+            rayStart += wheel.transform.up * 0.1f;
+            rayEnd = rayStart + wF * 10f;
+            Debug.DrawLine(rayStart + vOffset, rayEnd + vOffset, Color.blue);
+
+            rayEnd = rayStart + wR * 10f;
+            Debug.DrawLine(rayStart + vOffset, rayEnd + vOffset, Color.red);
+        }
 
         #endregion ENDREGION - Private/internal update methods
 
