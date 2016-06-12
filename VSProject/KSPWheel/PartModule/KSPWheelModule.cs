@@ -76,6 +76,8 @@ namespace KSPWheel
         [KSPField]
         public float impactTolerance;
 
+        public int raycastMask = ~(1 << 26 | 1 << 10);//ignore layers 26 and 10 (wheelCollidersIgnore & scaledScenery)
+
         /// <summary>
         /// If true, steering will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
         /// </summary>
@@ -129,16 +131,25 @@ namespace KSPWheel
         [KSPField]
         public Vector3 steeringAxis = Vector3.up;
 
+        //TODO update the min/max fields for UI for these values
         [KSPField]
         public float minLoadRating = 0.05f;
 
+        //TODO update the min/max fields for UI for these values
         [KSPField]
         public float maxLoadRating = 5f;
 
         [KSPField]
         public bool brakesLocked = false;
 
-        //public float 
+        [KSPField]
+        public float throttleResponse = 2f;
+        [KSPField]
+        public float brakeResponse = 2f;
+        [KSPField]
+        public float steeringResponse = 10f;
+        [KSPField]
+        public float maxRPM = 600f;
 
         #endregion
 
@@ -155,7 +166,8 @@ namespace KSPWheel
         public float suspensionSpring = -1;
         [KSPField]
         public float suspensionDamper = -1;
-        [KSPField]
+        [KSPField(guiName ="Motor Torque", guiActive = true, guiActiveEditor = true),
+         UI_FloatRange(minValue =0, maxValue = 100, stepIncrement = 0.5f)]
         public float maxMotorTorque = -1;
         [KSPField]
         public float maxBrakeTorque = -1;
@@ -336,13 +348,7 @@ namespace KSPWheel
             base.OnStart(state);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
             wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
-            locateWheelPivotTransforms();
-            if (!String.IsNullOrEmpty(wheelName)){ wheelMesh = part.transform.FindRecursive(wheelName); }
-            if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
-            if (!String.IsNullOrEmpty(suspensionName)) { suspensionMesh = part.transform.FindRecursive(suspensionName); }
-            if (!String.IsNullOrEmpty(steeringName)) { steeringMesh = part.transform.FindRecursive(steeringName); }
-            if (!String.IsNullOrEmpty(animationName)) { animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, wheelState); }
-            if (!String.IsNullOrEmpty(bogeyName)) { bogeyMesh = part.transform.FindRecursive(bogeyName); }
+            locateTransforms();
             WheelCollider collider = wheelColliderTransform.GetComponent<WheelCollider>();
             if (collider != null)
             {
@@ -372,9 +378,11 @@ namespace KSPWheel
                 int len = colliders.Length;
                 for (int i = 0; i < len; i++)
                 {
-                    //set all colliders in the part to wheel-collider-ignore layer; no stock models that I've investigated have colliders on the same object as meshes, they all use separate colliders
+                    // set all colliders in the part to wheel-collider-ignore layer;
+                    // no stock models that I've investigated have colliders on the same object as meshes, they all use separate colliders
                     colliders[i].gameObject.layer = 26;//wheelcollidersignore
-                    //remove stock 'collisionEnhancer' collider from wheels, if present; these things screw with wheel updates/raycasting, and cause improper collisions on wheels
+                    // remove stock 'collisionEnhancer' collider from wheels, if present;
+                    // these things screw with wheel updates/raycasting, and cause improper collisions on wheels
                     if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
                     {
                         GameObject.Destroy(colliders[i].gameObject);
@@ -415,6 +423,9 @@ namespace KSPWheel
         {
             if (!HighLogic.LoadedSceneIsFlight) { return; }
             if (!FlightGlobals.ready || !FlightDriver.fetch) { return; }
+            //workaround for part rigidbody not being present during start/load or initial fixedupdate ticks
+            //TODO can set it up in a coroutine, continuing to yield until rigidbody is present?
+            //      is that really a simpler solution? still have  to check for null each fixed-update tick until the wheel is present
             if (wheel == null)
             {
                 Rigidbody rb = part.GetComponent<Rigidbody>();
@@ -424,7 +435,6 @@ namespace KSPWheel
                 }
                 else
                 {
-                    //delaying until Start as the part.rigidbody is not initialized until ?? (need to find out when...)
                     wheel = new KSPWheelCollider(wheelColliderTransform.gameObject, part.gameObject.GetComponent<Rigidbody>());
                     wheel.radius = wheelRadius;
                     wheel.mass = wheelMass;
@@ -434,6 +444,7 @@ namespace KSPWheel
                     wheel.damper = suspensionDamper;
                     //wheel.isGrounded = grounded;
                     wheel.setImpactCallback(onWheelImpact);
+                    wheel.raycastMask = raycastMask;
                     if (brakesLocked) { wheel.brakeTorque = maxBrakeTorque; }
                 }
             }
@@ -446,14 +457,14 @@ namespace KSPWheel
             {
                 //wheel.gravityForce = FlightIntegrator.ActiveVesselFI.geeForce;
                 wheel.updateWheel();
-            }
+            }            
             fLong = wheel.longitudinalForce;
             fLat = wheel.lateralForce;
             rpm = wheel.rpm;
             steer = wheel.steeringAngle;
             grounded = wheel.isGrounded;
             comp = wheel.compressionDistance;
-            colliderHit = grounded ? wheel.contactColliderHit.name : "None";
+            colliderHit = grounded ? wheel.contactColliderHit.gameObject.name+" : "+wheel.contactColliderHit.gameObject.layer : "None";
             if (maxMotorTorque > 0 && fwdInput != 0)
             {
                 updateResourceDrain();
@@ -523,7 +534,7 @@ namespace KSPWheel
 
         #region REGION - Custom update methods
 
-        //TODO...
+        //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow
         private void updateLandedState()
         {
             bool grounded = wheel.isGrounded;
@@ -542,19 +553,38 @@ namespace KSPWheel
         /// </summary>
         private void sampleInput()
         {
-            fwdInput = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
-            rotInput = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
-            brakeInput = brakesLocked ? 1 : part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
-            if (motorLocked) { fwdInput = 0; }
-            if (steeringLocked) { rotInput = 0; }
-            if (invertSteering) { rotInput = -rotInput; }
-            if (invertMotor) { fwdInput = -fwdInput; }
+            float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
+            float rI = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
+            float bI = brakesLocked ? 1 : part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
+            float rpm = wheel.rpm;
+            if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
+            else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
+            if (motorLocked) { fI = 0; }
+            if (steeringLocked) { rI = 0; }
+            if (invertSteering) { rI = -rI; }
+            if (invertMotor) { fI = -fI; }
             if (tankSteering)
             {
-                fwdInput = fwdInput + rotInput;
-                if (fwdInput > 1) { fwdInput = 1; }
-                if (fwdInput < -1) { fwdInput = -1; }
+                fI = fI + rI;
+                if (fI > 1) { fI = 1; }
+                if (fI < -1) { fI = -1; }
             }
+
+            if (throttleResponse > 0)
+            {
+                fI = Mathf.Lerp(fwdInput, fI, throttleResponse * Time.deltaTime);
+            }
+            if (steeringResponse > 0)
+            {
+                rI = Mathf.Lerp(rotInput, rI, steeringResponse * Time.deltaTime);
+            }
+            if (!brakesLocked && brakeResponse > 0)
+            {
+                bI = Mathf.Lerp(brakeInput, bI, brakeResponse * Time.deltaTime);
+            }
+            fwdInput = fI;
+            rotInput = rI;
+            brakeInput = bI;
             wheel.motorTorque = maxMotorTorque * fwdInput;
             wheel.steeringAngle = maxSteeringAngle * rotInput;
             wheel.brakeTorque = maxBrakeTorque * brakeInput;
@@ -606,7 +636,7 @@ namespace KSPWheel
         /// Locate the wheel-pivot transforms from the list of wheel-pivot names (may be singular or CSV list), will find multiple same-named transforms
         /// ALL of them must rotate on the same axis (x-axis by default, currently not configurable)
         /// </summary>
-        private void locateWheelPivotTransforms()
+        private void locateTransforms()
         {
             String[] pivotNames = wheelPivotName.Split(',');
             List<Transform> transforms = new List<Transform>();
@@ -616,6 +646,12 @@ namespace KSPWheel
                 part.transform.FindRecursiveMulti(pivotNames[i].Trim(), transforms);
             }
             wheelPivotTransforms = transforms.ToArray();
+            if (!String.IsNullOrEmpty(wheelName)) { wheelMesh = part.transform.FindRecursive(wheelName); }
+            if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
+            if (!String.IsNullOrEmpty(suspensionName)) { suspensionMesh = part.transform.FindRecursive(suspensionName); }
+            if (!String.IsNullOrEmpty(steeringName)) { steeringMesh = part.transform.FindRecursive(steeringName); }
+            if (!String.IsNullOrEmpty(animationName)) { animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, wheelState); }
+            if (!String.IsNullOrEmpty(bogeyName)) { bogeyMesh = part.transform.FindRecursive(bogeyName); }
         }
 
         //debug code...

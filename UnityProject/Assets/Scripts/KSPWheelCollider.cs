@@ -408,25 +408,28 @@ namespace KSPWheel
             prevFSpring = localForce.y;
             float prevVSpring = vSpring;
             bool prevGrounded = grounded;
-            if (checkSuspensionContact())//suspension compression is updated in the suspension contact check
+            if (checkSuspensionContact())//suspension compression is calculated in the suspension contact check
             {
-                Vector3 localHitNormal = wheel.transform.InverseTransformVector(hitNormal);
-                Vector3 localHitAxis2 = new Vector3(-localHitNormal.y, -localHitNormal.x, -localHitNormal.z);
-                //now we know the vector differences in local space, and things become easier
-                Vector3 diff = Vector3.up - localHitNormal;
-                float xRot = 90f - Mathf.Atan2(Mathf.Abs(diff.z), Mathf.Abs(diff.y)) * Mathf.Rad2Deg;
-                //wF = Quaternion.AngleAxis(xRot, wheelRight) * wheelForward;
-                wR = wheel.transform.TransformVector(localHitAxis2);
-                wF = Vector3.Cross(wR, hitNormal);
+                //surprisingly, this seems to work extremely well...
+                //there will be the 'undefined' case where hitNormal==wheelForward (hitting a vertical wall)
+                //but that collision would never be detected anyway, as well as the suspension force would be undefined/uncalculated
+                wR = Vector3.Cross(hitNormal, wheelForward);
+                wF = -Vector3.Cross(hitNormal, wR);
 
-                //Vector3 hnr = new Vector3(hitNormal.x, hitNormal.z, hitNormal.y);
-                //Vector3 hnf = new Vector3(hitNormal.y, hitNormal.x, hitNormal.z);
-                //wR = hnr;
-                //wF = hnf;                
+                //no idea if this is 'proper' for transforming velocity from world-space to wheel-space; but it seems to return the right results
+                //the 'other' way to do it would be to construct a quaternion for the wheel-space rotation transform and multiple
+                // vqLocal = qRotation * vqWorld * qRotationInverse;
+                // where vqWorld is a quaternion with a vector component of the world velocity and w==0
+                // the output being a quaternion with vector component of the local velocity and w==0
+                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hitPoint);
+                float mag = worldVelocityAtHit.magnitude;
+                localVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, wF) * mag;
+                localVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wR) * mag;
+                localVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, hitNormal) * mag;
+
                 calcSpring();
                 integrateForces();
-                updateStickyJoint();
-                if (!prevGrounded && onImpactCallback != null)//if was not previously grounded, call-back with impact data
+                if (!prevGrounded && onImpactCallback != null)//if was not previously grounded, call-back with impact data; we really only know the impact velocity
                 {
                     onImpactCallback.Invoke(localVelocity);
                 }
@@ -441,9 +444,8 @@ namespace KSPWheel
                 hitPoint = Vector3.zero;
                 hitCollider = null;
                 localVelocity = Vector3.zero;
-                Component.Destroy(stickyJoint);
-                stickyJoint = null;
             }
+            updateStickyJoint();
         }
 
         #endregion ENDREGION - Public accessible methods, API get/set methods
@@ -457,11 +459,11 @@ namespace KSPWheel
         {
             calcFriction();
             //no clue if this is correct or not, but does seem to clean up some suspension force application problems at high incident angles
-            float suspensionDot = Vector3.Dot(hitNormal, wheel.transform.up);
+            float suspensionDot = Vector3.Dot(hitNormal, wheelUp);
 
-            Vector3 calculatedForces = hitNormal * localForce.y * suspensionDot;
-            calculatedForces += localForce.z * wheelForward;
-            calculatedForces += localForce.x * wheelRight;
+            Vector3 calculatedForces = hitNormal * localForce.y;// * suspensionDot;
+            calculatedForces += localForce.z * wF;
+            calculatedForces += localForce.x * wR;
             rigidBody.AddForceAtPosition(calculatedForces, hitPoint, ForceMode.Force);
             if (hitCollider.attachedRigidbody != null && !hitCollider.attachedRigidbody.isKinematic)
             {
@@ -488,6 +490,7 @@ namespace KSPWheel
             currentAngularVelocity += wBrake * -Mathf.Sign(currentAngularVelocity);
         }
 
+        private ConfigurableJoint bumpStopJoint;
         /// <summary>
         /// Per-fixed-update configuration of the rigidbody joints that are used for sticky friction and anti-punchthrough behaviour
         /// </summary>
@@ -495,66 +498,81 @@ namespace KSPWheel
         /// <param name="side"></param>
         private void updateStickyJoint()
         {
-            if (stickyJoint == null)
-            {
-                stickyJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
-                stickyJoint.anchor = wheel.transform.localPosition;
-                stickyJoint.axis = Vector3.right;
-                stickyJoint.autoConfigureConnectedAnchor = false;
-                stickyJoint.secondaryAxis = Vector3.up;
+            //if (stickyJoint == null)
+            //{
+            //    stickyJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
+            //    stickyJoint.anchor = wheel.transform.localPosition;
+            //    stickyJoint.axis = Vector3.right;
+            //    stickyJoint.autoConfigureConnectedAnchor = false;
+            //    stickyJoint.secondaryAxis = Vector3.up;
+            //}
 
-                // bump-stop code, borrowed from lo-fi's joint-based wheel implementation
-                // seems to work precisely as intended
-                stickyJoint.yMotion = ConfigurableJointMotion.Limited;
-                SoftJointLimitSpring bumpStopLimitSpring = new SoftJointLimitSpring();
-                bumpStopLimitSpring.spring = 0;
-                bumpStopLimitSpring.damper = 0;
-                stickyJoint.linearLimitSpring = bumpStopLimitSpring;
+            //if (bumpStopJoint == null)
+            //{
+            //    bumpStopJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
+            //    bumpStopJoint.anchor = wheel.transform.localPosition - (currentSuspenionLength + currentWheelRadius) * Vector3.up;
+            //    bumpStopJoint.axis = Vector3.right;
+            //    bumpStopJoint.autoConfigureConnectedAnchor = false;
+            //    bumpStopJoint.secondaryAxis = Vector3.up;
+                
+            //    SoftJointLimitSpring bumpStopLimitSpring = new SoftJointLimitSpring();
+            //    bumpStopLimitSpring.spring = 0;
+            //    bumpStopLimitSpring.damper = 0;
+            //    bumpStopJoint.linearLimitSpring = bumpStopLimitSpring;
 
-                SoftJointLimit bumpStopLimit = new SoftJointLimit();
-                bumpStopLimit.bounciness = 0;
-                bumpStopLimit.limit = currentSuspenionLength; //this sets the hard limit, or what are often called bump stops
-                bumpStopLimit.contactDistance = 0;
-                stickyJoint.linearLimit = bumpStopLimit;
-            }
-            stickyJoint.connectedAnchor = wheel.transform.position + wheel.transform.up * (currentSuspenionLength - currentSuspensionCompression);
-            stickyJoint.breakForce = 100f;
-            stickyJoint.breakTorque = 100f;
+            //    SoftJointLimit bumpStopLimit = new SoftJointLimit();
+            //    bumpStopLimit.bounciness = -1f;
+            //    bumpStopLimit.limit = currentSuspenionLength;
+            //    bumpStopLimit.contactDistance = 0f;
+            //    bumpStopJoint.linearLimit = bumpStopLimit;
+            //}
+            //bumpStopJoint.connectedAnchor = wheel.transform.position - wheelUp * (currentSuspenionLength - currentSuspensionCompression + currentWheelRadius);
+            //if (grounded)
+            //{
+            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Limited;
+            //}
+            //else
+            //{
+            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Free;
+            //}
 
-            if (Math.Abs(localVelocity.z) < maxStickyVelocity && currentMotorTorque == 0)
-            {
-                fwdStickyTimer += Time.fixedDeltaTime;
-            }
-            else
-            {
-                fwdStickyTimer = 0;
-            }
+            // this will either be the contact point as seen by the wheel
+            // or.. some arbitrary point in space at the bottom of the wheels droop
+            //stickyJoint.connectedAnchor = wheel.transform.position - wheelUp * ((currentSuspenionLength - currentSuspensionCompression) + currentWheelRadius);
 
-            if (Math.Abs(localVelocity.x) < maxStickyVelocity && Mathf.Abs(localForce.x) < springForce * 0.1f)
-            {
-                sideStickyTimer +=Time.fixedDeltaTime;
-            }
-            else
-            {
-                sideStickyTimer = 0;
-            }
+            //if (grounded && Math.Abs(localVelocity.z) < maxStickyVelocity && currentMotorTorque == 0)
+            //{
+            //    fwdStickyTimer += Time.fixedDeltaTime;
+            //}
+            //else
+            //{
+            //    fwdStickyTimer = 0;
+            //}
 
-            if (fwdStickyTimer >= fwdStickyTimeMax)
-            {
-                stickyJoint.zMotion = ConfigurableJointMotion.Locked;
-            }
-            else
-            {
-                stickyJoint.zMotion = ConfigurableJointMotion.Free;
-            }
-            if (sideStickyTimer >= sideStickyTimeMax)
-            {
-                stickyJoint.xMotion = ConfigurableJointMotion.Locked;
-            }
-            else
-            {
-                stickyJoint.xMotion = ConfigurableJointMotion.Free;
-            }
+            //if (grounded && Math.Abs(localVelocity.x) < maxStickyVelocity && Mathf.Abs(localForce.x) < springForce * 0.1f)
+            //{
+            //    sideStickyTimer +=Time.fixedDeltaTime;
+            //}
+            //else
+            //{
+            //    sideStickyTimer = 0;
+            //}
+            //if (fwdStickyTimer >= fwdStickyTimeMax)
+            //{
+            //    stickyJoint.zMotion = ConfigurableJointMotion.Locked;
+            //}
+            //else
+            //{
+            //    stickyJoint.zMotion = ConfigurableJointMotion.Free;
+            //}
+            //if (sideStickyTimer >= sideStickyTimeMax)
+            //{
+            //    stickyJoint.xMotion = ConfigurableJointMotion.Locked;
+            //}
+            //else
+            //{
+            //    stickyJoint.xMotion = ConfigurableJointMotion.Free;
+            //}
         }
 
         /// <summary>
@@ -585,17 +603,10 @@ namespace KSPWheel
             RaycastHit hit;
             if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, currentSuspenionLength + currentWheelRadius, currentRaycastMask))
             {
-                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
                 currentSuspensionCompression = currentSuspenionLength + currentWheelRadius - hit.distance;
-
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
                 hitPoint = hit.point;
-
-                float mag = worldVelocityAtHit.magnitude;
-                localVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, wheelForward) * mag;
-                localVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * mag;
-                localVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheelUp) * mag;
                 grounded = true;
                 return true;
             }
@@ -610,19 +621,14 @@ namespace KSPWheel
         private bool suspensionSweepSpherecast()
         {
             RaycastHit hit;
-            if (Physics.SphereCast(wheel.transform.position + wheel.transform.up * 0.1f, radius, -wheel.transform.up, out hit, length + radius, currentRaycastMask))
+            //need to start cast above max-compression point, to allow for catching the case of @ bump-stop
+            float rayOffset = currentWheelRadius;
+            if (Physics.SphereCast(wheel.transform.position + wheel.transform.up * rayOffset, radius, -wheel.transform.up, out hit, length + rayOffset, currentRaycastMask))
             {
-                currentSuspensionCompression = length + 0.1f - hit.distance;
-                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
-
+                currentSuspensionCompression = length + rayOffset - hit.distance;
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
                 hitPoint = hit.point;
-
-                float mag = worldVelocityAtHit.magnitude;
-                localVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, wheelForward) * mag;
-                localVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * mag;
-                localVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheelUp) * mag;
                 grounded = true;
                 return true;
             }
@@ -653,10 +659,10 @@ namespace KSPWheel
             bool hit1b;
             bool hit2b;
             Vector3 startPos = wheel.transform.position;
-            float vOffset = currentWheelRadius;
-            float rayLength = currentSuspenionLength + vOffset;
+            float rayOffset = currentWheelRadius;
+            float rayLength = currentSuspenionLength + rayOffset;
             float capLen = currentWheelRadius - capRadius;
-            Vector3 worldOffset = wheel.transform.up * vOffset;//offset it above the wheel by a small amount, in case of hitting bump-stop
+            Vector3 worldOffset = wheel.transform.up * rayOffset;//offset it above the wheel by a small amount, in case of hitting bump-stop
             Vector3 capEnd1 = wheel.transform.position + wheel.transform.forward * capLen;
             Vector3 capEnd2 = wheel.transform.position - wheel.transform.forward * capLen;
             Vector3 capBottom = wheel.transform.position - wheel.transform.up * capLen;
@@ -671,17 +677,10 @@ namespace KSPWheel
                 {
                     hit = hit1;
                 }
-                currentSuspensionCompression = currentSuspenionLength + vOffset - hit.distance;
-                Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hit.point);
-
+                currentSuspensionCompression = currentSuspenionLength + rayOffset - hit.distance;
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
                 hitPoint = hit.point;
-
-                float mag = worldVelocityAtHit.magnitude;
-                localVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, wheelForward) * mag;
-                localVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wheelRight) * mag;
-                localVelocity.y = Vector3.Dot(worldVelocityAtHit.normalized, wheelUp) * mag;
                 grounded = true;
                 return true;
             }
@@ -919,8 +918,15 @@ namespace KSPWheel
             Vector3 rayStart, rayEnd;
             Vector3 vOffset = rigidBody.velocity * Time.fixedDeltaTime;
 
+            //draw the force-vector line
             rayStart = hitPoint;
-            rayEnd = rayStart + wheel.transform.TransformVector(localForce.normalized) * 2f;
+            //because localForce isn't really a vector... its more 3 separate force-axis combinations...
+            rayEnd = hitNormal * localForce.y;
+            rayEnd += wR * localForce.x;
+            rayEnd += wF * localForce.z;
+            rayEnd += rayStart;
+
+            //rayEnd = rayStart + wheel.transform.TransformVector(localForce.normalized) * 2f;
             Debug.DrawLine(rayStart + vOffset, rayEnd + vOffset, Color.magenta);
 
             rayStart += wheel.transform.up * 0.1f;

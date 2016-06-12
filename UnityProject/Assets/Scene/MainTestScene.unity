@@ -679,21 +679,21 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 1100
+  maxMotorTorque: 2000
   rpmLimit: 600
   maxBrakeTorque: 1500
   maxSteerAngle: 35
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 2
+  forwardFrictionCoefficient: 5
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -829,11 +829,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
-      value: 12
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 400020, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
-      value: 11
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 400008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -934,6 +934,14 @@ Prefab:
     - target: {fileID: 400024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 100008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Layer
+      value: 26
+      objectReference: {fileID: 0}
+    - target: {fileID: 100006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_Layer
+      value: 26
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2300008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -1585,8 +1593,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -1601,7 +1609,7 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -1664,8 +1672,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -1680,7 +1688,7 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -1846,8 +1854,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -1862,7 +1870,7 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -1883,7 +1891,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -27.2000008
+      value: -9.60000038
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2021,6 +2029,10 @@ Prefab:
       propertyPath: m_LocalPosition.y
       value: .39631629
       objectReference: {fileID: 0}
+    - target: {fileID: 100006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2300008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
     - {fileID: 2300006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -2115,13 +2127,13 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 1
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -2177,13 +2189,13 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 1
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -2248,13 +2260,13 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 1
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -2295,13 +2307,13 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 1
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -2774,8 +2786,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -2790,7 +2802,7 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -3161,8 +3173,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -3177,7 +3189,7 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -3909,8 +3921,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -3925,7 +3937,7 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -4170,8 +4182,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -4186,7 +4198,7 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -4637,8 +4649,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -4653,7 +4665,7 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -5195,8 +5207,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -5211,7 +5223,7 @@ MonoBehaviour:
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -6512,21 +6524,21 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 1100
+  maxMotorTorque: 2000
   rpmLimit: 600
   maxBrakeTorque: 1000
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
+  forwardFrictionCoefficient: 2
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -6739,21 +6751,21 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 1100
+  maxMotorTorque: 2000
   rpmLimit: 600
   maxBrakeTorque: 1500
   maxSteerAngle: 35
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 2
+  forwardFrictionCoefficient: 5
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -6940,21 +6952,21 @@ MonoBehaviour:
   target: .699999988
   spring: 30000
   damper: 3000
-  maxMotorTorque: 1100
+  maxMotorTorque: 2000
   rpmLimit: 600
   maxBrakeTorque: 1000
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
+  forwardFrictionCoefficient: 2
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
@@ -7278,8 +7290,8 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 8000
-  damper: 2000
+  spring: 5000
+  damper: 1000
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -7294,7 +7306,7 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 2
   debug: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}

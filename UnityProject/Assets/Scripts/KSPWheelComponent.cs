@@ -241,6 +241,7 @@ namespace KSPWheel
                 wheelCollider.brakeTorque = maxBrakeTorque;
                 wheelCollider.forwardFrictionCoefficient = forwardFrictionCoefficient;
                 wheelCollider.sideFrictionCoefficient = sideFrictionCoefficient;
+                wheelCollider.surfaceFrictionCoefficient = surfaceFrictionCoefficient;
                 wheelCollider.sweepType = sweepType;
                 wheelCollider.frictionModel = frictionModel;
             }
