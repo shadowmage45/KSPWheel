@@ -28,7 +28,7 @@ namespace KSPWheel
         //externally set values
         private float currentWheelMass = 1f;
         private float currentWheelRadius = 0.5f;
-        private float currentSuspenionLength = 1f;
+        private float currentSuspensionLength = 1f;
         private float currentSuspensionTarget = 0f;
         private float currentSpring = 10f;
         private float currentDamper = 2f;
@@ -131,8 +131,8 @@ namespace KSPWheel
         /// </summary>
         public float length
         {
-            get { return currentSuspenionLength; }
-            set { currentSuspenionLength = value; }
+            get { return currentSuspensionLength; }
+            set { currentSuspensionLength = value; }
         }
 
         /// <summary>
@@ -416,6 +416,11 @@ namespace KSPWheel
                 wR = Vector3.Cross(hitNormal, wheelForward);
                 wF = -Vector3.Cross(hitNormal, wR);
 
+                wF = wheelForward - hitNormal * Vector3.Dot(wheelForward, hitNormal);
+                wR = Vector3.Cross(hitNormal, wF);
+                //wR = wheelRight - hitNormal * Vector3.Dot(wheelRight, hitNormal);
+                
+
                 //no idea if this is 'proper' for transforming velocity from world-space to wheel-space; but it seems to return the right results
                 //the 'other' way to do it would be to construct a quaternion for the wheel-space rotation transform and multiple
                 // vqLocal = qRotation * vqWorld * qRotationInverse;
@@ -498,6 +503,36 @@ namespace KSPWheel
         /// <param name="side"></param>
         private void updateStickyJoint()
         {
+            //if (bumpStopJoint == null)
+            //{
+            //    bumpStopJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
+            //    bumpStopJoint.anchor = wheel.transform.localPosition;// - (currentSuspenionLength + currentWheelRadius) * Vector3.up;
+            //    bumpStopJoint.axis = Vector3.right;
+            //    bumpStopJoint.autoConfigureConnectedAnchor = false;
+            //    bumpStopJoint.secondaryAxis = Vector3.up;
+            //    bumpStopJoint.targetPosition = Vector3.up * currentWheelRadius;
+
+            //    //SoftJointLimitSpring bumpStopLimitSpring = new SoftJointLimitSpring();
+            //    //bumpStopLimitSpring.spring = 0;
+            //    //bumpStopLimitSpring.damper = 0;
+            //    //bumpStopJoint.linearLimitSpring = bumpStopLimitSpring;
+
+            //    //SoftJointLimit bumpStopLimit = new SoftJointLimit();
+            //    //bumpStopLimit.bounciness = 0;
+            //    //bumpStopLimit.limit = currentSuspenionLength;
+            //    //bumpStopLimit.contactDistance = 0f;
+            //    //bumpStopJoint.linearLimit = bumpStopLimit;
+            //}
+            //bumpStopJoint.connectedAnchor = wheel.transform.position - wheelUp * (currentSuspensionLength - currentSuspensionCompression);
+            //if (grounded && currentSuspensionCompression > currentSuspensionLength)
+            //{
+            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Limited;
+            //}
+            //else
+            //{
+            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Free;
+            //}
+
             //if (stickyJoint == null)
             //{
             //    stickyJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
@@ -507,39 +542,10 @@ namespace KSPWheel
             //    stickyJoint.secondaryAxis = Vector3.up;
             //}
 
-            //if (bumpStopJoint == null)
-            //{
-            //    bumpStopJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
-            //    bumpStopJoint.anchor = wheel.transform.localPosition - (currentSuspenionLength + currentWheelRadius) * Vector3.up;
-            //    bumpStopJoint.axis = Vector3.right;
-            //    bumpStopJoint.autoConfigureConnectedAnchor = false;
-            //    bumpStopJoint.secondaryAxis = Vector3.up;
-                
-            //    SoftJointLimitSpring bumpStopLimitSpring = new SoftJointLimitSpring();
-            //    bumpStopLimitSpring.spring = 0;
-            //    bumpStopLimitSpring.damper = 0;
-            //    bumpStopJoint.linearLimitSpring = bumpStopLimitSpring;
-
-            //    SoftJointLimit bumpStopLimit = new SoftJointLimit();
-            //    bumpStopLimit.bounciness = -1f;
-            //    bumpStopLimit.limit = currentSuspenionLength;
-            //    bumpStopLimit.contactDistance = 0f;
-            //    bumpStopJoint.linearLimit = bumpStopLimit;
-            //}
-            //bumpStopJoint.connectedAnchor = wheel.transform.position - wheelUp * (currentSuspenionLength - currentSuspensionCompression + currentWheelRadius);
-            //if (grounded)
-            //{
-            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Limited;
-            //}
-            //else
-            //{
-            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Free;
-            //}
-
             // this will either be the contact point as seen by the wheel
             // or.. some arbitrary point in space at the bottom of the wheels droop
-            //stickyJoint.connectedAnchor = wheel.transform.position - wheelUp * ((currentSuspenionLength - currentSuspensionCompression) + currentWheelRadius);
 
+            //stickyJoint.connectedAnchor = wheel.transform.position - wheelUp * ((currentSuspenionLength - currentSuspensionCompression) + currentWheelRadius);
             //if (grounded && Math.Abs(localVelocity.z) < maxStickyVelocity && currentMotorTorque == 0)
             //{
             //    fwdStickyTimer += Time.fixedDeltaTime;
@@ -601,9 +607,9 @@ namespace KSPWheel
         private bool suspensionSweepRaycast()
         {
             RaycastHit hit;
-            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, currentSuspenionLength + currentWheelRadius, currentRaycastMask))
+            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, currentSuspensionLength + currentWheelRadius, currentRaycastMask))
             {
-                currentSuspensionCompression = currentSuspenionLength + currentWheelRadius - hit.distance;
+                currentSuspensionCompression = currentSuspensionLength + currentWheelRadius - hit.distance;
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
                 hitPoint = hit.point;
@@ -660,7 +666,7 @@ namespace KSPWheel
             bool hit2b;
             Vector3 startPos = wheel.transform.position;
             float rayOffset = currentWheelRadius;
-            float rayLength = currentSuspenionLength + rayOffset;
+            float rayLength = currentSuspensionLength + rayOffset;
             float capLen = currentWheelRadius - capRadius;
             Vector3 worldOffset = wheel.transform.up * rayOffset;//offset it above the wheel by a small amount, in case of hitting bump-stop
             Vector3 capEnd1 = wheel.transform.position + wheel.transform.forward * capLen;
@@ -677,7 +683,7 @@ namespace KSPWheel
                 {
                     hit = hit1;
                 }
-                currentSuspensionCompression = currentSuspenionLength + rayOffset - hit.distance;
+                currentSuspensionCompression = currentSuspensionLength + rayOffset - hit.distance;
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
                 hitPoint = hit.point;
@@ -696,7 +702,7 @@ namespace KSPWheel
             vSpring = (currentSuspensionCompression - prevSuspensionCompression) / Time.fixedDeltaTime;//per second velocity
             fDamp = currentDamper * vSpring;
             //calculate spring force basically from displacement * spring
-            float fSpring = (currentSuspensionCompression - (currentSuspenionLength * currentSuspensionTarget)) * currentSpring;
+            float fSpring = (currentSuspensionCompression - (currentSuspensionLength * currentSuspensionTarget)) * currentSpring;
             //if spring would be negative at this point, zero it to allow the damper to still function; this normally occurs when target > 0, at the lower end of wheel droop below target position
             if (fSpring < 0) { fSpring = 0; }
             //integrate damper value into spring force
