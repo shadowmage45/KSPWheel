@@ -2117,7 +2117,7 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 40000
+  spring: 42000
   damper: 3000
   maxMotorTorque: 0
   rpmLimit: 1100
@@ -2179,7 +2179,7 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 40000
+  spring: 42000
   damper: 3000
   maxMotorTorque: 0
   rpmLimit: 1100
@@ -2250,7 +2250,7 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 40000
+  spring: 42000
   damper: 3000
   maxMotorTorque: 1100
   rpmLimit: 800
@@ -2297,7 +2297,7 @@ MonoBehaviour:
   wheelMass: 25
   suspensionLength: .300000012
   target: .699999988
-  spring: 40000
+  spring: 42000
   damper: 3000
   maxMotorTorque: 1100
   rpmLimit: 800

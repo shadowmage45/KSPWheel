@@ -496,6 +496,9 @@ namespace KSPWheel
         }
 
         private ConfigurableJoint bumpStopJoint;
+        private GameObject hitPointObject;
+        private Rigidbody hitPointRigidbody;
+
         /// <summary>
         /// Per-fixed-update configuration of the rigidbody joints that are used for sticky friction and anti-punchthrough behaviour
         /// </summary>
@@ -503,34 +506,61 @@ namespace KSPWheel
         /// <param name="side"></param>
         private void updateStickyJoint()
         {
-            //if (bumpStopJoint == null)
-            //{
-            //    bumpStopJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
-            //    bumpStopJoint.anchor = wheel.transform.localPosition;// - (currentSuspenionLength + currentWheelRadius) * Vector3.up;
-            //    bumpStopJoint.axis = Vector3.right;
-            //    bumpStopJoint.autoConfigureConnectedAnchor = false;
-            //    bumpStopJoint.secondaryAxis = Vector3.up;
-            //    bumpStopJoint.targetPosition = Vector3.up * currentWheelRadius;
+            if (bumpStopJoint == null)
+            {
+                hitPointObject = new GameObject("HIT");
+                hitPointRigidbody = hitPointObject.AddComponent<Rigidbody>();
+                hitPointRigidbody.isKinematic = true;
+                hitPointRigidbody.mass = 1f;
 
-            //    //SoftJointLimitSpring bumpStopLimitSpring = new SoftJointLimitSpring();
-            //    //bumpStopLimitSpring.spring = 0;
-            //    //bumpStopLimitSpring.damper = 0;
-            //    //bumpStopJoint.linearLimitSpring = bumpStopLimitSpring;
+                bumpStopJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
+                bumpStopJoint.anchor = wheel.transform.localPosition;// - (currentSuspenionLength + currentWheelRadius) * Vector3.up;
+                bumpStopJoint.axis = Vector3.right;
+                bumpStopJoint.connectedBody = hitPointRigidbody;
+                bumpStopJoint.autoConfigureConnectedAnchor = false;
+                bumpStopJoint.secondaryAxis = Vector3.up;
+                bumpStopJoint.targetPosition = -Vector3.up * (currentWheelRadius*1.0125f);
 
-            //    //SoftJointLimit bumpStopLimit = new SoftJointLimit();
-            //    //bumpStopLimit.bounciness = 0;
-            //    //bumpStopLimit.limit = currentSuspenionLength;
-            //    //bumpStopLimit.contactDistance = 0f;
-            //    //bumpStopJoint.linearLimit = bumpStopLimit;
-            //}
+                //SoftJointLimitSpring bumpStopLimitSpring = new SoftJointLimitSpring();
+                //bumpStopLimitSpring.spring = 0;
+                //bumpStopLimitSpring.damper = 0;
+                //bumpStopJoint.linearLimitSpring = bumpStopLimitSpring;
+
+                SoftJointLimit bumpStopLimit = new SoftJointLimit();
+                bumpStopLimit.bounciness = 0;
+                bumpStopLimit.limit = currentSuspensionLength + currentWheelRadius*1.5f;
+                bumpStopLimit.contactDistance = 0f;
+                bumpStopJoint.linearLimit = bumpStopLimit;
+
+                JointDrive YD = new JointDrive(); //only yDrive used for now. X and Z can be used independently if we wish
+                YD.positionSpring = 200000;
+                YD.positionDamper = 0;
+                YD.maximumForce = 10000000;
+                YD.mode = JointDriveMode.Position;
+                bumpStopJoint.yDrive = YD;
+
+                //bumpStopJoint.swapBodies = true;
+            }
+            hitPointObject.transform.position = wheel.transform.position - wheelUp * (currentSuspensionLength - currentSuspensionCompression + currentWheelRadius);
+            bumpStopJoint.connectedAnchor = Vector3.zero;
             //bumpStopJoint.connectedAnchor = wheel.transform.position - wheelUp * (currentSuspensionLength - currentSuspensionCompression);
-            //if (grounded && currentSuspensionCompression > currentSuspensionLength)
+
+            if (grounded && currentSuspensionCompression > currentSuspensionLength)
+            {
+                bumpStopJoint.yMotion = ConfigurableJointMotion.Limited;
+            }
+            else
+            {
+                bumpStopJoint.yMotion = ConfigurableJointMotion.Free;
+            }
+            
+
+            //if (grounded)
             //{
-            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Limited;
             //}
             //else
             //{
-            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Free;
+            //    
             //}
 
             //if (stickyJoint == null)
