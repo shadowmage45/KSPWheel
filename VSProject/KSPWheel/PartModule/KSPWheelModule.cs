@@ -361,7 +361,7 @@ namespace KSPWheel
                 maxBrakeTorque = maxBrakeTorque == -1 ? collider.brakeTorque : maxBrakeTorque;
                 maxMotorTorque = maxMotorTorque == -1 ? collider.motorTorque : maxMotorTorque;
             }
-            Component.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
+            GameObject.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
             if (animationControl != null) { animationControl.setToAnimationState(wheelState, false); }
             Events["toggleGearEvent"].active = animationControl != null;
             Actions["toggleGearAction"].active = animationControl != null;
