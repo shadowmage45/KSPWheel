@@ -148,7 +148,8 @@ namespace KSPWheel
         public float steeringResponse = 10f;
         [KSPField]
         public float maxRPM = 600f;
-
+        [KSPField]
+        public float resourceAmount = 1f;
         #endregion
 
         #region REGION - Optional wheel parameters that may be loaded from the WheelCollider if present
@@ -256,6 +257,9 @@ namespace KSPWheel
 
         [KSPField(guiName = "dmp", guiActive = true)]
         public float dmp;
+
+        [KSPField(guiName = "EC/s", guiActive = true)]
+        public float guiResourceUse = 0f;
 
         #endregion
 
@@ -510,10 +514,6 @@ namespace KSPWheel
             grounded = wheel.isGrounded;
             comp = wheel.compressionDistance;
             colliderHit = grounded ? wheel.contactColliderHit.gameObject.name+" : "+wheel.contactColliderHit.gameObject.layer : "None";
-            if (maxMotorTorque > 0 && fwdInput != 0)
-            {
-                updateResourceDrain();
-            }
             updateLandedState();
         }
 
@@ -587,11 +587,18 @@ namespace KSPWheel
             part.GroundContact = grounded;
             vessel.checkLanded();
         }
-
-        //TODO -- handle resource drain for motor-enabled parts
-        private void updateResourceDrain()
+        
+        private float updateResourceDrain(float input)
         {
-            float drain = maxMotorTorque * fwdInput;
+            float percent = 1f;
+            if (input > 0)
+            {
+                float drain = maxMotorTorque * input * resourceAmount * TimeWarp.fixedDeltaTime;
+                double d = part.RequestResource("ElectricCharge", drain);
+                percent = (float)d / drain;
+                guiResourceUse = (float)d / TimeWarp.fixedDeltaTime;
+            }
+            return percent;
         }
 
         /// <summary>
@@ -602,9 +609,6 @@ namespace KSPWheel
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             float rI = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
             float bI = brakesLocked ? 1 : part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
-            float rpm = wheel.rpm;
-            if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
-            else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
             if (motorLocked) { fI = 0; }
             if (steeringLocked) { rI = 0; }
             if (invertSteering) { rI = -rI; }
@@ -628,7 +632,12 @@ namespace KSPWheel
             {
                 bI = Mathf.Lerp(brakeInput, bI, brakeResponse * Time.deltaTime);
             }
-            fwdInput = fI;
+
+            float rpm = wheel.rpm;
+            if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
+            else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
+
+            fwdInput = fI * updateResourceDrain(Mathf.Abs(fI));
             rotInput = rI;
             brakeInput = bI;
             wheel.motorTorque = maxMotorTorque * fwdInput;
