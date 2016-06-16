@@ -131,11 +131,9 @@ namespace KSPWheel
         [KSPField]
         public Vector3 steeringAxis = Vector3.up;
 
-        //TODO update the min/max fields for UI for these values
         [KSPField]
         public float minLoadRating = 0.05f;
 
-        //TODO update the min/max fields for UI for these values
         [KSPField]
         public float maxLoadRating = 5f;
 
@@ -154,11 +152,13 @@ namespace KSPWheel
         #endregion
 
         #region REGION - Optional wheel parameters that may be loaded from the WheelCollider if present
-        [KSPField]
+        [KSPField(guiName ="Radius", guiActive =true),
+         UI_FloatRange(suppressEditorShipModified = true, minValue = 0.025f, maxValue = 1f, stepIncrement = 0.025f)]
         public float wheelRadius = -1;
         [KSPField]
         public float wheelMass = -1;
-        [KSPField]
+        [KSPField(guiName = "Length", guiActive = true),
+         UI_FloatRange(suppressEditorShipModified = true, minValue = 0.025f, maxValue = 2f, stepIncrement = 0.025f)]
         public float suspensionTravel = -1;
         [KSPField]
         public float suspensionTarget = -1;
@@ -251,27 +251,44 @@ namespace KSPWheel
         [KSPField(guiName = "comp", guiActive = true)]
         public float comp;
 
+        [KSPField(guiName = "spr", guiActive = true)]
+        public float spr;
+
+        [KSPField(guiName = "dmp", guiActive = true)]
+        public float dmp;
+
         #endregion
 
         #region REGION - GUI Handling methods
 
         public void onSpringUpdated(BaseField field, object obj)
         {
-            wheel.spring = suspensionSpring * springMult;
-            MonoBehaviour.print("Set spring to: " + wheel.spring);
+            if ((float)obj != springMult)
+            {
+                wheel.spring = suspensionSpring * springMult;
+                spr = wheel.spring;
+            }
         }
 
         public void onDamperUpdated(BaseField field, object obj)
         {
-            wheel.damper = suspensionDamper * dampMult;
-            MonoBehaviour.print("Set damper to: " + wheel.damper);
+            if ((float)obj != dampMult)
+            {
+                wheel.damper = suspensionDamper * dampMult;
+                dmp = wheel.damper;
+            }
         }
 
         public void onLoadUpdated(BaseField field, object obj)
         {
-            calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1, out suspensionSpring, out suspensionDamper);
-            wheel.spring = suspensionSpring * springMult;
-            wheel.damper = suspensionDamper * dampMult;
+            if ((float)obj != loadRating)
+            {
+                calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1, out suspensionSpring, out suspensionDamper);
+                wheel.spring = suspensionSpring * springMult;
+                wheel.damper = suspensionDamper * dampMult;
+                spr = wheel.spring;
+                dmp = wheel.damper;
+            }
         }
         
         [KSPAction("Toggle Gear", KSPActionGroup.Gear)]
@@ -327,6 +344,19 @@ namespace KSPWheel
 
         #region REGION - Standard KSP/Unity Overrides
 
+        public override string GetInfo()
+        {
+            String data = brakesLocked ? "Landing Leg" : "Wheel";
+            data = data + "\nMin Load: " + minLoadRating;
+            data = data + "\nMax Load: " + maxLoadRating;
+            if (maxSteeringAngle > 0) { data = data + "\nMax Steer: " + maxSteeringAngle; }
+            if (!brakesLocked && maxBrakeTorque > 0) { data = data + "\nMax Brake: " + maxBrakeTorque; }
+            if (maxMotorTorque > 0) { data = data +"\nMax Torque: "+maxMotorTorque; }
+            if (maxMotorTorque > 0 && maxRPM > 0) { data = data + "\nMax Motor RPM: " + maxRPM; }
+            //TODO resource-use stats at max torque
+            return data;
+        }
+
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
@@ -361,6 +391,10 @@ namespace KSPWheel
                 maxBrakeTorque = maxBrakeTorque == -1 ? collider.brakeTorque : maxBrakeTorque;
                 maxMotorTorque = maxMotorTorque == -1 ? collider.motorTorque : maxMotorTorque;
             }
+            if (loadRating > 0)
+            {
+                calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1.0f, out suspensionSpring, out suspensionDamper);
+            }
             GameObject.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
             if (animationControl != null) { animationControl.setToAnimationState(wheelState, false); }
             Events["toggleGearEvent"].active = animationControl != null;
@@ -370,6 +404,13 @@ namespace KSPWheel
             Fields["dampMult"].uiControlFlight.onFieldChanged = onDamperUpdated;
             BaseField f = Fields["loadRating"];
             f.uiControlEditor.onFieldChanged = f.uiControlFlight.onFieldChanged = onLoadUpdated;
+            UI_FloatRange rng = (UI_FloatRange)f.uiControlFlight;
+            if (rng != null)
+            {
+                rng.minValue = minLoadRating;
+                rng.maxValue = maxLoadRating;
+                rng.stepIncrement = 0.1f;
+            }
             //TODO -- there has got to be an easier way to handle these; perhaps check if the collider is part of the 
             // model hierarchy for the part/vessel?
             if (HighLogic.LoadedSceneIsFlight)
@@ -439,7 +480,7 @@ namespace KSPWheel
                     wheel.radius = wheelRadius;
                     wheel.mass = wheelMass;
                     wheel.length = suspensionTravel;
-                    wheel.target = suspensionTarget;
+                    wheel.target = 0f;// suspensionTarget;
                     wheel.spring = suspensionSpring;
                     wheel.damper = suspensionDamper;
                     //wheel.isGrounded = grounded;
@@ -448,6 +489,10 @@ namespace KSPWheel
                     if (brakesLocked) { wheel.brakeTorque = maxBrakeTorque; }
                 }
             }
+            wheel.radius = wheelRadius;
+            wheel.length = suspensionTravel;
+            spr = wheel.spring;
+            dmp = wheel.damper;
             if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }            
             sampleInput();
             //update the wheels input state from current keyboard input
@@ -484,18 +529,19 @@ namespace KSPWheel
             if (suspensionMesh != null)
             {
                 float offset = wheel.compressionDistance + suspensionOffset;
+                float scale = suspensionMesh.parent == null ? 1f : suspensionMesh.parent.localScale.y;
                 Vector3 pos = suspensionMesh.localPosition;
                 if (suspensionAxis.x != 0)
                 {
-                    pos.x = suspensionExtPos + offset * suspensionAxis.x;
+                    pos.x = suspensionExtPos + offset * suspensionAxis.x / scale;
                 }
                 else if (suspensionAxis.y != 0)
                 {
-                    pos.y = suspensionExtPos + offset * suspensionAxis.y;
+                    pos.y = suspensionExtPos + offset * suspensionAxis.y / scale;
                 }
                 else if (suspensionAxis.z !=0)
                 {
-                    pos.z = suspensionExtPos + offset * suspensionAxis.z;
+                    pos.z = suspensionExtPos + offset * suspensionAxis.z / scale;
                 }
                 suspensionMesh.localPosition = pos;
             }
@@ -596,7 +642,6 @@ namespace KSPWheel
         /// <param name="state"></param>
         public void onAnimationStateChanged(KSPWheelState state)
         {
-            MonoBehaviour.print("Recv callback from anim state change, new state: " + state);
             wheelState = state;
             if (state == KSPWheelState.RETRACTED)
             {
@@ -618,17 +663,17 @@ namespace KSPWheel
         {
             //TODO
         }
-
+        
         /// <summary>
         /// Input load in tons, suspension length, target (0-1), and desired damp ratio (1 = critical)
         /// and output spring and damper for that load and ratio
-        /// WIP - may or may not be correct...
         /// </summary>
-        /// <param name="load"></param>
         private void calcSuspension(float load, float length, float target, float dampRatio, out float spring, out float damper)
         {
-            float targetDistance = length - (target * length);
-            spring = (load * 10) / targetDistance;            
+
+            float targetCompression = length - (length - (target * length));
+            if (targetCompression == 0) { targetCompression = 0.01f; }
+            spring = load * 10 / targetCompression;
             damper = 2 * Mathf.Sqrt(load * spring) * dampRatio;
         }
 

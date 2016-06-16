@@ -34,7 +34,7 @@ namespace KSPWheel.Component
                     float v = d / Time.fixedDeltaTime;
                     force = new Vector3(0, v, 0);
                     force = gameObject.transform.TransformVector(force);
-                    rb.AddForceAtPosition(force * hitMult * d, p1, ForceMode.VelocityChange);
+                    rb.AddForceAtPosition(force * hitMult, p1, ForceMode.VelocityChange);
                 }
             }
         }
