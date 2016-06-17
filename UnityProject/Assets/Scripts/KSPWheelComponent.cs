@@ -149,6 +149,8 @@ namespace KSPWheel
         public float fLat;
         public float comp;
 
+        public bool suspLock = false;
+
         #endregion ENDREGION - Unity Editor Display Variables
 
         private KSPWheelCollider wheelCollider;
@@ -157,10 +159,19 @@ namespace KSPWheel
         private float currentSteer;
         private float currentBrakeTorque;
 
+        private GameObject bumpStopCollider;
+
         public void Start()
         {
             wheelCollider = new KSPWheelCollider(gameObject, rigidBody);
-            OnValidate();//manually call to set all current parameters into wheel collider object
+            bumpStopCollider = new GameObject("BSC");
+            SphereCollider sc = bumpStopCollider.AddComponent<SphereCollider>();
+            PhysicMaterial mat = new PhysicMaterial("TEST");
+            mat.bounciness = 0;
+            mat.dynamicFriction = 1;
+            mat.staticFriction = 1;
+            sc.material = mat;
+            OnValidate();//manually call to set all current parameters into wheel collider object            
         }
 
         private void sampleInput()
@@ -193,11 +204,20 @@ namespace KSPWheel
 
         public void FixedUpdate()
         {
+
+            Vector3 targetPos = suspLock ? transform.position - transform.up * suspensionLength : transform.position;
+            Vector3 pos = bumpStopCollider.transform.position;
+            Vector3 p = Vector3.Lerp(pos, targetPos, Time.fixedDeltaTime);
+            bumpStopCollider.transform.position = p;
+
             sampleInput();
             wheelCollider.motorTorque = currentMotorTorque;
             wheelCollider.steeringAngle = currentSteer;
             wheelCollider.brakeTorque = currentBrakeTorque;
-            wheelCollider.updateWheel();
+            if (!suspLock)
+            {
+                wheelCollider.updateWheel();
+            }
             if (steeringTransform != null)
             {
                 steeringTransform.localRotation = Quaternion.AngleAxis(currentSteer, steeringTransform.up);
@@ -244,6 +264,12 @@ namespace KSPWheel
                 wheelCollider.surfaceFrictionCoefficient = surfaceFrictionCoefficient;
                 wheelCollider.sweepType = sweepType;
                 wheelCollider.frictionModel = frictionModel;
+
+                SphereCollider sc = bumpStopCollider.GetComponent<SphereCollider>();
+                bumpStopCollider.layer = 26;
+                sc.radius = wheelRadius;
+                bumpStopCollider.transform.parent = gameObject.transform;
+                bumpStopCollider.transform.localPosition = Vector3.zero;
             }
         }
 
