@@ -680,10 +680,15 @@ namespace KSPWheel
         private void calcSuspension(float load, float length, float target, float dampRatio, out float spring, out float damper)
         {
 
-            float targetCompression = length - (length - (target * length));
-            if (targetCompression == 0) { targetCompression = 0.01f; }
+            float targetCompression = target * length;
+            if (targetCompression <= 0) { targetCompression = 0.01f; }
             spring = load * 10 / targetCompression;
-            damper = 2 * Mathf.Sqrt(load * spring) * dampRatio;
+            //damper = 2 * Mathf.Sqrt(load * spring) * dampRatio;
+            float k = spring;
+            float o = Mathf.Sqrt(k / load);//natural frequency
+            float cd = 2 * load * o;//critical damping coefficient
+            //cd = 2 * Mathf.Sqrt(k * load);
+            damper = cd * dampRatio;
         }
 
         /// <summary>
