@@ -131,6 +131,8 @@ namespace KSPWheel
         
         public bool debug = false;
 
+        public float susResp = 1f;
+
         #endregion ENDREGION - Unity Editor Inspector Assignable Fields
 
         // these variables are updated every fixed-tick after the wheel has been updated
@@ -167,9 +169,9 @@ namespace KSPWheel
             bumpStopCollider = new GameObject("BSC");
             SphereCollider sc = bumpStopCollider.AddComponent<SphereCollider>();
             PhysicMaterial mat = new PhysicMaterial("TEST");
-            mat.bounciness = 0;
-            mat.dynamicFriction = 1;
-            mat.staticFriction = 1;
+            mat.bounciness = 0.0f;
+            mat.dynamicFriction = 0;
+            mat.staticFriction = 0;
             sc.material = mat;
             OnValidate();//manually call to set all current parameters into wheel collider object            
         }
@@ -214,10 +216,7 @@ namespace KSPWheel
             wheelCollider.motorTorque = currentMotorTorque;
             wheelCollider.steeringAngle = currentSteer;
             wheelCollider.brakeTorque = currentBrakeTorque;
-            if (!suspLock)
-            {
-                wheelCollider.updateWheel();
-            }
+            wheelCollider.updateWheel();
             if (steeringTransform != null)
             {
                 steeringTransform.localRotation = Quaternion.AngleAxis(currentSteer, steeringTransform.up);
@@ -264,6 +263,7 @@ namespace KSPWheel
                 wheelCollider.surfaceFrictionCoefficient = surfaceFrictionCoefficient;
                 wheelCollider.sweepType = sweepType;
                 wheelCollider.frictionModel = frictionModel;
+                wheelCollider.susResponse = susResp;
 
                 SphereCollider sc = bumpStopCollider.GetComponent<SphereCollider>();
                 bumpStopCollider.layer = 26;

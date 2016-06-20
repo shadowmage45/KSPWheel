@@ -457,6 +457,10 @@ namespace KSPWheel
 
         #region REGION - Private/internal update methods
 
+        public float susResponse = 1f;
+
+        private float prevSpring = 0f;
+
         /// <summary>
         /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.
         /// </summary>
@@ -465,8 +469,11 @@ namespace KSPWheel
             calcFriction();
             //no clue if this is correct or not, but does seem to clean up some suspension force application problems at high incident angles
             float suspensionDot = Vector3.Dot(hitNormal, wheelUp);
-
-            Vector3 calculatedForces = hitNormal * localForce.y;// * suspensionDot;
+            if (susResponse > 0)
+            {
+                localForce.y = Mathf.Lerp(prevSpring, localForce.y, susResponse / Time.fixedDeltaTime);
+            }            
+            Vector3 calculatedForces = hitNormal * localForce.y * suspensionDot;
             calculatedForces += localForce.z * wF;
             calculatedForces += localForce.x * wR;
             rigidBody.AddForceAtPosition(calculatedForces, hitPoint, ForceMode.Force);
@@ -474,6 +481,7 @@ namespace KSPWheel
             {
                 hitCollider.attachedRigidbody.AddForceAtPosition(-calculatedForces, hitPoint, ForceMode.Force);
             }
+            prevSpring = localForce.y;
         }
 
         /// <summary>

@@ -695,6 +695,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -705,6 +706,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &191296913
 GameObject:
   m_ObjectHideFlags: 0
@@ -1121,6 +1123,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1131,6 +1134,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &301343513
 GameObject:
   m_ObjectHideFlags: 0
@@ -1460,6 +1464,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1470,6 +1475,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &360438514
 GameObject:
   m_ObjectHideFlags: 0
@@ -1611,6 +1617,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1621,6 +1628,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &377664100
 GameObject:
   m_ObjectHideFlags: 0
@@ -1690,6 +1698,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1700,6 +1709,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &441339093
 GameObject:
   m_ObjectHideFlags: 0
@@ -1872,6 +1882,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1882,6 +1893,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1001 &523005883
 Prefab:
   m_ObjectHideFlags: 0
@@ -2116,18 +2128,18 @@ MonoBehaviour:
   wheelRadius: .402999997
   wheelMass: 25
   suspensionLength: .300000012
-  target: .699999988
-  spring: 40000
-  damper: 3000
+  target: 0
+  spring: 12000
+  damper: 6000
   maxMotorTorque: 0
   rpmLimit: 1100
-  maxBrakeTorque: 1500
+  maxBrakeTorque: 0
   maxSteerAngle: 35
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  sideFrictionCoefficient: 1.5
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
@@ -2135,6 +2147,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 1
   debug: 0
+  susResp: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2145,6 +2158,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!54 &523005900
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2178,18 +2192,18 @@ MonoBehaviour:
   wheelRadius: .402999997
   wheelMass: 25
   suspensionLength: .300000012
-  target: .699999988
-  spring: 40000
-  damper: 3000
+  target: 0
+  spring: 12000
+  damper: 6000
   maxMotorTorque: 0
   rpmLimit: 1100
-  maxBrakeTorque: 1500
+  maxBrakeTorque: 0
   maxSteerAngle: 35
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  sideFrictionCoefficient: 1.5
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
@@ -2197,6 +2211,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 1
   debug: 0
+  susResp: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2207,6 +2222,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!64 &523005902
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -2249,18 +2265,18 @@ MonoBehaviour:
   wheelRadius: .402999997
   wheelMass: 25
   suspensionLength: .300000012
-  target: .699999988
-  spring: 40000
-  damper: 3000
+  target: 0
+  spring: 14000
+  damper: 6000
   maxMotorTorque: 1100
   rpmLimit: 800
-  maxBrakeTorque: 0
+  maxBrakeTorque: 1500
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  sideFrictionCoefficient: 1.5
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
@@ -2268,6 +2284,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 1
   debug: 0
+  susResp: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2278,6 +2295,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!114 &523005905
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2296,18 +2314,18 @@ MonoBehaviour:
   wheelRadius: .402999997
   wheelMass: 25
   suspensionLength: .300000012
-  target: .699999988
-  spring: 40000
-  damper: 3000
+  target: 0
+  spring: 14000
+  damper: 6000
   maxMotorTorque: 1100
   rpmLimit: 800
-  maxBrakeTorque: 0
+  maxBrakeTorque: 1500
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  sideFrictionCoefficient: 1.5
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
@@ -2315,6 +2333,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 1
   debug: 0
+  susResp: 0
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2325,6 +2344,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!4 &523005907 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -2342,7 +2362,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   origin: {x: .981000006, y: .39631629, z: -2.21000004}
   anchor: {x: 0, y: -.703000009, z: 0}
-  maxLocalDiff: {x: .00499999989, y: 0, z: .00499999989}
+  maxLocalDiff: {x: .000750000007, y: 0, z: .00749999983}
   worldHitPos: {x: 0, y: 0, z: 0}
   stickyWorldPos: {x: 0, y: 0, z: 0}
   worldDiff: {x: 0, y: 0, z: 0}
@@ -2362,53 +2382,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   origin: {x: -.981000006, y: .39631629, z: -2.21000004}
   anchor: {x: 0, y: -.703000009, z: 0}
-  maxLocalDiff: {x: .00499999989, y: 0, z: .00499999989}
+  maxLocalDiff: {x: .00749999983, y: 0, z: .00749999983}
   worldHitPos: {x: 0, y: 0, z: 0}
   stickyWorldPos: {x: 0, y: 0, z: 0}
   worldDiff: {x: 0, y: 0, z: 0}
   localDiff: {x: 0, y: 0, z: 0}
   localForce: {x: 0, y: 0, z: 0}
   worldForce: {x: 0, y: 0, z: 0}
---- !u!114 &523005917
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 523005893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: df65bb15d553647488a99a1e60512d09, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  origin: {x: .981000006, y: .39631629, z: -2.21000004}
-  anchor: {x: 0, y: -.703000009, z: 0}
-  upAxis: {x: 0, y: 0, z: 0}
-  forwardAxis: {x: 0, y: 0, z: 0}
-  linearDist: .402999997
-  dist: {x: 0, y: 0, z: 0}
-  force: {x: 0, y: 0, z: 0}
-  hitDist: 0
-  hitMult: .5
---- !u!114 &523005918
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 523005893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: df65bb15d553647488a99a1e60512d09, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  origin: {x: -.981000006, y: .39631629, z: -2.21000004}
-  anchor: {x: 0, y: -.703000009, z: 0}
-  upAxis: {x: 0, y: 0, z: 0}
-  forwardAxis: {x: 0, y: 0, z: 0}
-  linearDist: .402999997
-  dist: {x: 0, y: 0, z: 0}
-  force: {x: 0, y: 0, z: 0}
-  hitDist: 0
-  hitMult: .5
 --- !u!4 &552666938 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400026, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -2483,6 +2463,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2493,6 +2474,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &593581620
 GameObject:
   m_ObjectHideFlags: 0
@@ -2884,6 +2866,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2894,6 +2877,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &683615209
 GameObject:
   m_ObjectHideFlags: 0
@@ -3195,6 +3179,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -3205,6 +3190,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &764206516
 GameObject:
   m_ObjectHideFlags: 0
@@ -3271,6 +3257,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -3281,6 +3268,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &769263970
 GameObject:
   m_ObjectHideFlags: 0
@@ -3771,7 +3759,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 851116913}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 222.600006, y: -.0399999991, z: 328.119995}
+  m_LocalPosition: {x: 222.600006, y: -.0700000003, z: 328.119995}
   m_LocalScale: {x: 1, y: 1.01914859, z: 1.01914847}
   m_Children:
   - {fileID: 2055982601}
@@ -4019,6 +4007,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -4029,6 +4018,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &933400985
 GameObject:
   m_ObjectHideFlags: 0
@@ -4280,6 +4270,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -4290,6 +4281,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &1017201675
 GameObject:
   m_ObjectHideFlags: 0
@@ -4590,6 +4582,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -4600,6 +4593,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &1136791720
 GameObject:
   m_ObjectHideFlags: 0
@@ -4747,6 +4741,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -4757,6 +4752,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &1150879878
 GameObject:
   m_ObjectHideFlags: 0
@@ -5305,6 +5301,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -5315,6 +5312,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!4 &1270874160 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400010, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -5488,6 +5486,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -5498,6 +5497,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &1356012564
 GameObject:
   m_ObjectHideFlags: 0
@@ -6452,6 +6452,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -6462,6 +6463,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &1608088954
 GameObject:
   m_ObjectHideFlags: 0
@@ -6620,6 +6622,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -6630,6 +6633,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &1700694767 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 100018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -6847,6 +6851,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -6857,6 +6862,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &1792337766
 GameObject:
   m_ObjectHideFlags: 0
@@ -7048,6 +7054,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -7058,6 +7065,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!4 &1871359694 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400014, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -7288,6 +7296,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -7298,6 +7307,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &1986604049
 GameObject:
   m_ObjectHideFlags: 0
@@ -7388,6 +7398,7 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 2
   debug: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -7398,6 +7409,7 @@ MonoBehaviour:
   fLong: 0
   fLat: 0
   comp: 0
+  suspLock: 0
 --- !u!1 &2038602079
 GameObject:
   m_ObjectHideFlags: 0
