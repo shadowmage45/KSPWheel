@@ -173,7 +173,7 @@ namespace KSPWheel
             mat.dynamicFriction = 0;
             mat.staticFriction = 0;
             sc.material = mat;
-            OnValidate();//manually call to set all current parameters into wheel collider object            
+            OnValidate();//manually call to set all current parameters into wheel collider object
         }
 
         private void sampleInput()

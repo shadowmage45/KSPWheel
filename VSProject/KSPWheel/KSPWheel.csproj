@@ -46,17 +46,8 @@
     <Reference Include="KSPAssets">
       <HintPath>libs\KSPAssets.dll</HintPath>
     </Reference>
-    <Reference Include="KSPCore">
-      <HintPath>libs\KSPCore.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPUtil">
-      <HintPath>libs\KSPUtil.dll</HintPath>
-    </Reference>
     <Reference Include="MiscUtil-r285">
       <HintPath>libs\MiscUtil-r285.dll</HintPath>
-    </Reference>
-    <Reference Include="SaveUpgradePipeline.Core">
-      <HintPath>libs\SaveUpgradePipeline.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
