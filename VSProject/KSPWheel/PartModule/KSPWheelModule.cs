@@ -449,6 +449,9 @@ namespace KSPWheel
                 if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
                 if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
             }
+
+             //FlightIntegrator.ActiveVesselFI.GraviticAcceleration;
+
         }
 
         public void Start()
@@ -480,7 +483,8 @@ namespace KSPWheel
                 }
                 else
                 {
-                    wheel = new KSPWheelCollider(wheelColliderTransform.gameObject, part.gameObject.GetComponent<Rigidbody>());
+                    wheel = wheelColliderTransform.gameObject.AddComponent<KSPWheelCollider>();
+                    wheel.rigidBody = rb;
                     wheel.radius = wheelRadius;
                     wheel.mass = wheelMass;
                     wheel.length = suspensionTravel;

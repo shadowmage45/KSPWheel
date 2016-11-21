@@ -165,7 +165,8 @@ namespace KSPWheel
 
         public void Start()
         {
-            wheelCollider = new KSPWheelCollider(gameObject, rigidBody);
+            wheelCollider = gameObject.AddComponent<KSPWheelCollider>();
+            wheelCollider.rigidBody = this.rigidBody;
             bumpStopCollider = new GameObject("BSC");
             SphereCollider sc = bumpStopCollider.AddComponent<SphereCollider>();
             PhysicMaterial mat = new PhysicMaterial("TEST");
@@ -206,7 +207,6 @@ namespace KSPWheel
 
         public void FixedUpdate()
         {
-
             Vector3 targetPos = suspLock ? transform.position - transform.up * suspensionLength : transform.position;
             Vector3 pos = bumpStopCollider.transform.position;
             Vector3 p = Vector3.Lerp(pos, targetPos, Time.fixedDeltaTime);

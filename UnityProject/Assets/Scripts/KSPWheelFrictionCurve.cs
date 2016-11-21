@@ -119,7 +119,7 @@ namespace KSPWheel
                 texture.SetPixel(i, outY, Color.green);
             }
             byte[] fileBytes = texture.EncodeToPNG();
-            File.WriteAllBytes(fileName, fileBytes);
+            //File.WriteAllBytes(fileName, fileBytes);
         }
 
         /// <summary>

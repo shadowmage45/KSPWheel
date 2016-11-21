@@ -669,16 +669,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 323507626}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 1625128780}
   suspensionTransform: {fileID: 1625128780}
   wheelTransform: {fileID: 552666938}
-  wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 30000
-  damper: 3000
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 2000
   rpmLimit: 600
   maxBrakeTorque: 1500
@@ -686,14 +686,14 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 5
+  forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -851,7 +851,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400002, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
-      value: 5
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 100018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_IsActive
@@ -1097,16 +1097,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 1986604052}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 769263971}
   suspensionTransform: {fileID: 769263971}
   wheelTransform: {fileID: 980701925}
   wheelRadius: .5
   wheelMass: 1
   suspensionLength: .5
-  target: .5
-  spring: 40
-  damper: 200
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 0
   rpmLimit: 600
   maxBrakeTorque: 0
@@ -1267,7 +1267,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1700694768}
-  m_RootOrder: 4
+  m_RootOrder: 5
 --- !u!81 &328160472
 AudioListener:
   m_ObjectHideFlags: 0
@@ -1438,16 +1438,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 1017201677}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 377664101}
   suspensionTransform: {fileID: 377664101}
   wheelTransform: {fileID: 97561717}
   wheelRadius: .5
   wheelMass: 1
   suspensionLength: .5
-  target: .5
-  spring: 40
-  damper: 200
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 0
   rpmLimit: 600
   maxBrakeTorque: 0
@@ -1596,11 +1596,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 877978350}
   wheelTransform: {fileID: 593581621}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -1608,14 +1608,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -1677,11 +1677,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 1972014160}
   wheelTransform: {fileID: 1487746895}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -1689,14 +1689,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -1861,11 +1861,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 1612596487}
   wheelTransform: {fileID: 1198023063}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -1873,14 +1873,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -1903,7 +1903,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -27.3299999
+      value: -26.9699993
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1911,7 +1911,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 6.53000021
+      value: 82.5599976
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1919,7 +1919,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: .707106829
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.z
@@ -1927,7 +1927,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: .707106709
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -2039,11 +2039,23 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400032, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: .39631629
+      value: .451999992
       objectReference: {fileID: 0}
     - target: {fileID: 100006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400020, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: .451999992
+      objectReference: {fileID: 0}
+    - target: {fileID: 400024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: .451999992
+      objectReference: {fileID: 0}
+    - target: {fileID: 400028, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: .451999992
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 2300008, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -2126,11 +2138,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 523005889}
   wheelTransform: {fileID: 523005890}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
+  wheelMass: 150
+  suspensionLength: .25
   target: 0
-  spring: 12000
-  damper: 6000
+  spring: 24000
+  damper: 2500
   maxMotorTorque: 0
   rpmLimit: 1100
   maxBrakeTorque: 0
@@ -2139,15 +2151,15 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.5
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 1
+  sweepType: 0
   debug: 0
-  susResp: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2189,12 +2201,12 @@ MonoBehaviour:
   steeringTransform: {fileID: 523005887}
   suspensionTransform: {fileID: 523005887}
   wheelTransform: {fileID: 523005888}
-  wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
+  wheelRadius: .405999988
+  wheelMass: 150
+  suspensionLength: .25
   target: 0
-  spring: 12000
-  damper: 6000
+  spring: 24000
+  damper: 2500
   maxMotorTorque: 0
   rpmLimit: 1100
   maxBrakeTorque: 0
@@ -2203,15 +2215,15 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.5
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 1
+  sweepType: 0
   debug: 0
-  susResp: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2262,12 +2274,12 @@ MonoBehaviour:
   steeringTransform: {fileID: 523005885}
   suspensionTransform: {fileID: 523005885}
   wheelTransform: {fileID: 523005886}
-  wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
+  wheelRadius: .405999988
+  wheelMass: 150
+  suspensionLength: .25
   target: 0
-  spring: 14000
-  damper: 6000
+  spring: 24000
+  damper: 2500
   maxMotorTorque: 1100
   rpmLimit: 800
   maxBrakeTorque: 1500
@@ -2276,15 +2288,15 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.5
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 1
+  sweepType: 0
   debug: 0
-  susResp: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2311,12 +2323,12 @@ MonoBehaviour:
   steeringTransform: {fileID: 523005884}
   suspensionTransform: {fileID: 523005884}
   wheelTransform: {fileID: 523005891}
-  wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
+  wheelRadius: .405999988
+  wheelMass: 150
+  suspensionLength: .25
   target: 0
-  spring: 14000
-  damper: 6000
+  spring: 24000
+  damper: 2500
   maxMotorTorque: 1100
   rpmLimit: 800
   maxBrakeTorque: 1500
@@ -2325,15 +2337,15 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.5
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 1
+  sweepType: 0
   debug: 0
-  susResp: 0
+  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2349,46 +2361,6 @@ MonoBehaviour:
 Transform:
   m_PrefabParentObject: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
   m_PrefabInternal: {fileID: 523005883}
---- !u!114 &523005914
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 523005893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 628ef3b172b043d40aa27fb166de2421, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  origin: {x: .981000006, y: .39631629, z: -2.21000004}
-  anchor: {x: 0, y: -.703000009, z: 0}
-  maxLocalDiff: {x: .000750000007, y: 0, z: .00749999983}
-  worldHitPos: {x: 0, y: 0, z: 0}
-  stickyWorldPos: {x: 0, y: 0, z: 0}
-  worldDiff: {x: 0, y: 0, z: 0}
-  localDiff: {x: 0, y: 0, z: 0}
-  localForce: {x: 0, y: 0, z: 0}
-  worldForce: {x: 0, y: 0, z: 0}
---- !u!114 &523005916
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 523005893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 628ef3b172b043d40aa27fb166de2421, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  origin: {x: -.981000006, y: .39631629, z: -2.21000004}
-  anchor: {x: 0, y: -.703000009, z: 0}
-  maxLocalDiff: {x: .00749999983, y: 0, z: .00749999983}
-  worldHitPos: {x: 0, y: 0, z: 0}
-  stickyWorldPos: {x: 0, y: 0, z: 0}
-  worldDiff: {x: 0, y: 0, z: 0}
-  localDiff: {x: 0, y: 0, z: 0}
-  localForce: {x: 0, y: 0, z: 0}
-  worldForce: {x: 0, y: 0, z: 0}
 --- !u!4 &552666938 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400026, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -2437,16 +2409,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 1017201677}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 1886162933}
   suspensionTransform: {fileID: 1886162933}
   wheelTransform: {fileID: 441339094}
   wheelRadius: .5
   wheelMass: 1
   suspensionLength: .5
-  target: .5
-  spring: 40
-  damper: 200
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 0
   rpmLimit: 600
   maxBrakeTorque: 0
@@ -2845,11 +2817,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 1177290863}
   wheelTransform: {fileID: 683615210}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -2857,14 +2829,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -3153,16 +3125,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 1986604052}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 209174297}
   suspensionTransform: {fileID: 209174297}
   wheelTransform: {fileID: 1536394808}
   wheelRadius: .5
   wheelMass: 1
   suspensionLength: .5
-  target: .5
-  spring: 40
-  damper: 200
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 0
   rpmLimit: 600
   maxBrakeTorque: 0
@@ -3236,11 +3208,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 1136791721}
   wheelTransform: {fileID: 694971871}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -3248,14 +3220,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -3986,11 +3958,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 948435993}
   wheelTransform: {fileID: 1886736323}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -3998,14 +3970,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -4249,11 +4221,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 1871359694}
   wheelTransform: {fileID: 1007554339}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -4261,14 +4233,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -4556,16 +4528,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 1986604052}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 510431658}
   suspensionTransform: {fileID: 510431658}
   wheelTransform: {fileID: 1293397543}
   wheelRadius: .5
   wheelMass: 1
   suspensionLength: .5
-  target: .5
-  spring: 40
-  damper: 200
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 0
   rpmLimit: 600
   maxBrakeTorque: 0
@@ -4720,11 +4692,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 829393066}
   wheelTransform: {fileID: 1932392386}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -4732,14 +4704,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -5280,11 +5252,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 1626022509}
   wheelTransform: {fileID: 803132351}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -5292,14 +5264,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -5460,16 +5432,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 1017201677}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 33922816}
   suspensionTransform: {fileID: 33922816}
   wheelTransform: {fileID: 1237557252}
   wheelRadius: .5
   wheelMass: 1
   suspensionLength: .5
-  target: .5
-  spring: 40
-  damper: 200
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 0
   rpmLimit: 600
   maxBrakeTorque: 0
@@ -6426,16 +6398,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 1986604052}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 125583366}
   suspensionTransform: {fileID: 125583366}
   wheelTransform: {fileID: 33867825}
   wheelRadius: .5
   wheelMass: 1
   suspensionLength: .5
-  target: .5
-  spring: 40
-  damper: 200
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 0
   rpmLimit: 600
   maxBrakeTorque: 0
@@ -6596,16 +6568,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 323507626}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 1523980872}
   suspensionTransform: {fileID: 1523980872}
   wheelTransform: {fileID: 965513524}
-  wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 30000
-  damper: 3000
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 2000
   rpmLimit: 600
   maxBrakeTorque: 1000
@@ -6613,14 +6585,14 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 2
+  forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -6825,16 +6797,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 323507626}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 1270874160}
   suspensionTransform: {fileID: 1270874160}
   wheelTransform: {fileID: 986207155}
-  wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 30000
-  damper: 3000
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 2000
   rpmLimit: 600
   maxBrakeTorque: 1500
@@ -6842,14 +6814,14 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 5
+  forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -7028,16 +7000,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 323507626}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 304629250}
   suspensionTransform: {fileID: 304629250}
   wheelTransform: {fileID: 564269934}
-  wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 30000
-  damper: 3000
+  wheelRadius: .5
+  wheelMass: 1
+  suspensionLength: .5
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 2000
   rpmLimit: 600
   maxBrakeTorque: 1000
@@ -7045,14 +7017,14 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
-  forwardFrictionCoefficient: 2
+  forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -7270,16 +7242,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c979a107887b049bc4b78d562b024a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rigidBody: {fileID: 1017201677}
+  rigidBody: {fileID: 0}
   steeringTransform: {fileID: 693814093}
   suspensionTransform: {fileID: 693814093}
   wheelTransform: {fileID: 1608088955}
   wheelRadius: .5
   wheelMass: 1
   suspensionLength: .5
-  target: .5
-  spring: 40
-  damper: 200
+  target: 0
+  spring: 1000
+  damper: 1500
   maxMotorTorque: 0
   rpmLimit: 600
   maxBrakeTorque: 0
@@ -7377,11 +7349,11 @@ MonoBehaviour:
   suspensionTransform: {fileID: 288306998}
   wheelTransform: {fileID: 728316006}
   wheelRadius: .402999997
-  wheelMass: 25
-  suspensionLength: .300000012
-  target: .699999988
-  spring: 5000
-  damper: 1000
+  wheelMass: 150
+  suspensionLength: .25
+  target: 0
+  spring: 7500
+  damper: 2500
   maxMotorTorque: 250
   rpmLimit: 600
   maxBrakeTorque: 350
@@ -7389,14 +7361,14 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
-  forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  forwardFrictionCoefficient: 1.20000005
+  sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
   tankSteer: 1
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 2
+  sweepType: 0
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}

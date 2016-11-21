@@ -4,7 +4,8 @@ using UnityEngine;
 namespace KSPWheel
 {
 
-    public class KSPWheelCollider
+    [AddComponentMenu("Physics/KSPWheelCollider")]
+    public class KSPWheelCollider : MonoBehaviour
     {
 
         #region REGION - Public Accessible values
@@ -12,7 +13,7 @@ namespace KSPWheel
         /// <summary>
         /// The game object this script should be attached to / affect, set from constructor
         /// </summary>
-        public readonly GameObject wheel;
+        private GameObject wheel;
 
         // TODO really should be read-only, being grabbed from wheel game object when collider is initialized
         // but silly KSP doesn't have RB's on the PART during MODULE initialization; needs to be delayed until first fixed update at least?
@@ -26,16 +27,16 @@ namespace KSPWheel
         #region REGION - Private variables
 
         //externally set values
-        private float currentWheelMass = 1f;
-        private float currentWheelRadius = 0.5f;
-        private float currentSuspensionLength = 1f;
-        private float currentSuspensionTarget = 0f;
-        private float currentSpring = 10f;
-        private float currentDamper = 2f;
+        private float wheelMass = 1f;
+        private float wheelRadius = 0.5f;
+        private float suspensionLength = 1f;
+        private float suspensionTarget = 0f;
+        private float suspensionSpring = 10f;
+        private float suspensionDamper = 2f;
         private float currentFwdFrictionCoef = 1f;
         private float currentSideFrictionCoef = 1f;
         private float currentSurfaceFrictionCoef = 1f;
-        private float currentSteerAngle = 0f;
+        private float currentSteeringAngle = 0f;
         private float currentMotorTorque = 0f;
         private float currentBrakeTorque = 0f;
         private float currentMomentOfInertia = 1.0f * 0.5f * 0.5f * 0.5f;//moment of inertia of wheel; used for mass in acceleration calculations regarding wheel angular velocity.  MOI of a solid cylinder = ((m*r*r)/2)
@@ -84,28 +85,19 @@ namespace KSPWheel
         private ConfigurableJoint stickyJoint;//the joint used for sticky friction
         private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity
 
-        private KSPWheelFrictionCurve fwdFrictionCurve;//current forward friction curve
-        private KSPWheelFrictionCurve sideFrictionCurve;//current sideways friction curve
+        private KSPWheelFrictionCurve fwdFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);//current forward friction curve
+        private KSPWheelFrictionCurve sideFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);//current sideways friction curve
+
+        private bool automaticUpdates = false;
         
         #endregion ENDREGION - Private variables
 
         #region REGION - Public accessible methods, Constructor, API get/set methods
-
-        /// <summary>
-        /// Initialize a wheel-collider object for the given GameObject (the wheel collider), and the given rigidbody (the RB that the wheel-collider will apply forces to)<para/>
-        /// -Both- must be valid references (i.e. cannot be null)
-        /// </summary>
-        /// <param name="wheel"></param>
-        /// <param name="rigidBody"></param>
-        public KSPWheelCollider(GameObject wheel, Rigidbody rigidBody)
+        
+        public void FixedUpdate()
         {
-            this.wheel = wheel;
-            if (wheel == null) { throw new NullReferenceException("Wheel game object for WheelCollider may not be null!"); }
-            this.rigidBody = rigidBody;
-            if (rigidBody == null) { throw new NullReferenceException("Rigidbody for wheel collider may not be null!"); }
-            //default friction curves; may be set to custom curves through the get/set methods below
-            sideFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);
-            fwdFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);
+            if (!automaticUpdates) { return; }
+            this.updateWheel();
         }
 
         /// <summary>
@@ -113,8 +105,8 @@ namespace KSPWheel
         /// </summary>
         public float spring
         {
-            get { return currentSpring; }
-            set { currentSpring = value; }
+            get { return suspensionSpring; }
+            set { suspensionSpring = value; }
         }
 
         /// <summary>
@@ -122,8 +114,8 @@ namespace KSPWheel
         /// </summary>
         public float damper
         {
-            get { return currentDamper; }
-            set { currentDamper = value; }
+            get { return suspensionDamper; }
+            set { suspensionDamper = value; }
         }
 
         /// <summary>
@@ -131,8 +123,8 @@ namespace KSPWheel
         /// </summary>
         public float length
         {
-            get { return currentSuspensionLength; }
-            set { currentSuspensionLength = value; }
+            get { return suspensionLength; }
+            set { suspensionLength = value; }
         }
 
         /// <summary>
@@ -140,8 +132,8 @@ namespace KSPWheel
         /// </summary>
         public float target
         {
-            get { return currentSuspensionTarget; }
-            set { currentSuspensionTarget = value; }
+            get { return suspensionTarget; }
+            set { suspensionTarget = value; }
         }
 
         /// <summary>
@@ -149,13 +141,13 @@ namespace KSPWheel
         /// </summary>
         public float mass
         {
-            get { return currentWheelMass; }
+            get { return wheelMass; }
             set
             {
-                currentWheelMass = value;
-                currentMomentOfInertia = currentWheelMass * currentWheelRadius * currentWheelRadius * 0.5f;
+                wheelMass = value;
+                currentMomentOfInertia = wheelMass * wheelRadius * wheelRadius * 0.5f;
                 inertiaInverse = 1.0f / currentMomentOfInertia;
-                massInverse = 1.0f / currentWheelMass;
+                massInverse = 1.0f / wheelMass;
             }
         }
 
@@ -164,13 +156,13 @@ namespace KSPWheel
         /// </summary>
         public float radius
         {
-            get { return currentWheelRadius; }
+            get { return wheelRadius; }
             set
             {
-                currentWheelRadius = value;
-                currentMomentOfInertia = currentWheelMass * currentWheelRadius * currentWheelRadius * 0.5f;
+                wheelRadius = value;
+                currentMomentOfInertia = wheelMass * wheelRadius * wheelRadius * 0.5f;
                 inertiaInverse = 1.0f / currentMomentOfInertia;
-                radiusInverse = 1.0f / currentWheelRadius;
+                radiusInverse = 1.0f / wheelRadius;
             }
         }
 
@@ -248,8 +240,8 @@ namespace KSPWheel
         /// </summary>
         public float steeringAngle
         {
-            get { return currentSteerAngle; }
-            set { currentSteerAngle = value; }
+            get { return currentSteeringAngle; }
+            set { currentSteeringAngle = value; }
         }
 
         /// <summary>
@@ -401,7 +393,13 @@ namespace KSPWheel
         /// </summary>
         public void updateWheel()
         {
-            wheelForward = Quaternion.AngleAxis(currentSteerAngle, wheel.transform.up) * wheel.transform.forward;
+            if (rigidBody == null)
+            {
+                //this.rigidBody = gameObject.GetComponentUpwards<Rigidbody>();
+                return;
+            }
+            if (this.wheel == null) { this.wheel = this.gameObject; }
+            wheelForward = Quaternion.AngleAxis(currentSteeringAngle, wheel.transform.up) * wheel.transform.forward;
             wheelUp = wheel.transform.up;
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             prevSuspensionCompression = currentSuspensionCompression;
@@ -461,6 +459,9 @@ namespace KSPWheel
 
         private float prevSpring = 0f;
 
+        public Vector3 gravity = new Vector3(0, -9.81f, 0);
+        public Vector3 gNorm = new Vector3(0, -1, 0);
+
         /// <summary>
         /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.
         /// </summary>
@@ -472,16 +473,43 @@ namespace KSPWheel
             if (susResponse > 0)
             {
                 localForce.y = Mathf.Lerp(prevSpring, localForce.y, susResponse / Time.fixedDeltaTime);
-            }            
+            }
             Vector3 calculatedForces = hitNormal * localForce.y * suspensionDot;
             calculatedForces += localForce.z * wF;
             calculatedForces += localForce.x * wR;
+            calculatedForces += calcAG(hitNormal, localForce.y * suspensionDot);
             rigidBody.AddForceAtPosition(calculatedForces, hitPoint, ForceMode.Force);
             if (hitCollider.attachedRigidbody != null && !hitCollider.attachedRigidbody.isKinematic)
             {
                 hitCollider.attachedRigidbody.AddForceAtPosition(-calculatedForces, hitPoint, ForceMode.Force);
             }
             prevSpring = localForce.y;
+        }
+
+        /// <summary>
+        /// Calculate an offset to the spring force that will negate the tendency to slide down hill caused by suspension forces.
+        ///   Seems to mostly work and brings drift down to sub-milimeter-per-second.
+        ///   Should be combined with some sort of spring/breakable joint to complete the sticky-friction implementation.  
+        /// </summary>
+        /// <param name="hitNormal"></param>
+        /// <param name="springForce"></param>
+        /// <returns></returns>
+        private Vector3 calcAG(Vector3 hitNormal, float springForce)
+        {
+            Vector3 agFix = new Vector3(0, 0, 0);
+            // this is the amount of suspension force that is misaligning the vehicle
+            // need to push uphill by this amount to keep the rigidbody centered along suspension axis
+            float gravNormDot = Vector3.Dot(hitNormal, gNorm);
+            //this force should be applied in the 'uphill' direction
+            float agForce = gravNormDot * springForce;
+            //calculate uphill direction from hitNorm and gNorm
+            // cross of the two gives the left/right of the hill
+            Vector3 hitGravCross = Vector3.Cross(hitNormal, gNorm);
+            // cross the left/right with the hitNorm to derive the up/down-hill direction
+            Vector3 upDown = Vector3.Cross(hitGravCross, hitNormal);
+            // and pray that all the rhs/lhs coordinates are correct...
+            agFix = upDown * agForce;
+            return agFix;
         }
 
         /// <summary>
@@ -641,9 +669,9 @@ namespace KSPWheel
         private bool suspensionSweepRaycast()
         {
             RaycastHit hit;
-            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, currentSuspensionLength + currentWheelRadius, currentRaycastMask))
+            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, suspensionLength + wheelRadius, currentRaycastMask))
             {
-                currentSuspensionCompression = currentSuspensionLength + currentWheelRadius - hit.distance;
+                currentSuspensionCompression = suspensionLength + wheelRadius - hit.distance;
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
                 hitPoint = hit.point;
@@ -662,7 +690,7 @@ namespace KSPWheel
         {
             RaycastHit hit;
             //need to start cast above max-compression point, to allow for catching the case of @ bump-stop
-            float rayOffset = currentWheelRadius;
+            float rayOffset = wheelRadius;
             if (Physics.SphereCast(wheel.transform.position + wheel.transform.up * rayOffset, radius, -wheel.transform.up, out hit, length + rayOffset, currentRaycastMask))
             {
                 currentSuspensionCompression = length + rayOffset - hit.distance;
@@ -699,9 +727,9 @@ namespace KSPWheel
             bool hit1b;
             bool hit2b;
             Vector3 startPos = wheel.transform.position;
-            float rayOffset = currentWheelRadius;
-            float rayLength = currentSuspensionLength + rayOffset;
-            float capLen = currentWheelRadius - capRadius;
+            float rayOffset = wheelRadius;
+            float rayLength = suspensionLength + rayOffset;
+            float capLen = wheelRadius - capRadius;
             Vector3 worldOffset = wheel.transform.up * rayOffset;//offset it above the wheel by a small amount, in case of hitting bump-stop
             Vector3 capEnd1 = wheel.transform.position + wheel.transform.forward * capLen;
             Vector3 capEnd2 = wheel.transform.position - wheel.transform.forward * capLen;
@@ -717,7 +745,7 @@ namespace KSPWheel
                 {
                     hit = hit1;
                 }
-                currentSuspensionCompression = currentSuspensionLength + rayOffset - hit.distance;
+                currentSuspensionCompression = suspensionLength + rayOffset - hit.distance;
                 hitNormal = hit.normal;
                 hitCollider = hit.collider;
                 hitPoint = hit.point;
@@ -734,9 +762,9 @@ namespace KSPWheel
         {
             //calculate damper force from the current compression velocity of the spring; damp force can be negative
             vSpring = (currentSuspensionCompression - prevSuspensionCompression) / Time.fixedDeltaTime;//per second velocity
-            fDamp = currentDamper * vSpring;
+            fDamp = suspensionDamper * vSpring;
             //calculate spring force basically from displacement * spring
-            float fSpring = (currentSuspensionCompression - (currentSuspensionLength * currentSuspensionTarget)) * currentSpring;
+            float fSpring = (currentSuspensionCompression - (suspensionLength * suspensionTarget)) * suspensionSpring;
             //if spring would be negative at this point, zero it to allow the damper to still function; this normally occurs when target > 0, at the lower end of wheel droop below target position
             if (fSpring < 0) { fSpring = 0; }
             //integrate damper value into spring force
@@ -825,7 +853,7 @@ namespace KSPWheel
             // this is the remaining brake angular acceleration/torque that can be used to counteract wheel acceleration caused by traction friction
             float wBrakeDelta = wBrakeMax - wBrake;
             
-            vWheel = currentAngularVelocity * currentWheelRadius;
+            vWheel = currentAngularVelocity * wheelRadius;
             sLong = calcLongSlip(localVelocity.z, vWheel);
             sLat = calcLatSlip(localVelocity.z, localVelocity.x);
             vWheelDelta = vWheel - localVelocity.z;
@@ -856,7 +884,7 @@ namespace KSPWheel
             // otherwise fLongMax is used and the wheel is still slipping but maximum traction force will be exerted
             fTractMax = Mathf.Min(fTractMax, fLongMax);
             // convert the clamped traction value into a torque value and apply to the wheel
-            float tractionTorque = fTractMax * currentWheelRadius * -Mathf.Sign(vWheelDelta);
+            float tractionTorque = fTractMax * wheelRadius * -Mathf.Sign(vWheelDelta);
             // and set the longitudinal force to the force calculated for the wheel/surface torque
             localForce.z = fTractMax * Mathf.Sign(vWheelDelta);
             //use wheel inertia to determine final wheel acceleration from torques; inertia inverse used to avoid div operations; convert to delta-time, as accel is normally radians/s
@@ -900,7 +928,7 @@ namespace KSPWheel
             // really this should just be an adjustment to the curve parameters
             // as all that the pacejka formulas do is define the curves used by slip ratio to calculate maximum force output
             
-            vWheel = currentAngularVelocity * currentWheelRadius;
+            vWheel = currentAngularVelocity * wheelRadius;
             sLong = calcLongSlip(localVelocity.z, vWheel);
             sLat = calcLatSlip(localVelocity.z, localVelocity.x);
             vWheelDelta = vWheel - localVelocity.z;
@@ -929,7 +957,7 @@ namespace KSPWheel
             //newtons of force needed to bring wheel to surface speed over one update tick
             float fDelta = tDelta * radiusInverse / Time.fixedDeltaTime;
             localForce.z = Mathf.Min(Mathf.Abs(fDelta), localForce.z) * Mathf.Sign(fDelta);
-            float tTract = -localForce.z * currentWheelRadius;
+            float tTract = -localForce.z * wheelRadius;
             currentAngularVelocity += tTract * Time.fixedDeltaTime * inertiaInverse;
             currentAngularVelocity += currentMotorTorque * Time.fixedDeltaTime * inertiaInverse;
             
