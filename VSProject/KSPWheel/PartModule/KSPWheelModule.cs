@@ -484,7 +484,7 @@ namespace KSPWheel
                 else
                 {
                     wheel = wheelColliderTransform.gameObject.AddComponent<KSPWheelCollider>();
-                    wheel.rigidBody = rb;
+                    wheel.rigidbody = rb;
                     wheel.radius = wheelRadius;
                     wheel.mass = wheelMass;
                     wheel.length = suspensionTravel;
