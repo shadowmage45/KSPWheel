@@ -11,15 +11,9 @@ namespace KSPWheel
     /// Traction control / anti-slip.
     /// Torque curve vs rpm.
     /// </summary>
-    public class KSPWheelDamage : PartModule
+    public class KSPWheelDamage : KSPWheelSubmodule
     {
-
-        [KSPField]
-        public string wheelColliderName = "wheelCollider";
-
-        [KSPField]
-        public int indexInDuplicates = 0;
-
+                
         [KSPField]
         public string wheelName = "wheel";
 
@@ -28,27 +22,30 @@ namespace KSPWheel
 
         [KSPField]
         public float impactTolerance = 100f;
-
-        private Transform wheelColliderTransform;
+        
         private Transform wheelMesh;
         private Transform bustedWheelMesh;
-        private KSPWheelBase wheelBase;
-        private KSPWheelCollider wheel;
+        
+        //TODO -- enable/disable for broken status
+        [KSPEvent(guiName = "Repair Gear", guiActive = false, guiActiveEditor = false)]
+        public void repairWheel()
+        {
+
+        }
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            Transform[] wcs = part.transform.FindChildren(wheelColliderName);
-            wheelColliderTransform = wcs[indexInDuplicates];
             if (!String.IsNullOrEmpty(wheelName)) { wheelMesh = part.transform.FindRecursive(wheelName); }
             if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
             //TODO start co-routine to wait for wheel to be populated, and then add an OnImpact callback
         }
 
-        public void Start()
+        internal override void postControllerSetup()
         {
-            wheelBase = part.GetComponent<KSPWheelBase>();
-            KSPWheelState wheelState = wheelBase.wheelState;
+            base.postControllerSetup();
+            KSPWheelState wheelState = controller.wheelState;
+            Events["repairWheel"].active = wheelState == KSPWheelState.BROKEN;
             if (wheelState == KSPWheelState.BROKEN)
             {
                 if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
@@ -59,6 +56,22 @@ namespace KSPWheel
                 if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
                 if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
             }
+        }
+
+        internal override void postWheelCreated()
+        {
+            base.postWheelCreated();
+            wheel.setImpactCallback(onWheelImpact);
+        }
+
+        /// <summary>
+        /// Called from the KSPWheelCollider on first ground contact<para/>
+        /// The input Vector3 is the wheel-local impact velocity.  Relative impact speed can be derived from localImpactVelocity.magnitude
+        /// </summary>
+        /// <param name="localImpactVelocity"></param>
+        public void onWheelImpact(Vector3 localImpactVelocity)
+        {
+            //TODO
         }
 
     }

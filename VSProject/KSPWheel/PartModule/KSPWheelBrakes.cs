@@ -11,14 +11,8 @@ namespace KSPWheel
     /// Traction control / anti-slip.
     /// Torque curve vs rpm.
     /// </summary>
-    public class KSPWheelBrakes : PartModule
+    public class KSPWheelBrakes : KSPWheelSubmodule
     {
-
-        [KSPField]
-        public string wheelColliderName = "wheelCollider";
-
-        [KSPField]
-        public int indexInDuplicates = 0;
 
         [KSPField]
         public float maxBrakeTorque = 0f;
@@ -28,17 +22,13 @@ namespace KSPWheel
         
         [KSPField]
         public bool brakesLocked = false;
-
-        private Transform wheelColliderTransform;
-        private KSPWheelCollider wheel;
+        
         private float brakeInput;
         private ModuleStatusLight statusLightModule;
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            Transform[] wcs = part.transform.FindChildren(wheelColliderName);
-            wheelColliderTransform = wcs[indexInDuplicates];
         }
 
         public void Start()
@@ -46,20 +36,23 @@ namespace KSPWheel
             statusLightModule = part.GetComponent<ModuleStatusLight>();
         }
 
-        public void FixedUpdate()
+        internal override void preWheelPhysicsUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight) { return; }
-            if (wheel == null) { wheel = wheelColliderTransform.GetComponent<KSPWheelCollider>(); return; }
-            
+            base.preWheelPhysicsUpdate();
             float bI = brakesLocked ? 1 : part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
             if (!brakesLocked && brakeResponse > 0)
             {
                 bI = Mathf.Lerp(brakeInput, bI, brakeResponse * Time.deltaTime);
             }
-            
+
             brakeInput = bI;
             wheel.brakeTorque = maxBrakeTorque * brakeInput;
 
+        }
+
+        internal override void preWheelFrameUpdate()
+        {
+            base.preWheelFrameUpdate();
             if (statusLightModule != null)
             {
                 statusLightModule.SetStatus(brakeInput != 0);

@@ -86,17 +86,6 @@ namespace KSPWheel
 
         #endregion
 
-        #region REGION - Animation handling
-
-        [KSPField]
-        public string animationName = String.Empty;
-        [KSPField]
-        public float animationSpeed=1;
-        [KSPField]
-        public int animationLayer=1;
-
-        #endregion
-
         #region REGION - Persistent data
 
         [KSPField(isPersistant = true)]
@@ -117,9 +106,8 @@ namespace KSPWheel
         private Transform wheelColliderTransform;//the transform that the wheel-collider is attached to
         private Transform[] wheelPivotTransforms;//
         private KSPWheelCollider wheel;
-        private WheelAnimationHandler animationControl;
-        private ModuleLight lightModule;
         private GameObject debugHitObject;
+        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();        
 
         #endregion
 
@@ -187,55 +175,6 @@ namespace KSPWheel
                 dmp = wheel.damper;
             }
         }
-        
-        [KSPAction("Toggle Gear", KSPActionGroup.Gear)]
-        public void toggleGearAction(KSPActionParam param)
-        {
-            if (param.type == KSPActionType.Activate) { deploy(); }
-            else if (param.type == KSPActionType.Deactivate) { retract(); }
-        }
-        
-        [KSPEvent(guiName = "Toggle Gear", guiActive = true, guiActiveEditor = true)]
-        public void toggleGearEvent()
-        {
-            toggleDeploy();
-        }
-
-        //TODO -- enable/disable for broken status
-        [KSPEvent(guiName = "Repair Gear", guiActive = false, guiActiveEditor = false)]
-        public void repairWheel()
-        {
-
-        }
-        
-        private void deploy()
-        {
-            if (wheelState == KSPWheelState.RETRACTED || wheelState == KSPWheelState.RETRACTING) { toggleDeploy(); }
-        }
-        
-        private void retract()
-        {
-            if (wheelState == KSPWheelState.DEPLOYED || wheelState == KSPWheelState.DEPLOYING) { toggleDeploy(); }
-        }
-
-        private void toggleDeploy()
-        {
-            if (animationControl == null)
-            {
-                MonoBehaviour.print("Animation control is null!");
-                return;
-            }
-            if (wheelState == KSPWheelState.DEPLOYED || wheelState == KSPWheelState.DEPLOYING)
-            {
-                wheelState = KSPWheelState.RETRACTING;
-                animationControl.setToAnimationState(wheelState, false);
-            }
-            else if (wheelState == KSPWheelState.RETRACTED || wheelState == KSPWheelState.RETRACTING)
-            {
-                wheelState = KSPWheelState.DEPLOYING;
-                animationControl.setToAnimationState(wheelState, false);
-            }
-        }
 
         #endregion
 
@@ -274,10 +213,6 @@ namespace KSPWheel
                 calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1.0f, out suspensionSpring, out suspensionDamper);
             }
 
-            if (animationControl != null) { animationControl.setToAnimationState(wheelState, false); }
-            Events["toggleGearEvent"].active = animationControl != null;
-            Actions["toggleGearAction"].active = animationControl != null;
-            Events["repairWheel"].active = wheelState == KSPWheelState.BROKEN;
             Fields["springMult"].uiControlFlight.onFieldChanged = onSpringUpdated;
             Fields["dampMult"].uiControlFlight.onFieldChanged = onDamperUpdated;
             BaseField f = Fields["loadRating"];
@@ -320,15 +255,6 @@ namespace KSPWheel
             wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;            
         }
 
-        public void Start()
-        {
-            lightModule = part.GetComponent<ModuleLight>();
-            if (lightModule != null && wheelState == KSPWheelState.DEPLOYED)
-            {
-                lightModule.LightsOn();
-            }
-        }
-
         /// <summary>
         /// Updates the wheel collider component physics if it is not broken or retracted
         /// </summary>
@@ -339,6 +265,8 @@ namespace KSPWheel
             //workaround for part rigidbody not being present during start/load or initial fixedupdate ticks
             //TODO can set it up in a coroutine, continuing to yield until rigidbody is present?
             //      is that really a simpler solution? still have  to check for null each fixed-update tick until the wheel is present
+            //      but might allow for specific co-routines to be ran for each specific update function -- one for wait and check, one for actual updates
+            //      WHAT is the overhead cost of coroutines
             if (wheel == null)
             {
                 Rigidbody rb = part.GetComponent<Rigidbody>();
@@ -357,13 +285,12 @@ namespace KSPWheel
                     wheel.spring = suspensionSpring;
                     wheel.damper = suspensionDamper;
                     //wheel.isGrounded = grounded;
-                    wheel.setImpactCallback(onWheelImpact);
                     wheel.raycastMask = raycastMask;
+                    onWheelCreated(wheelColliderTransform, wheel);
                 }
             }
 
-            if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }
-            
+            if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }            
             
             //Update the wheel physics state as long as it is not broken or fully retracted
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
@@ -372,7 +299,9 @@ namespace KSPWheel
                 wheel.radius = wheelRadius;
                 wheel.length = suspensionTravel;
                 wheel.gravityVector = vessel.gravityForPos;
+                for (int i = 0; i < subModules.Count; i++) { subModules[i].preWheelPhysicsUpdate(); }
                 wheel.updateWheel();
+                for (int i = 0; i < subModules.Count; i++) { subModules[i].postWheelPhysicsUpdate(); }
                 debugHitObject.transform.position = wheelColliderTransform.position - (wheelColliderTransform.up * suspensionTravel) + (wheelColliderTransform.up * wheel.compressionDistance) - (wheelColliderTransform.up * wheelRadius);
             }
 
@@ -394,13 +323,18 @@ namespace KSPWheel
         /// </summary>
         public void Update()
         {
-            if (animationControl != null) { animationControl.updateAnimationState(); }
-            if (!HighLogic.LoadedSceneIsFlight) { return; }
-            if (!FlightGlobals.ready || !FlightDriver.fetch || wheel==null) { return; }
+            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch || wheel == null) { return; }
+
+            int len = subModules.Count;
+            for (int i = 0; i < len; i++)
+            {
+                subModules[i].preWheelFrameUpdate();
+            }
+
             //TODO block/reset input state when not deployed, re-orient wheels to default (zero steering rotation) when retracted/ing?
             if (wheelPivotTransforms != null && wheelPivotTransforms.Length>0)
             {
-                int len = wheelPivotTransforms.Length;
+                len = wheelPivotTransforms.Length;
                 for (int i = 0; i < len; i++)
                 {
                     wheelPivotTransforms[i].Rotate(wheel.perFrameRotation, 0, 0, Space.Self);
@@ -412,6 +346,25 @@ namespace KSPWheel
 
         #region REGION - Custom update methods
 
+        internal void addSubmodule(KSPWheelSubmodule module)
+        {
+            subModules.AddUnique(module);
+        }
+
+        internal void removeSubmodule(KSPWheelSubmodule module)
+        {
+            subModules.Remove(module);
+        }
+
+        private void onWheelCreated(Transform tr, KSPWheelCollider wheel)
+        {
+            int len = subModules.Count;
+            for (int i = 0; i < len; i++)
+            {
+                subModules[i].onWheelCreated(tr, wheel);
+            }
+        }
+
         //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow
         private void updateLandedState()
         {
@@ -421,40 +374,11 @@ namespace KSPWheel
         }
         
         /// <summary>
-        /// Callback from animationControl for when an animation transitions from one state to another
-        /// </summary>
-        /// <param name="state"></param>
-        public void onAnimationStateChanged(KSPWheelState state)
-        {
-            wheelState = state;
-            if (state == KSPWheelState.RETRACTED)
-            {
-                //TODO reset suspension and steering transforms to neutral?
-                if (lightModule != null) { lightModule.LightsOff(); }
-            }
-            else if (state == KSPWheelState.DEPLOYED)
-            {
-                if (lightModule != null) { lightModule.LightsOn(); }
-            }
-        }
-
-        /// <summary>
-        /// Called from the KSPWheelCollider on first ground contact<para/>
-        /// The input Vector3 is the wheel-local impact velocity.  Relative impact speed can be derived from localImpactVelocity.magnitude
-        /// </summary>
-        /// <param name="localImpactVelocity"></param>
-        public void onWheelImpact(Vector3 localImpactVelocity)
-        {
-            //TODO
-        }
-        
-        /// <summary>
         /// Input load in tons, suspension length, target (0-1), and desired damp ratio (1 = critical)
         /// and output spring and damper for that load and ratio
         /// </summary>
         private void calcSuspension(float load, float length, float target, float dampRatio, out float spring, out float damper)
         {
-
             float targetCompression = target * length;
             if (targetCompression <= 0) { targetCompression = 0.01f; }
             spring = load * 10 / targetCompression;
@@ -481,7 +405,6 @@ namespace KSPWheel
                 part.transform.FindRecursiveMulti(pivotNames[i].Trim(), transforms);
             }
             wheelPivotTransforms = transforms.ToArray();
-            //if (!String.IsNullOrEmpty(animationName)) { animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, wheelState); }
         }
 
         #endregion

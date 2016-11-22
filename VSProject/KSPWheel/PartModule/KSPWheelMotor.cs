@@ -11,15 +11,9 @@ namespace KSPWheel
     /// Traction control / anti-slip.
     /// Torque curve vs rpm.
     /// </summary>
-    public class KSPWheelMotor : PartModule
+    public class KSPWheelMotor : KSPWheelSubmodule
     {
-
-        [KSPField]
-        public string wheelColliderName = "wheelCollider";
-
-        [KSPField]
-        public int indexInDuplicates = 0;
-
+        
         [KSPField(guiName = "Motor Torque", guiActive = true, guiActiveEditor = true),
          UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 0.5f)]
         public float maxMotorTorque = 0f;
@@ -56,22 +50,16 @@ namespace KSPWheel
         [KSPField(guiActive = true, guiName = "Motor EC Use", guiUnits = "ec/s")]
         public float guiResourceUse = 0f;
 
-        private Transform wheelColliderTransform;
-        private KSPWheelCollider wheel;
         private float fwdInput;
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            Transform[] wcs = part.transform.FindChildren(wheelColliderName);
-            wheelColliderTransform = wcs[indexInDuplicates];
         }
 
-        public void FixedUpdate()
+        internal override void preWheelPhysicsUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight) { return; }
-            if (wheel == null) { wheel = wheelColliderTransform.GetComponent<KSPWheelCollider>(); return; }
-            
+            base.preWheelPhysicsUpdate();
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             if (motorLocked) { fI = 0; }
             if (invertMotor) { fI = -fI; }

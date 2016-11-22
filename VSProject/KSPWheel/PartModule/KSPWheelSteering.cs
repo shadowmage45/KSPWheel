@@ -4,21 +4,23 @@ using UnityEngine;
 
 namespace KSPWheel
 {
-    public class KSPWheelSteering : PartModule
+    public class KSPWheelSteering : KSPWheelSubmodule
     {
-
+        /// <summary>
+        /// Name of the transform that will be rotated for visual steering effect
+        /// </summary>
         [KSPField]
         public string steeringName = "steering";
-
-        [KSPField]
-        public string wheelColliderName = "wheelCollider";
-
-        [KSPField]
-        public int indexInDuplicates = 0;
-
+        
+        /// <summary>
+        /// Maximum deflection angle of the steering transform, measured from its default state (rotation = 0,0,0)
+        /// </summary>
         [KSPField]
         public float maxSteeringAngle = 0f;
 
+        /// <summary>
+        /// Steering lerp response speed.  Higher values = faster response.
+        /// </summary>
         [KSPField]
         public float steeringResponse = 0;
 
@@ -36,30 +38,28 @@ namespace KSPWheel
          UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true)]
         public bool invertSteering = false;
         
+        /// <summary>
+        /// The local axis of the steering transform to rotate around.  Defaults to 0, 1, 0 -- rotate around y+ axis, with z+ facing forward.
+        /// </summary>
         [KSPField]
         public Vector3 steeringAxis = Vector3.up;
         
         private Transform steeringTransform;
-        private Transform wheelColliderTransform;
-        private KSPWheelCollider wheel;
         private float rotInput;
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            Transform[] sus = part.transform.FindChildren(steeringName);
-            Transform[] wcs = part.transform.FindChildren(wheelColliderName);
-            steeringTransform = sus[indexInDuplicates];
-            wheelColliderTransform = wcs[indexInDuplicates];
+            steeringTransform = part.transform.FindRecursive(steeringName);
         }
 
-        public void FixedUpdate()
+        internal override void preWheelPhysicsUpdate()
         {
-            if (wheel == null) { wheel = wheelColliderTransform.GetComponent<KSPWheelCollider>(); return; }
+            base.preWheelPhysicsUpdate();
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             float rI = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
             if (steeringLocked) { rI = 0; }
-            if (invertSteering) { rI = -rI; }            
+            if (invertSteering) { rI = -rI; }
             if (steeringResponse > 0)
             {
                 rI = Mathf.Lerp(rotInput, rI, steeringResponse * Time.deltaTime);
@@ -71,7 +71,7 @@ namespace KSPWheel
         public void Update()
         {
             if (!HighLogic.LoadedSceneIsFlight || steeringTransform == null) { return; }
-            if (wheel == null) { wheel = wheelColliderTransform.GetComponent<KSPWheelCollider>(); return; }
+            if (wheel == null) { return; }
             steeringTransform.localRotation = Quaternion.Euler(steeringAxis * wheel.steeringAngle);
         }
 

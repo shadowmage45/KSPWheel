@@ -9,11 +9,11 @@ namespace KSPWheel
     /// </summary>
     public class WheelAnimationHandler
     {
-        private readonly KSPWheelModule module;
+        private readonly KSPWheelDeployment module;
         private KSPWheelState currentAnimState;        
         private AnimationData animationData;
 
-        public WheelAnimationHandler(KSPWheelModule module, string animationName, float animationSpeed, int animationLayer, KSPWheelState initialState)
+        public WheelAnimationHandler(KSPWheelDeployment module, string animationName, float animationSpeed, int animationLayer, KSPWheelState initialState)
         {
             this.module = module;
             this.currentAnimState = initialState;
