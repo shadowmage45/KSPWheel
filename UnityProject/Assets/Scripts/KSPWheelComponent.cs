@@ -166,7 +166,7 @@ namespace KSPWheel
         public void Start()
         {
             wheelCollider = gameObject.AddComponent<KSPWheelCollider>();
-            wheelCollider.rigidBody = this.rigidBody;
+            wheelCollider.rigidbody = this.rigidBody;
             bumpStopCollider = new GameObject("BSC");
             SphereCollider sc = bumpStopCollider.AddComponent<SphereCollider>();
             PhysicMaterial mat = new PhysicMaterial("TEST");

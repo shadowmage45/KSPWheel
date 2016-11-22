@@ -78,8 +78,16 @@
     <Compile Include="Component\KSPWheelFrictionCurve.cs" />
     <Compile Include="Component\KSPWheelStickyConstraint.cs" />
     <Compile Include="Component\LFWheelGrip.cs" />
+    <Compile Include="PartModule\KSPWheelBase.cs" />
+    <Compile Include="PartModule\KSPWheelBrakes.cs" />
+    <Compile Include="PartModule\KSPWheelDamage.cs" />
+    <Compile Include="PartModule\KSPWheelMotor.cs" />
     <Compile Include="PartModule\KSPWheelAnimationState.cs" />
+    <Compile Include="PartModule\KSPWheelModuleKFTrack.cs" />
+    <Compile Include="PartModule\KSPWheelModuleKF.cs" />
     <Compile Include="PartModule\KSPWheelState.cs" />
+    <Compile Include="PartModule\KSPWheelSteering.cs" />
+    <Compile Include="PartModule\KSPWheelSuspension.cs" />
     <Compile Include="PartModule\Utils.cs" />
     <Compile Include="PartModule\WheelAnimationHandler.cs" />
     <Compile Include="PartModule\KSPWheelModule.cs" />

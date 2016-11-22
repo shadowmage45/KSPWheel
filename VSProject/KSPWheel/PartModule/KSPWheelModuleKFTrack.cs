@@ -8,7 +8,7 @@ namespace KSPWheel
     /// A replacement for the stock wheel system that uses the KSPWheelCollider class for phsyics handling.
     /// Intended to be a fully-functional (but possibly not fully-equivalent) replacement for the stock wheel modules and U5 WheelCollider component
     /// </summary>
-    public class KSPWheelModule : PartModule
+    public class KSPWheelModuleKFTrack : PartModule
     {
         #region REGION - Basic wheel parameters that cannot be pulled from the U5 WheelCollider component
 
@@ -26,47 +26,6 @@ namespace KSPWheel
         public string wheelPivotName;
 
         /// <summary>
-        /// Name of the mesh that represents the 'non-busted wheel'<para/>
-        /// May be null if no wheel mesh exists or should be manipulated
-        /// </summary>
-        [KSPField]
-        public string wheelName;
-
-        /// <summary>
-        /// Name of the mesh that represents the 'busted wheel'<para/>
-        /// May be null if no busted wheel mesh exists or should be manipulated (if not present, and wheel is breakable, the normal mesh will be used if it is present)
-        /// </summary>
-        [KSPField]
-        public string bustedWheelName;
-
-        /// <summary>
-        /// Name of the transform that should be moved for suspension<para/>
-        /// May be null if there is no visual response to suspension forces for the wheel (repulsors)
-        /// </summary>
-        [KSPField]
-        public string suspensionName;
-
-        /// <summary>
-        /// Name of the transform used for steering rotation.  This transform will be rotated around its Y axis, with the default orientation of the model representing straight forward<para/>
-        /// May be null if there is no steering on the model; may re-use the suspension transform for steering transform if model is setup in such a manner.
-        /// </summary>
-        [KSPField]
-        public string steeringName;
-
-        [KSPField]
-        public string boundsColliderName;
-
-        //bogey functions are used for aligning the 'foot' to the ground
-        [KSPField]
-        public string bogeyName;
-
-        [KSPField]
-        public Vector3 bogeyRotAxis=Vector3.right;
-
-        [KSPField]
-        public Vector3 bogeyUpAxis = Vector3.up;
-
-        /// <summary>
         /// Determines if this wheel should use tank-steering.  This will adjust the fwd/reverse input for steering input rather than manipulating the orientation of the wheel.
         /// </summary>
         [KSPField]
@@ -79,7 +38,11 @@ namespace KSPWheel
         [KSPField]
         public float impactTolerance;
 
+        [KSPField]
         public int raycastMask = ~(1 << 26 | 1 << 10);//ignore layers 26 and 10 (wheelCollidersIgnore & scaledScenery)
+
+        [KSPField]
+        public string boundsColliderName;
 
         /// <summary>
         /// If true, steering will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
@@ -113,27 +76,13 @@ namespace KSPWheel
 
         #region REGION - Optional wheel parameters that may vary on a part to part basis
 
-        /// <summary>
-        /// Determines how far above the initial position in the model that the wheel-collider should be located.
-        /// This is needed as the setup for stock models varies widely for wheel-collider positioning;
-        /// some have it near the top of suspension travel, others at the bottom.
-        /// Needs to be set on a per-part/model basis.
-        /// </summary>
-        [KSPField]
-        public float wheelColliderOffset;
         [KSPField]
         public float maxSteeringAngle;
 
         [KSPField(guiActive = true, guiActiveEditor = true),
          UI_FloatRange(suppressEditorShipModified = true, minValue = -2f, maxValue = 2f, stepIncrement = 0.25f)]
         public float suspensionOffset = 0f;
-
-        [KSPField(guiActive = true, guiActiveEditor = true),
-         UI_FloatRange(suppressEditorShipModified = true, minValue = -2f, maxValue = 2f, stepIncrement = 0.25f)]
-        public float suspensionExtPos = 0f;
-
-        [KSPField]
-        public Vector3 wheelColliderRotation = Vector3.zero;
+        
         [KSPField]
         public Vector3 suspensionAxis = Vector3.up;
         [KSPField]
@@ -164,20 +113,27 @@ namespace KSPWheel
         [KSPField(guiName ="Radius", guiActive =true),
          UI_FloatRange(suppressEditorShipModified = true, minValue = 0.025f, maxValue = 1f, stepIncrement = 0.025f)]
         public float wheelRadius = -1;
+
         [KSPField]
         public float wheelMass = -1;
+
         [KSPField(guiName = "Length", guiActive = true),
          UI_FloatRange(suppressEditorShipModified = true, minValue = 0.025f, maxValue = 2f, stepIncrement = 0.025f)]
         public float suspensionTravel = -1;
+
         [KSPField]
         public float suspensionTarget = -1;
+
         [KSPField]
         public float suspensionSpring = -1;
+
         [KSPField]
         public float suspensionDamper = -1;
+
         [KSPField(guiName ="Motor Torque", guiActive = true, guiActiveEditor = true),
          UI_FloatRange(minValue =0, maxValue = 100, stepIncrement = 0.5f)]
         public float maxMotorTorque = -1;
+
         [KSPField]
         public float maxBrakeTorque = -1;
         #endregion
@@ -197,36 +153,18 @@ namespace KSPWheel
 
         [KSPField(isPersistant = true)]
         public bool grounded = false;
-
-        [KSPField]
-        public bool defaultCompressed = false;
         #endregion
 
         #region REGION - Private working/cached variables
-        private Transform wheelColliderTransform;//the transform that the wheel-collider is attached to
-        private Transform[] wheelPivotTransforms;//
-        private Transform wheelMesh;
-        private Transform bustedWheelMesh;
-        private Transform suspensionMesh;
-        private Transform steeringMesh;
-        private Transform bogeyMesh;
+        private Transform[] wheelColliderTransforms;
+        private Transform[] wheelPivotTransforms;
+        private Vector3 suspensionDefaultLocation;
 
-        private KSPWheelCollider wheel;
+        private KSPWheelCollider[] wheels;
         private KSPWheelState wheelState = KSPWheelState.DEPLOYED;
-        private WheelAnimationHandler animationControl;
-        private ModuleLight lightModule;
-        private ModuleStatusLight statusLightModule;
         #endregion
 
         #region REGION - Debug fields
-
-        [KSPField(guiName = "SpringMult", guiActive = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 10, stepIncrement = 0.05f, suppressEditorShipModified =true)]
-        public float springMult = 1f;
-
-        [KSPField(guiName = "DampMult", guiActive = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 10, stepIncrement = 0.05f, suppressEditorShipModified =true)]
-        public float dampMult = 1f;
 
         //TODO -- implement dynamic load-setting; min and max range should be configurable through part config file
         // allow the user to adjust the suspension spring/damper indirectly by specifying the load the wheel should be rated for.
@@ -245,29 +183,11 @@ namespace KSPWheel
         [KSPField(guiName = "BrakeInput", guiActive = true)]
         public float brakeInput;
 
-        [KSPField(guiName = "Hit", guiActive = true)]
-        public string colliderHit;
-
         [KSPField(guiName = "RPM", guiActive = true)]
         public float rpm;
 
-        [KSPField(guiName = "Steer", guiActive = true)]
-        public float steer;
-
-        [KSPField(guiName = "fLong", guiActive = true)]
-        public float fLong;
-
-        [KSPField(guiName = "fLat", guiActive = true)]
-        public float fLat;
-
-        [KSPField(guiName = "comp", guiActive = true)]
-        public float comp;
-
-        [KSPField(guiName = "spr", guiActive = true)]
-        public float spr;
-
-        [KSPField(guiName = "dmp", guiActive = true)]
-        public float dmp;
+        [KSPField(guiName = "Collider: ", guiActive = true)]
+        public string colliderHit;
 
         [KSPField(guiName = "EC/s", guiActive = true)]
         public float guiResourceUse = 0f;
@@ -276,102 +196,24 @@ namespace KSPWheel
 
         #region REGION - GUI Handling methods
 
-        public void onSpringUpdated(BaseField field, object obj)
-        {
-            if ((float)obj != springMult)
-            {
-                wheel.spring = suspensionSpring * springMult;
-                spr = wheel.spring;
-            }
-        }
-
-        public void onDamperUpdated(BaseField field, object obj)
-        {
-            if ((float)obj != dampMult)
-            {
-                wheel.damper = suspensionDamper * dampMult;
-                dmp = wheel.damper;
-            }
-        }
-
         public void onLoadUpdated(BaseField field, object obj)
         {
             if ((float)obj != loadRating)
             {
                 calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1, out suspensionSpring, out suspensionDamper);
-                wheel.spring = suspensionSpring * springMult;
-                wheel.damper = suspensionDamper * dampMult;
-                spr = wheel.spring;
-                dmp = wheel.damper;
+                int len = wheels.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    wheels[i].spring = suspensionSpring;
+                    wheels[i].damper = suspensionDamper;
+                }
             }
         }
-        
-        [KSPAction("Toggle Gear", KSPActionGroup.Gear)]
-        public void toggleGearAction(KSPActionParam param)
-        {
-            if (param.type == KSPActionType.Activate) { deploy(); }
-            else if (param.type == KSPActionType.Deactivate) { retract(); }
-        }
-        
-        [KSPEvent(guiName = "Toggle Gear", guiActive = true, guiActiveEditor = true)]
-        public void toggleGearEvent()
-        {
-            toggleDeploy();
-        }
-
-        //TODO -- enable/disable for broken status
-        [KSPEvent(guiName = "Repair Gear", guiActive = false, guiActiveEditor = false)]
-        public void repairWheel()
-        {
-
-        }
-        
-        private void deploy()
-        {
-            if (wheelState == KSPWheelState.RETRACTED || wheelState == KSPWheelState.RETRACTING) { toggleDeploy(); }
-        }
-        
-        private void retract()
-        {
-            if (wheelState == KSPWheelState.DEPLOYED || wheelState == KSPWheelState.DEPLOYING) { toggleDeploy(); }
-        }
-
-        private void toggleDeploy()
-        {
-            if (animationControl == null)
-            {
-                MonoBehaviour.print("Animation control is null!");
-                return;
-            }
-            if (wheelState == KSPWheelState.DEPLOYED || wheelState == KSPWheelState.DEPLOYING)
-            {
-                wheelState = KSPWheelState.RETRACTING;
-                animationControl.setToAnimationState(wheelState, false);
-            }
-            else if (wheelState == KSPWheelState.RETRACTED || wheelState == KSPWheelState.RETRACTING)
-            {
-                wheelState = KSPWheelState.DEPLOYING;
-                animationControl.setToAnimationState(wheelState, false);
-            }
-        }
-
+       
         #endregion
 
         #region REGION - Standard KSP/Unity Overrides
-
-        public override string GetInfo()
-        {
-            String data = brakesLocked ? "Landing Leg" : "Wheel";
-            data = data + "\nMin Load: " + minLoadRating;
-            data = data + "\nMax Load: " + maxLoadRating;
-            if (maxSteeringAngle > 0) { data = data + "\nMax Steer: " + maxSteeringAngle; }
-            if (!brakesLocked && maxBrakeTorque > 0) { data = data + "\nMax Brake: " + maxBrakeTorque; }
-            if (maxMotorTorque > 0) { data = data +"\nMax Torque: "+maxMotorTorque; }
-            if (maxMotorTorque > 0 && maxRPM > 0) { data = data + "\nMax Motor RPM: " + maxRPM; }
-            //TODO resource-use stats at max torque
-            return data;
-        }
-
+        
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
@@ -391,32 +233,14 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            Utils.printHierarchy(part.gameObject);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-            wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
             locateTransforms();
-            WheelCollider collider = wheelColliderTransform.GetComponent<WheelCollider>();
-            if (collider != null)
-            {
-                wheelRadius = wheelRadius == -1 ? collider.radius : wheelRadius;
-                wheelMass = wheelMass == -1 ? collider.mass : wheelMass;
-                suspensionTravel = suspensionTravel == -1? collider.suspensionDistance : suspensionTravel;
-                suspensionTarget = suspensionTarget == -1? collider.suspensionSpring.targetPosition : suspensionTarget;
-                suspensionSpring = suspensionSpring == -1 ? collider.suspensionSpring.spring : suspensionSpring ;
-                suspensionDamper = suspensionDamper == -1 ? collider.suspensionSpring.damper : suspensionDamper;
-                maxBrakeTorque = maxBrakeTorque == -1 ? collider.brakeTorque : maxBrakeTorque;
-                maxMotorTorque = maxMotorTorque == -1 ? collider.motorTorque : maxMotorTorque;
-            }
+
             if (loadRating > 0)
             {
                 calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1.0f, out suspensionSpring, out suspensionDamper);
             }
-            GameObject.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
-            if (animationControl != null) { animationControl.setToAnimationState(wheelState, false); }
-            Events["toggleGearEvent"].active = animationControl != null;
-            Actions["toggleGearAction"].active = animationControl != null;
-            Events["repairWheel"].active = wheelState == KSPWheelState.BROKEN;
-            Fields["springMult"].uiControlFlight.onFieldChanged = onSpringUpdated;
-            Fields["dampMult"].uiControlFlight.onFieldChanged = onDamperUpdated;
             BaseField f = Fields["loadRating"];
             f.uiControlEditor.onFieldChanged = f.uiControlFlight.onFieldChanged = onLoadUpdated;
             UI_FloatRange rng = (UI_FloatRange)f.uiControlFlight;
@@ -426,20 +250,16 @@ namespace KSPWheel
                 rng.maxValue = maxLoadRating;
                 rng.stepIncrement = 0.1f;
             }
-            //TODO -- there has got to be an easier way to handle these; perhaps check if the collider is part of the 
-            // model hierarchy for the part/vessel?
+
             if (HighLogic.LoadedSceneIsFlight)
             {
                 Collider[] colliders = part.GetComponentsInChildren<Collider>();
                 int len = colliders.Length;
                 for (int i = 0; i < len; i++)
                 {
-                    // set all colliders in the part to wheel-collider-ignore layer;
-                    // no stock models that I've investigated have colliders on the same object as meshes, they all use separate colliders
-                    colliders[i].gameObject.layer = 26;//wheelcollidersignore
                     // remove stock 'collisionEnhancer' collider from wheels, if present;
                     // these things screw with wheel updates/raycasting, and cause improper collisions on wheels
-                    if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
+                    if (colliders[i].gameObject.name.ToLower().StartsWith("collisionenhancer"))
                     {
                         GameObject.Destroy(colliders[i].gameObject);
                     }
@@ -447,21 +267,8 @@ namespace KSPWheel
             }
             part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
             
-            wheelColliderTransform.Rotate(wheelColliderRotation, Space.Self);
-            wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;
-            
-            if (wheelState == KSPWheelState.BROKEN)
-            {
-                if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
-                if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(true); }
-            }
-            else
-            {
-                if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
-                if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
-            }
-
-            //FlightIntegrator.ActiveVesselFI.GraviticAcceleration;
+            //remove the bounds collider from the model
+            //TODO this should possibly be removed during Start() or after vessel position has been set on reload
             if (!string.IsNullOrEmpty(boundsColliderName))
             {
                 Transform tr = part.transform.FindRecursive(boundsColliderName);
@@ -473,12 +280,7 @@ namespace KSPWheel
 
         public void Start()
         {
-            lightModule = part.GetComponent<ModuleLight>();
-            if (lightModule != null && wheelState == KSPWheelState.DEPLOYED)
-            {
-                lightModule.LightsOn();
-            }
-            statusLightModule = part.GetComponent<ModuleStatusLight>();
+
         }
 
         /// <summary>
@@ -491,7 +293,8 @@ namespace KSPWheel
             //workaround for part rigidbody not being present during start/load or initial fixedupdate ticks
             //TODO can set it up in a coroutine, continuing to yield until rigidbody is present?
             //      is that really a simpler solution? still have  to check for null each fixed-update tick until the wheel is present
-            if (wheel == null)
+            int len;
+            if (wheels == null)
             {
                 Rigidbody rb = part.GetComponent<Rigidbody>();
                 if (rb == null)
@@ -500,41 +303,55 @@ namespace KSPWheel
                 }
                 else
                 {
-                    wheel = wheelColliderTransform.gameObject.AddComponent<KSPWheelCollider>();
-                    wheel.rigidbody = rb;
-                    wheel.radius = wheelRadius;
-                    wheel.mass = wheelMass;
-                    wheel.length = suspensionTravel;
-                    wheel.target = 0f;// suspensionTarget;
-                    wheel.spring = suspensionSpring;
-                    wheel.damper = suspensionDamper;
-                    //wheel.isGrounded = grounded;
-                    wheel.setImpactCallback(onWheelImpact);
-                    wheel.raycastMask = raycastMask;
-                    if (brakesLocked) { wheel.brakeTorque = maxBrakeTorque; }
+                    len = wheelColliderTransforms.Length;
+                    wheels = new KSPWheelCollider[len];
+                    for (int i = 0; i < len; i++)
+                    {
+
+                        KSPWheelCollider wheel = wheelColliderTransforms[i].gameObject.AddComponent<KSPWheelCollider>();
+                        wheels[i] = wheel;
+                        wheel.rigidbody = rb;
+                        wheel.radius = wheelRadius;
+                        wheel.mass = wheelMass;
+                        wheel.length = suspensionTravel;
+                        wheel.target = 0f;// suspensionTarget;
+                        wheel.spring = suspensionSpring;
+                        wheel.damper = suspensionDamper;
+                        //wheel.isGrounded = grounded;
+                        wheel.setImpactCallback(onWheelImpact);
+                        wheel.raycastMask = raycastMask;
+                        if (brakesLocked) { wheel.brakeTorque = maxBrakeTorque; }
+                    }
                 }
             }
-            wheel.radius = wheelRadius;
-            wheel.length = suspensionTravel;
-            spr = wheel.spring;
-            dmp = wheel.damper;
+            len = wheels.Length;
+            for (int i = 0; i < len; i++)
+            {
+                wheels[i].radius = wheelRadius;
+                wheels[i].length = suspensionTravel;
+            }
             if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }            
             sampleInput();
             //update the wheels input state from current keyboard input
             //Update the wheel physics state as long as it is not broken or fully retracted
             //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
+            float rpmAvg = 0;
             if (wheelState != KSPWheelState.BROKEN && wheelState != KSPWheelState.RETRACTED)
             {
-                //wheel.gravityForce = FlightIntegrator.ActiveVesselFI.geeForce;
-                wheel.updateWheel();
-            }            
-            fLong = wheel.longitudinalForce;
-            fLat = wheel.lateralForce;
-            rpm = wheel.rpm;
-            steer = wheel.steeringAngle;
-            grounded = wheel.isGrounded;
-            comp = wheel.compressionDistance;
-            colliderHit = grounded ? wheel.contactColliderHit.gameObject.name+" : "+wheel.contactColliderHit.gameObject.layer : "None";
+                
+                for (int i = 0; i < len; i++)
+                {
+                    wheels[i].gravityVector = vessel.gravityForPos;
+                    wheels[i].updateWheel();
+                    rpmAvg += wheels[i].rpm;
+                }
+                rpmAvg /= wheels.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    wheels[i].rpm = rpmAvg;
+                }
+            }
+            rpm = rpmAvg;
             updateLandedState();
         }
 
@@ -543,60 +360,16 @@ namespace KSPWheel
         /// </summary>
         public void Update()
         {
-            if (animationControl != null) { animationControl.updateAnimationState(); }
-            if (!FlightGlobals.ready || !FlightDriver.fetch || wheel==null) { return; }
+            if (!FlightGlobals.ready || !FlightDriver.fetch || wheels==null) { return; }
             //TODO block/reset input state when not deployed, re-orient wheels to default (zero steering rotation) when retracted/ing?
-            if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }            
-            if (suspensionMesh != null)
-            {
-                float offset = wheel.compressionDistance + suspensionOffset;
-                if (defaultCompressed)
-                {
-                    offset -= suspensionTravel;
-                }
-                float scale = suspensionMesh.parent == null ? 1f : suspensionMesh.parent.localScale.y;
-                Vector3 pos = suspensionMesh.localPosition;
-                if (suspensionAxis.x != 0)
-                {
-                    pos.x = (suspensionExtPos + offset) * suspensionAxis.x / scale;
-                }
-                else if (suspensionAxis.y != 0)
-                {
-                    pos.y = (suspensionExtPos + offset) * suspensionAxis.y / scale;
-                }
-                else if (suspensionAxis.z !=0)
-                {
-                    pos.z = (suspensionExtPos + offset) * suspensionAxis.z / scale;
-                }
-                suspensionMesh.localPosition = pos;
-            }
-            if (steeringMesh != null)
-            {
-                steeringMesh.localRotation = Quaternion.Euler(steeringAxis * wheel.steeringAngle);
-            }
+            if (!HighLogic.LoadedSceneIsFlight || wheelState==KSPWheelState.BROKEN || wheelState==KSPWheelState.RETRACTED) { return; }
             if (wheelPivotTransforms != null && wheelPivotTransforms.Length>0)
             {
                 int len = wheelPivotTransforms.Length;
                 for (int i = 0; i < len; i++)
                 {
-                    wheelPivotTransforms[i].Rotate(wheel.perFrameRotation, 0, 0, Space.Self);
+                    wheelPivotTransforms[i].Rotate(0, 0, wheels[0].perFrameRotation, Space.Self);
                 }
-            }
-            if (statusLightModule != null)
-            {
-                statusLightModule.SetStatus(brakeInput != 0);
-            }
-            if (bogeyMesh != null)
-            {
-                if (wheel.isGrounded)//orient foot to ground
-                {
-                    Vector3 normal = wheel.contactNormal;
-                    float dot = Vector3.Dot(bogeyUpAxis, normal);
-                }
-                else
-                {
-                    //default orientation? which would be?
-                }                
             }
         }
 
@@ -607,8 +380,22 @@ namespace KSPWheel
         //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow
         private void updateLandedState()
         {
-            bool grounded = wheel.isGrounded;
+            grounded = false;
+            int len = wheels.Length;
+            for (int i = 0; i < len; i++)
+            {
+                if (wheels[i].isGrounded)
+                {
+                    grounded = true;
+                    colliderHit = wheels[i].contactColliderHit.gameObject.name + " : " + wheels[i].contactColliderHit.gameObject.layer;
+                    break;
+                }
+            }
             part.GroundContact = grounded;
+            if (!grounded)
+            {
+                colliderHit = "None";
+            }
             vessel.checkLanded();
         }
         
@@ -657,33 +444,25 @@ namespace KSPWheel
                 bI = Mathf.Lerp(brakeInput, bI, brakeResponse * Time.deltaTime);
             }
 
-            float rpm = wheel.rpm;
-            if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
-            else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
-
+            int len = wheels.Length;
+            for (int i = 0; i < len; i++)
+            {
+                KSPWheelCollider wheel = wheels[i];
+                float rpm = wheel.rpm;
+                if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
+                else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
+            }
+            
             fwdInput = fI * updateResourceDrain(Mathf.Abs(fI));
             rotInput = rI;
             brakeInput = bI;
-            wheel.motorTorque = maxMotorTorque * fwdInput;
-            wheel.steeringAngle = maxSteeringAngle * rotInput;
-            wheel.brakeTorque = maxBrakeTorque * brakeInput;
-        }
-
-        /// <summary>
-        /// Callback from animationControl for when an animation transitions from one state to another
-        /// </summary>
-        /// <param name="state"></param>
-        public void onAnimationStateChanged(KSPWheelState state)
-        {
-            wheelState = state;
-            if (state == KSPWheelState.RETRACTED)
+            
+            for (int i = 0; i < len; i++)
             {
-                //TODO reset suspension and steering transforms to neutral?
-                if (lightModule != null) { lightModule.LightsOff(); }
-            }
-            else if (state == KSPWheelState.DEPLOYED)
-            {
-                if (lightModule != null) { lightModule.LightsOn(); }
+                KSPWheelCollider wheel = wheels[i];
+                wheel.motorTorque = maxMotorTorque * fwdInput;
+                wheel.steeringAngle = maxSteeringAngle * rotInput;
+                wheel.brakeTorque = maxBrakeTorque * brakeInput;
             }
         }
 
@@ -721,32 +500,35 @@ namespace KSPWheel
         /// </summary>
         private void locateTransforms()
         {
+            String[] wcNames = wheelColliderName.Split(',');
+            List<Transform> wcTrs = new List<Transform>();
+            int len = wcNames.Length;
+            for (int i = 0; i < len; i++)
+            {
+                Transform tr = part.transform.FindRecursive(wcNames[i].Trim());
+                if (tr != null)
+                {
+                    wcTrs.Add(tr);
+                }
+                else { MonoBehaviour.print("ERROR: Coudl not locate wheel collider transform by name: " + wcNames[i]); }
+                WheelCollider wc = tr.GetComponent<WheelCollider>();
+                if (wc != null)
+                {
+                    GameObject.Destroy(wc);
+                }
+            }
+            this.wheelColliderTransforms = wcTrs.ToArray();
+
             String[] pivotNames = wheelPivotName.Split(',');
             List<Transform> transforms = new List<Transform>();
-            int len = pivotNames.Length;
+            len = pivotNames.Length;
             for (int i = 0; i < len; i++)
             {
                 part.transform.FindRecursiveMulti(pivotNames[i].Trim(), transforms);
             }
             wheelPivotTransforms = transforms.ToArray();
-            if (!String.IsNullOrEmpty(wheelName)) { wheelMesh = part.transform.FindRecursive(wheelName); }
-            if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
-            if (!String.IsNullOrEmpty(suspensionName)) { suspensionMesh = part.transform.FindRecursive(suspensionName); }
-            if (!String.IsNullOrEmpty(steeringName)) { steeringMesh = part.transform.FindRecursive(steeringName); }
-            if (!String.IsNullOrEmpty(animationName)) { animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, wheelState); }
-            if (!String.IsNullOrEmpty(bogeyName)) { bogeyMesh = part.transform.FindRecursive(bogeyName); }
+            foreach (Transform tr in wheelPivotTransforms) { MonoBehaviour.print("PivotTransform: " + tr); }
         }
-
-        //debug code...
-        //public void OnCollisionEnter(Collision c)
-        //{
-        //    MonoBehaviour.print("OCE: " + c.collider);
-        //    int len = c.contacts.Length;
-        //    for (int i = 0; i < len; i++)
-        //    {
-        //        MonoBehaviour.print("C: " + c.contacts[i].thisCollider + " :: " + c.contacts[i].otherCollider);
-        //    }
-        //}
 
         #endregion
 

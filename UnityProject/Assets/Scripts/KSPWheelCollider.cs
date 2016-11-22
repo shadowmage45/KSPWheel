@@ -8,25 +8,11 @@ namespace KSPWheel
     public class KSPWheelCollider : MonoBehaviour
     {
 
-        #region REGION - Public Accessible values
-
-        /// <summary>
-        /// The game object this script should be attached to / affect, set from constructor
-        /// </summary>
-        private GameObject wheel;
-
-        // TODO really should be read-only, being grabbed from wheel game object when collider is initialized
-        // but silly KSP doesn't have RB's on the PART during MODULE initialization; needs to be delayed until first fixed update at least?
-        /// <summary>
-        /// The rigidbody that this wheel will apply forces to and sample velocity from, set from constructor
-        /// </summary>
-        public Rigidbody rigidBody;
-
-        #endregion ENDREGION - Public Accessible values
-
         #region REGION - Private variables
 
-        //externally set values
+        //private vars with either external get/set methods, or internal calculated fields from other fields get/set methods
+        private GameObject wheel;
+        private Rigidbody rigidBody;
         private float wheelMass = 1f;
         private float wheelRadius = 0.5f;
         private float suspensionLength = 1f;
@@ -43,6 +29,24 @@ namespace KSPWheel
         private int currentRaycastMask = ~(1 << 26);//default cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask (26 = KSP WheelColliderIgnore layer)
         private KSPWheelFrictionType currentFrictionModel = KSPWheelFrictionType.STANDARD;
         private KSPWheelSweepType currentSweepType = KSPWheelSweepType.RAY;
+        private KSPWheelFrictionCurve fwdFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);//current forward friction curve
+        private KSPWheelFrictionCurve sideFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);//current sideways friction curve
+        private bool automaticUpdates = false;
+        //set from get/set method
+        private Vector3 gravity = new Vector3(0, -9.81f, 0);
+        //calced when the gravity vector is set
+        private Vector3 gNorm = new Vector3(0, -1, 0);
+        private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity
+        private Action<KSPWheelCollider> preUpdateCallback;//if automatic updates are enabled, this field may optionally be populated with a pre-update callback method; will be called directly prior to the wheels internal update code being processed
+        private Action<KSPWheelCollider> postUpdateCallback;//if automatic updates are enabled, this field may optionally be populated with a post-update callback method; will be called directly after the wheels internal update code processing.
+
+        //private vars with external get methods (cannot be set, for data viewing/debug purposes only)
+        private bool grounded = false;
+
+        //cached internal utility vars
+        private float inertiaInverse;//cached inertia inverse used to eliminate division operations from per-tick update code
+        private float radiusInverse;//cached radius inverse used to eliminate division operations from per-tick update code
+        private float massInverse;//cached mass inverse used to eliminate division operations from per-tick update code
 
         //sticky-friction vars;
         //TODO -- add get/set methods for these to expose them for configuration
@@ -62,7 +66,7 @@ namespace KSPWheel
         private float vSpring;//linear velocity of spring in m/s, derived from prevCompression - currentCompression along suspension axis
         private float fDamp;//force exerted by the damper this physics frame, in newtons
 
-        private bool grounded = false;
+        //wheel axis directions are calculated each frame during update processing
         private Vector3 wheelUp;
         private Vector3 wheelForward;
         private Vector3 wheelRight;
@@ -76,30 +80,24 @@ namespace KSPWheel
         private Vector3 hitNormal;
         private Collider hitCollider;
 
-        //cached internal utility vars
-        private float inertiaInverse;//cached inertia inverse used to eliminate division operations from per-tick update code
-        private float radiusInverse;//cached radius inverse used to eliminate division operations from per-tick update code
-        private float massInverse;//cached mass inverse used to eliminate division operations from per-tick update code
-
         //run-time references to various objects
         private ConfigurableJoint stickyJoint;//the joint used for sticky friction
-        private Action<Vector3> onImpactCallback;//simple blind callback for when the wheel changes from !grounded to grounded, the input variable is the wheel-local impact velocity
 
-        private KSPWheelFrictionCurve fwdFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);//current forward friction curve
-        private KSPWheelFrictionCurve sideFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);//current sideways friction curve
-
-        private bool automaticUpdates = false;
-        
         #endregion ENDREGION - Private variables
 
-        #region REGION - Public accessible methods, Constructor, API get/set methods
-        
-        public void FixedUpdate()
-        {
-            if (!automaticUpdates) { return; }
-            this.updateWheel();
-        }
+        #region REGION - Public accessible API get/set methods
 
+        //get-set equipped field defs
+
+        /// <summary>
+        /// Get/Set the rigidbody that the WheelCollider applies forces to.  MUST be set manually after WheelCollider component is added to a GameObject.
+        /// </summary>
+        public Rigidbody rigidbody
+        {
+            get { return rigidBody; }
+            set { rigidBody = value; }
+        }
+        
         /// <summary>
         /// Get/Set the current spring stiffness value.  This is the configurable value that influences the 'springForce' used in suspension calculations
         /// </summary>
@@ -245,6 +243,71 @@ namespace KSPWheel
         }
 
         /// <summary>
+        /// Get/Set the gravity vector that should be used during calculations.  MUST be updated every frame that gravity differs from the previous frame or undesired and inconsistent functioning will result.
+        /// </summary>
+        public Vector3 gravityVector
+        {
+            get { return gravity; }
+            set { gravity = value; gNorm = gravity.normalized; }
+        }
+        
+        /// <summary>
+        /// Get/Set the suspension sweep type -- Raycast, Spherecast, or Capsulecast (enum value)
+        /// </summary>
+        public KSPWheelSweepType sweepType
+        {
+            get { return this.currentSweepType; }
+            set { currentSweepType = value; }
+        }
+
+        /// <summary>
+        /// Get/Set the friction model to be used -- currently only Standard is supported.
+        /// </summary>
+        public KSPWheelFrictionType frictionModel
+        {
+            get { return currentFrictionModel; }
+            set { currentFrictionModel = value; }
+        }
+
+        /// <summary>
+        /// Get/Set if the WheelCollider should use its own FixedUpdate function or rely on external calling of the update method.
+        /// </summary>
+        public bool autoUpdateEnabled
+        {
+            get { return automaticUpdates; }
+            set { automaticUpdates = value; }
+        }
+
+        /// <summary>
+        /// Seat the reference to the wheel-impact callback.  This method will be called when the wheel first contacts the surface, passing in the wheel-local impact velocity (impact force is unknown)
+        /// </summary>
+        /// <param name="callback"></param>
+        public void setImpactCallback(Action<Vector3> callback)
+        {
+            onImpactCallback = callback;
+        }
+
+        /// <summary>
+        /// Set the pre-update callback method to be called when automatic updates are used
+        /// </summary>
+        /// <param name="callback"></param>
+        public void setPreUpdateCallback(Action<KSPWheelCollider> callback)
+        {
+            preUpdateCallback = callback;
+        }
+
+        /// <summary>
+        /// Set the post-update callback method to be called when automatic updates are used
+        /// </summary>
+        /// <param name="callback"></param>
+        public void setPostUpdateCallback(Action<KSPWheelCollider> callback)
+        {
+            postUpdateCallback = callback;
+        }
+
+        //below here are Get-only method defs
+
+        /// <summary>
         /// Return true/false if tire was grounded on the last suspension check
         /// </summary>
         public bool isGrounded
@@ -279,16 +342,7 @@ namespace KSPWheel
         {
             get { return currentSuspensionCompression; }
         }
-
-        /// <summary>
-        /// Seat the reference to the wheel-impact callback.  This method will be called when the wheel first contacts the surface, passing in the wheel-local impact velocity (impact force is unknown)
-        /// </summary>
-        /// <param name="callback"></param>
-        public void setImpactCallback(Action<Vector3> callback)
-        {
-            onImpactCallback = callback;
-        }
-
+        
         /// <summary>
         /// Get/Set the current raycast layer mask to be used by the wheel-collider ray/sphere-casting.<para/>
         /// This determines which colliders will be checked against for suspension positioning/spring force calculation.
@@ -360,31 +414,40 @@ namespace KSPWheel
             get { return sLat; }
         }
 
+        /// <summary>
+        /// Returns the last calculated wheel-local velocity (velocity of the wheel, in the wheels' frame of reference)
+        /// </summary>
         public Vector3 wheelLocalVelocity
         {
             get { return localVelocity; }
         }
 
+        /// <summary>
+        /// Returns the last raycast collider hit.
+        /// </summary>
         public Collider contactColliderHit
         {
             get { return hitCollider; }
         }
 
+        /// <summary>
+        /// Returns the surface normal of the raycast collider that was hit
+        /// </summary>
         public Vector3 contactNormal
         {
             get { return hitNormal; }
         }
+        
+        #endregion ENDREGION - Public accessible methods, API get/set methods
 
-        public KSPWheelSweepType sweepType
-        {
-            get { return this.currentSweepType; }
-            set { currentSweepType = value; }
-        }
+        #region REGION - Update methods -- internal, external
 
-        public KSPWheelFrictionType frictionModel
+        public void FixedUpdate()
         {
-            get { return currentFrictionModel; }
-            set { currentFrictionModel = value; }
+            if (!automaticUpdates) { return; }
+            if (preUpdateCallback != null) { preUpdateCallback.Invoke(this); }
+            this.updateWheel();
+            if (postUpdateCallback != null) { postUpdateCallback.Invoke(this); }
         }
 
         /// <summary>
@@ -451,7 +514,7 @@ namespace KSPWheel
             updateStickyJoint();
         }
 
-        #endregion ENDREGION - Public accessible methods, API get/set methods
+        #endregion ENDREGION - Update methods -- internal, external
 
         #region REGION - Private/internal update methods
 
@@ -459,8 +522,6 @@ namespace KSPWheel
 
         private float prevSpring = 0f;
 
-        public Vector3 gravity = new Vector3(0, -9.81f, 0);
-        public Vector3 gNorm = new Vector3(0, -1, 0);
 
         /// <summary>
         /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.

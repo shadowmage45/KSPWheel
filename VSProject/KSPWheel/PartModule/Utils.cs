@@ -24,21 +24,19 @@ namespace KSPWheel
             return null;
         }
 
+        public static Transform[] FindChildren(this Transform transform, String name)
+        {
+            List<Transform> trs = new List<Transform>();
+            transform.FindRecursiveMulti(name, trs);
+            return trs.ToArray();
+        }
+
         public static void FindRecursiveMulti(this Transform transform, String name, List<Transform> addTo)
         {
             if (transform.name == name) { addTo.Add(transform); }
             foreach (Transform child in transform)
             {
                 FindRecursiveMulti(child, name, addTo);
-            }
-        }
-
-        private static void locateTransformRecurse(Transform tr, String name, List<Transform> addTo)
-        {
-            if (tr.name == name) { addTo.Add(tr); }
-            foreach (Transform child in tr)
-            {
-                locateTransformRecurse(child, name, addTo);
             }
         }
         
@@ -266,5 +264,25 @@ namespace KSPWheel
             }
             return curve;
         }
+
+        public static void printHierarchy(GameObject go)
+        {
+            printHierarchy(go.transform, "");
+        }
+
+        public static void printHierarchy(Transform tr, string prefix)
+        {
+            prefix = prefix + "  ";
+            MonoBehaviour.print(prefix+"GO: "+tr.gameObject + " -- scale: "+tr.localScale+" : "+tr.lossyScale);
+            foreach (UnityEngine.Component c in tr.gameObject.GetComponents<UnityEngine.Component>())
+            {
+                MonoBehaviour.print(prefix + "CP: " + c);
+            }
+            foreach (Transform trc in tr)
+            {
+                printHierarchy(trc, prefix);
+            }
+        }
+
     }
 }
