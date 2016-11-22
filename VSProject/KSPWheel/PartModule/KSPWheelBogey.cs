@@ -18,6 +18,9 @@ namespace KSPWheel
         [KSPField]
         public Vector3 bogeyFwdAxis = Vector3.forward;
 
+        [KSPField]
+        public Vector3 bogeyRotAxis = Vector3.left;
+
         private Transform bogeyTransform;
 
         public override void OnStart(StartState state)

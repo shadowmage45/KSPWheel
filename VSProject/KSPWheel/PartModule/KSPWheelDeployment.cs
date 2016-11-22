@@ -9,16 +9,14 @@ namespace KSPWheel
     public class KSPWheelDeployment : KSPWheelSubmodule
     {
 
-        #region REGION - Animation handling
-
         [KSPField]
         public string animationName = String.Empty;
+
         [KSPField]
         public float animationSpeed = 1;
+
         [KSPField]
         public int animationLayer = 1;
-
-        #endregion
 
         private WheelAnimationHandler animationControl;
         private ModuleLight lightModule;
@@ -36,12 +34,14 @@ namespace KSPWheel
             toggleDeploy();
         }
 
-        private void deploy()
+        [KSPEvent(guiName = "Deploy Gear", guiActive = true, guiActiveEditor = true)]
+        public void deploy()
         {
             if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING) { toggleDeploy(); }
         }
 
-        private void retract()
+        [KSPEvent(guiName = "Retract Gear", guiActive = true, guiActiveEditor = true)]
+        public void retract()
         {
             if (controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING) { toggleDeploy(); }
         }
@@ -68,24 +68,21 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            Events["toggleGearEvent"].active = animationControl != null;
-            Actions["toggleGearAction"].active = animationControl != null;
-        }
-
-        public void Start()
-        {
-            animationControl.setToAnimationState(controller.wheelState, false);
-            lightModule = part.GetComponent<ModuleLight>();
-            if (lightModule != null && controller.wheelState == KSPWheelState.DEPLOYED)
-            {
-                lightModule.LightsOn();
-            }
         }
 
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
             animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState);
+            Events[nameof(deploy)].active = controller.wheelState == KSPWheelState.RETRACTED;
+            Events[nameof(retract)].active = controller.wheelState == KSPWheelState.DEPLOYED;
+            animationControl.setToAnimationState(controller.wheelState, false);
+
+            lightModule = part.GetComponent<ModuleLight>();
+            if (lightModule != null && controller.wheelState == KSPWheelState.DEPLOYED)
+            {
+                lightModule.LightsOn();
+            }
         }
 
         internal override void preWheelFrameUpdate()
@@ -100,7 +97,7 @@ namespace KSPWheel
         /// <param name="state"></param>
         public void onAnimationStateChanged(KSPWheelState state)
         {
-            wheelState = state;
+            controller.wheelState = state;
             if (state == KSPWheelState.RETRACTED)
             {
                 //TODO reset suspension and steering transforms to neutral?
