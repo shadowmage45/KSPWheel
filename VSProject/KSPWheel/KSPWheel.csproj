@@ -85,15 +85,12 @@
     <Compile Include="PartModule\KSPWheelDeployment.cs" />
     <Compile Include="PartModule\KSPWheelMotor.cs" />
     <Compile Include="PartModule\KSPWheelAnimationState.cs" />
-    <Compile Include="PartModule\KSPWheelModuleKFTrack.cs" />
-    <Compile Include="PartModule\KSPWheelModuleKF.cs" />
     <Compile Include="PartModule\KSPWheelState.cs" />
     <Compile Include="PartModule\KSPWheelSteering.cs" />
     <Compile Include="PartModule\KSPWheelSubmodule.cs" />
     <Compile Include="PartModule\KSPWheelSuspension.cs" />
     <Compile Include="PartModule\Utils.cs" />
     <Compile Include="PartModule\WheelAnimationHandler.cs" />
-    <Compile Include="PartModule\KSPWheelModule.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
