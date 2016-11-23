@@ -71,7 +71,7 @@ namespace KSPWheel
         private Vector3 wheelForward;
         private Vector3 wheelRight;
         private Vector3 localVelocity;
-        private Vector3 localForce;
+        private Vector3 localForce;//the wheel(contact-patch?) local forces; x=lat, y=spring, z=long
         private float vWheel;
         private float vWheelDelta;
         private float sLong;
@@ -925,8 +925,9 @@ namespace KSPWheel
             // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame
             // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
             localForce.x = fLatMax;
-            // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero; the 2x multiplier is just because it helped with response but didn't induce oscillations; higher multipliers can
-            float fMult = 0.8f;
+            // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero
+            // TODO - may need to adjust the multiplier when arresting downward motion so as to not induce jitter, as at times it may be greater than the actual sprung mass
+            float fMult = 1f;
             if (localForce.x > Mathf.Abs(localVelocity.x) * localForce.y * fMult) { localForce.x = Mathf.Abs(localVelocity.x) * localForce.y * fMult; }
             // if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
             localForce.x *= -Mathf.Sign(localVelocity.x);// sign it opposite to the current vLat
