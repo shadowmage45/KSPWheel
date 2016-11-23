@@ -33,17 +33,11 @@ namespace KSPWheel
 
         }
 
-        public override void OnStart(StartState state)
-        {
-            base.OnStart(state);
-            if (!String.IsNullOrEmpty(wheelName)) { wheelMesh = part.transform.FindRecursive(wheelName); }
-            if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
-            //TODO start co-routine to wait for wheel to be populated, and then add an OnImpact callback
-        }
-
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
+            if (!String.IsNullOrEmpty(wheelName)) { wheelMesh = part.transform.FindRecursive(wheelName); }
+            if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
             KSPWheelState wheelState = controller.wheelState;
             Events["repairWheel"].active = wheelState == KSPWheelState.BROKEN;
             if (wheelState == KSPWheelState.BROKEN)
