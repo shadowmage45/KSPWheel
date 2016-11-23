@@ -103,11 +103,12 @@ namespace KSPWheel
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
+        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
         private Transform wheelColliderTransform;//the transform that the wheel-collider is attached to
         private Transform[] wheelPivotTransforms;//
         private KSPWheelCollider wheel;
+        private GameObject bumpStopCollider;
         private GameObject debugHitObject;
-        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();        
 
         #endregion
 
@@ -207,6 +208,17 @@ namespace KSPWheel
             {
                 GameObject.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
             }
+            bumpStopCollider = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
+            bumpStopCollider.layer = 26;
+            bumpStopCollider.transform.NestToParent(wheelColliderTransform);
+            SphereCollider sc = bumpStopCollider.AddComponent<SphereCollider>();
+            sc.center = Vector3.zero;
+            sc.radius = wheelRadius;
+            PhysicMaterial mat = new PhysicMaterial("TEST");
+            mat.bounciness = 0.0f;
+            mat.dynamicFriction = 0;
+            mat.staticFriction = 0;
+            sc.material = mat;
 
             if (loadRating > 0)
             {
@@ -235,7 +247,7 @@ namespace KSPWheel
                 {
                     // set all colliders in the part to wheel-collider-ignore layer;
                     // no stock models that I've investigated have colliders on the same object as meshes, they all use separate colliders
-                    colliders[i].gameObject.layer = 26;//wheelcollidersignore
+                    //colliders[i].gameObject.layer = 26;//wheelcollidersignore
                     // remove stock 'collisionEnhancer' collider from wheels, if present;
                     // these things screw with wheel updates/raycasting, and cause improper collisions on wheels
                     if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
@@ -252,7 +264,7 @@ namespace KSPWheel
             part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
             
             wheelColliderTransform.Rotate(wheelColliderRotation, Space.Self);
-            wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;            
+            wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;
         }
 
         /// <summary>
@@ -270,6 +282,7 @@ namespace KSPWheel
             if (wheel == null)
             {
                 Rigidbody rb = part.GetComponent<Rigidbody>();
+                if (part.parent != null) { rb = part.parent.GetComponent<Rigidbody>(); }
                 if (rb == null)
                 {
                     return;

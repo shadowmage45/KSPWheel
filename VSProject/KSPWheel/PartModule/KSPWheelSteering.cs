@@ -45,12 +45,14 @@ namespace KSPWheel
         public Vector3 steeringAxis = Vector3.up;
         
         private Transform steeringTransform;
+        private Quaternion defaultRotation;
         private float rotInput;
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             steeringTransform = part.transform.FindRecursive(steeringName);
+            defaultRotation = steeringTransform.localRotation;
         }
 
         internal override void preWheelPhysicsUpdate()
@@ -72,7 +74,8 @@ namespace KSPWheel
         {
             if (!HighLogic.LoadedSceneIsFlight || steeringTransform == null) { return; }
             if (wheel == null) { return; }
-            steeringTransform.localRotation = Quaternion.Euler(steeringAxis * wheel.steeringAngle);
+            steeringTransform.localRotation = defaultRotation;
+            steeringTransform.Rotate(wheel.steeringAngle * steeringAxis, Space.Self);
         }
 
     }

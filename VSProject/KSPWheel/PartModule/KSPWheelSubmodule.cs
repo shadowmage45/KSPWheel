@@ -32,7 +32,10 @@ namespace KSPWheel
 
         public virtual void OnDestroy()
         {
-            controller.removeSubmodule(this);
+            if (controller != null)
+            {
+                controller.removeSubmodule(this);
+            }
         }
 
         internal void onWheelCreated(Transform transform, KSPWheelCollider collider)
