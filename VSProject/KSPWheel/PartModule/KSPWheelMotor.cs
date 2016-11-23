@@ -30,7 +30,8 @@ namespace KSPWheel
         [KSPField]
         public bool tankSteering = false;
 
-        [KSPField]
+        [KSPField(guiName = "Invert Steering", guiActive = false, guiActiveEditor = false, isPersistant = true),
+         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true)]
         public bool invertSteering = false;
 
         /// <summary>
@@ -55,6 +56,11 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            if (tankSteering)
+            {
+                Fields[nameof(invertSteering)].guiActive = true;
+                Fields[nameof(invertSteering)].guiActiveEditor = true;
+            }
         }
 
         internal override void preWheelPhysicsUpdate()
