@@ -28,22 +28,33 @@ namespace KSPWheel
         /// If true the steering will be locked to zero and will not respond to steering input.
         /// </summary>
         [KSPField(guiName = "Steering Lock", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true)]
+         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool steeringLocked;
 
         /// <summary>
         /// If true, steering will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
         /// </summary>
         [KSPField(guiName = "Invert Steering", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true)]
+         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool invertSteering = false;
+
+
+        [KSPField(guiName = "latFrict", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+        public float steeringBias = 0f;
         
         /// <summary>
         /// The local axis of the steering transform to rotate around.  Defaults to 0, 1, 0 -- rotate around y+ axis, with z+ facing forward.
         /// </summary>
         [KSPField]
         public Vector3 steeringAxis = Vector3.up;
-        
+
+        [KSPField]
+        public bool useSteeringCurve = false;
+
+        [KSPField]
+        public FloatCurve steeringCurve;
+
         private Transform steeringTransform;
         private Quaternion defaultRotation;
         private float rotInput;
@@ -53,6 +64,12 @@ namespace KSPWheel
             base.OnStart(state);
             steeringTransform = part.transform.FindRecursive(steeringName);
             defaultRotation = steeringTransform.localRotation;
+            if(steeringCurve== null)
+            {
+                steeringCurve = new FloatCurve();
+                steeringCurve.Add(0, 1, 0, 0);
+                steeringCurve.Add(1, 1, 0, 0);
+            }
         }
 
         internal override void preWheelPhysicsUpdate()
@@ -67,6 +84,12 @@ namespace KSPWheel
                 rI = Mathf.Lerp(rotInput, rI, steeringResponse * Time.deltaTime);
             }
             rotInput = rI;
+            if (useSteeringCurve)
+            {
+                float speed = wheel.wheelLocalVelocity.magnitude;
+                float mult = steeringCurve.Evaluate(speed);
+                rI *= mult;
+            }
             wheel.steeringAngle = maxSteeringAngle * rotInput;
         }
 
