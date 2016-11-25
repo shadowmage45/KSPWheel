@@ -48,12 +48,6 @@ namespace KSPWheel
         [KSPField]
         public float wheelColliderOffset = 0f;
         
-        /// <summary>
-        /// An offset to the rotation of the wheel collider, in euler angles
-        /// </summary>
-        [KSPField]
-        public Vector3 wheelColliderRotation = Vector3.zero;
-
         [KSPField]
         public float wheelRadius = 0.25f;
 
@@ -93,6 +87,9 @@ namespace KSPWheel
         [KSPField(guiName = "Auto-Tune", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool autoTuneSuspension = false;
+
+        [KSPField]
+        public string boundsColliderName = String.Empty;
 
         #endregion
 
@@ -205,19 +202,13 @@ namespace KSPWheel
             field = Fields[nameof(suspensionTarget)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
 
-            //TODO -- there has got to be an easier way to handle these; perhaps check if the collider is part of the 
-            // model hierarchy for the part/vessel?
+            //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
             {
                 Collider[] colliders = part.GetComponentsInChildren<Collider>();
                 int len = colliders.Length;
                 for (int i = 0; i < len; i++)
                 {
-                    // set all colliders in the part to wheel-collider-ignore layer;
-                    // no stock models that I've investigated have colliders on the same object as meshes, they all use separate colliders
-                    //colliders[i].gameObject.layer = 26;//wheelcollidersignore
-                    // remove stock 'collisionEnhancer' collider from wheels, if present;
-                    // these things screw with wheel updates/raycasting, and cause improper collisions on wheels
                     if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
                     {
                         GameObject.Destroy(colliders[i].gameObject);
@@ -225,8 +216,18 @@ namespace KSPWheel
                 }
             }
             part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
+
+            //destroy bounds collider, if specified and present (KF wheels)
+            if (!string.IsNullOrEmpty(boundsColliderName))
+            {
+                Transform boundsCollider = part.transform.FindRecursive(boundsColliderName);
+                if (boundsCollider != null)
+                {
+                    GameObject.Destroy(boundsCollider.gameObject);
+                }
+            }
             
-            wheelColliderTransform.Rotate(wheelColliderRotation, Space.Self);
+            //offset to wheel collider for stock wheels
             wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;
         }
 
@@ -307,7 +308,7 @@ namespace KSPWheel
                 len = wheelPivotTransforms.Length;
                 for (int i = 0; i < len; i++)
                 {
-                    wheelPivotTransforms[i].Rotate(wheel.perFrameRotation, 0, 0, Space.Self);
+                    wheelPivotTransforms[i].Rotate(wheelPivotAxis * wheel.perFrameRotation, Space.Self);
                 }
             }
         }
