@@ -20,19 +20,6 @@ namespace KSPWheel
         public string wheelColliderName;
 
         /// <summary>
-        /// Name of the transform that should be rotated around its specified axis for wheel rotation<para/>
-        /// May be null if no transform should be rotated.  Will accept CSV list if multiple wheels should be animated.
-        /// </summary>
-        [KSPField]
-        public string wheelPivotName;
-
-        /// <summary>
-        /// The axis on which to rotate the wheel pivot transform.  Defaults to X-axis.
-        /// </summary>
-        [KSPField]
-        public Vector3 wheelPivotAxis = Vector3.left;
-
-        /// <summary>
         /// The raycast mask to use for the wheel-collider suspension sweep. <para/>
         /// By default ignore layers 26 and 10 (wheelCollidersIgnore & scaledScenery)
         /// </summary>
@@ -101,9 +88,6 @@ namespace KSPWheel
         [KSPField(isPersistant = true)]
         public bool grounded = false;
 
-        [KSPField]
-        public bool defaultCompressed = false;
-
         #endregion
 
         #region REGION - Private working/cached variables
@@ -112,7 +96,6 @@ namespace KSPWheel
 
         private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
         private Transform wheelColliderTransform;//the transform that the wheel-collider is attached to
-        private Transform[] wheelPivotTransforms;//
         private KSPWheelCollider wheel;
         private GameObject bumpStopGameObject;
         private SphereCollider bumpStopCollider;
@@ -159,7 +142,7 @@ namespace KSPWheel
             base.OnStart(state);
             //Utils.printHierarchy(part.gameObject);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-            locateTransforms();
+            wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
 
             WheelCollider collider = wheelColliderTransform.GetComponent<WheelCollider>();
             if (collider != null)
@@ -295,21 +278,10 @@ namespace KSPWheel
         public void Update()
         {
             if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch || wheel == null) { return; }
-
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
                 subModules[i].preWheelFrameUpdate();
-            }
-
-            //TODO block/reset input state when not deployed, re-orient wheels to default (zero steering rotation) when retracted/ing?
-            if (wheelPivotTransforms != null && wheelPivotTransforms.Length>0)
-            {
-                len = wheelPivotTransforms.Length;
-                for (int i = 0; i < len; i++)
-                {
-                    wheelPivotTransforms[i].Rotate(wheelPivotAxis * wheel.perFrameRotation, Space.Self);
-                }
             }
         }
 
@@ -387,23 +359,6 @@ namespace KSPWheel
             float cd = 2 * load * o;//critical damping coefficient
             //cd = 2 * Mathf.Sqrt(k * load);
             damper = cd * dampRatio;
-        }
-
-        /// <summary>
-        /// Locate the wheel-pivot transforms from the list of wheel-pivot names (may be singular or CSV list), will find multiple same-named transforms
-        /// ALL of them must rotate on the same axis (x-axis by default, currently not configurable)
-        /// </summary>
-        private void locateTransforms()
-        {
-            wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
-            String[] pivotNames = wheelPivotName.Split(',');
-            List<Transform> transforms = new List<Transform>();
-            int len = pivotNames.Length;
-            for (int i = 0; i < len; i++)
-            {
-                part.transform.FindRecursiveMulti(pivotNames[i].Trim(), transforms);
-            }
-            wheelPivotTransforms = transforms.ToArray();
         }
 
         #endregion
