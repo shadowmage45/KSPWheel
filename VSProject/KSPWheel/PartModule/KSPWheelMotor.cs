@@ -31,25 +31,39 @@ namespace KSPWheel
         public bool tankSteering = false;
 
         [KSPField(guiName = "Invert Steering", guiActive = false, guiActiveEditor = false, isPersistant = true),
-         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true)]
+         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool invertSteering = false;
 
         /// <summary>
         /// If true, motor response will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
         /// </summary>
         [KSPField(guiName = "Invert Motor", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true)]
+         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool invertMotor;
 
         /// <summary>
         /// If true, motor response will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
         /// </summary>
         [KSPField(guiName = "Motor Lock", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Locked", disabledText = "Enabled", suppressEditorShipModified = true)]
+         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool motorLocked;
 
         [KSPField(guiActive = true, guiName = "Motor EC Use", guiUnits = "ec/s")]
         public float guiResourceUse = 0f;
+
+        [KSPField]
+        public bool useTorqueCurve = false;
+
+        [KSPField]
+        public FloatCurve torqueCurve;
+
+        [KSPField(guiName = "Traction Control", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+        public bool useTractionControl = false;
+
+        [KSPField(guiName = "Traction Val", guiActive = true, guiActiveEditor = true),
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.025f)]
+        public float tractionControl = 0.1f;
 
         private float fwdInput;
 
@@ -60,6 +74,12 @@ namespace KSPWheel
             {
                 Fields[nameof(invertSteering)].guiActive = true;
                 Fields[nameof(invertSteering)].guiActiveEditor = true;
+            }
+            if (torqueCurve == null)
+            {
+                torqueCurve = new FloatCurve();
+                torqueCurve.Add(0, 1, 0, 0);
+                torqueCurve.Add(1, 0, 0, 0);
             }
         }
 
@@ -78,6 +98,14 @@ namespace KSPWheel
                 if (fI < -1) { fI = -1; }
             }
 
+            if (useTractionControl)
+            {
+                if (wheel.longitudinalSlip > tractionControl)
+                {
+                    fI = 0;
+                }
+            }
+
             if (throttleResponse > 0)
             {
                 fI = Mathf.Lerp(fwdInput, fI, throttleResponse * Time.deltaTime);
@@ -86,11 +114,12 @@ namespace KSPWheel
             float rpm = wheel.rpm;
             if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
             else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
-
             fwdInput = fI * updateResourceDrain(Mathf.Abs(fI));
-            wheel.motorTorque = maxMotorTorque * fwdInput;
+            float mult = useTorqueCurve ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
+            wheel.motorTorque = maxMotorTorque * fwdInput * mult;
         }
 
+        //TODO fix resource drain, it was causing the world to explode...
         private float updateResourceDrain(float input)
         {
             float percent = 1f;
