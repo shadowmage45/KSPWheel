@@ -18,6 +18,14 @@ namespace KSPWheel
         [KSPField]
         public int animationLayer = 1;
 
+        [KSPField]
+        public string tempColliderName = "deployTgt";
+
+        [KSPField]
+        public float tempColliderOffset = 0f;
+
+        private CapsuleCollider collider;
+        private Transform tempColliderTransform;
         private WheelAnimationHandler animationControl;
         private ModuleLight lightModule;
         
@@ -37,12 +45,14 @@ namespace KSPWheel
         [KSPEvent(guiName = "Deploy Gear", guiActive = true, guiActiveEditor = true)]
         public void deploy()
         {
+            if (controller == null) { return; }
             if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING) { toggleDeploy(); }
         }
 
         [KSPEvent(guiName = "Retract Gear", guiActive = true, guiActiveEditor = true)]
         public void retract()
         {
+            if (controller == null) { return; }
             if (controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING) { toggleDeploy(); }
         }
 
@@ -57,11 +67,23 @@ namespace KSPWheel
             {
                 controller.wheelState = KSPWheelState.RETRACTING;
                 animationControl.setToAnimationState(controller.wheelState, false);
+                if (collider != null)
+                {
+                    collider.height = wheel.length + wheel.radius*2 - wheel.compressionDistance;
+                    collider.center = new Vector3(0, -collider.height * 0.5f + collider.radius, 0);
+                    collider.enabled = true;
+                }
             }
             else if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING)
             {
                 controller.wheelState = KSPWheelState.DEPLOYING;
                 animationControl.setToAnimationState(controller.wheelState, false);
+                if (collider != null)
+                {
+                    collider.height = wheel.length + wheel.radius * 2;// - wheel.compressionDistance;
+                    collider.center = new Vector3(0, -collider.height * 0.5f + collider.radius, 0);
+                    collider.enabled = true;
+                }
             }
         }
 
@@ -83,12 +105,46 @@ namespace KSPWheel
             {
                 lightModule.LightsOn();
             }
+            if (vessel != null)
+            {
+                vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, controller.wheelState == KSPWheelState.DEPLOYED);
+            }
+            tempColliderTransform = part.transform.FindRecursive(tempColliderName);
+        }
+
+        internal override void postWheelCreated()
+        {
+            base.postWheelCreated();
+            if (tempColliderTransform != null)
+            {
+                GameObject standInCollider = new GameObject("KSPWheelTempCollider");
+                //nest it to the wheel collider, with y+ orientation
+                standInCollider.transform.NestToParent(tempColliderTransform);
+                Vector3 pos = standInCollider.transform.localPosition;
+                pos.y += tempColliderOffset;
+                standInCollider.transform.localPosition = pos;
+                standInCollider.layer = 26;
+                collider = standInCollider.AddComponent<CapsuleCollider>();
+                collider.radius = wheel.radius;
+                collider.height = wheel.length + wheel.radius * 2;
+                collider.center = new Vector3(0, -collider.height * 0.5f + collider.radius, 0);
+                collider.enabled = controller.wheelState != KSPWheelState.DEPLOYED;
+            }
         }
 
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
             animationControl.updateAnimationState();
+        }
+
+        internal override void preWheelPhysicsUpdate()
+        {
+            base.preWheelPhysicsUpdate();
+            if (collider != null)
+            {
+                collider.enabled = controller.wheelState != KSPWheelState.DEPLOYED;
+            }
         }
 
         /// <summary>
@@ -98,6 +154,7 @@ namespace KSPWheel
         public void onAnimationStateChanged(KSPWheelState state)
         {
             controller.wheelState = state;
+            MonoBehaviour.print("Set wheel state to: " + state);
             if (state == KSPWheelState.RETRACTED)
             {
                 //TODO reset suspension and steering transforms to neutral?
@@ -109,5 +166,9 @@ namespace KSPWheel
             }
         }
 
+        private void updateCollider()
+        {
+
+        }
     }
 }
