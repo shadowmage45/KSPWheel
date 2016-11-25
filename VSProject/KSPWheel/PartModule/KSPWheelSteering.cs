@@ -93,7 +93,7 @@ namespace KSPWheel
                 rI = rI * (1 + bias);
             }
             if (rI > 1) { rI = 1; }
-            if (rI < 1) { rI = -1; }
+            if (rI < -1) { rI = -1; }
             rotInput = rI;
             if (useSteeringCurve)
             {
