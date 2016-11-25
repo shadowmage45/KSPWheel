@@ -19,7 +19,10 @@ namespace KSPWheel
         public float rotationSpeed = 5f;
 
         [KSPField]
-        public float restingRotation = 20f;
+        public float restingRotation = 0f;
+
+        [KSPField]
+        public float rotationOffset = 0f;
 
         [KSPField(guiActive = true)]
         public float angle;
@@ -52,13 +55,17 @@ namespace KSPWheel
                 Vector3 normal = wheel.contactNormal;
                 //transformed to local coordinates of the bogey
                 normal = bogeyTransform.InverseTransformDirection(normal);
-                angle = getBogeyAngle(normal);
+                angle = getBogeyAngle(normal) + rotationOffset;
+                if (angle >= 180) { angle -= 360f; }
+                if (angle < -180) { angle += 360f; }
                 if (rotationSpeed > 0) { angle = Mathf.Lerp(0, angle, Time.deltaTime * rotationSpeed); }
                 bogeyTransform.Rotate(bogeyRotAxis, angle, Space.Self);
             }
             else
             {
-                angle = restingRotation;
+                angle = restingRotation + rotationOffset;
+                if (angle >= 180) { angle -= 360f; }
+                if (angle < -180) { angle += 360f; }
                 Quaternion dest = defaultRotation * Quaternion.Euler(angle * bogeyRotAxis);
                 bogeyTransform.localRotation = rotationSpeed > 0 ? Quaternion.Lerp(bogeyTransform.localRotation, dest, Time.deltaTime) : dest;
             }
