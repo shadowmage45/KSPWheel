@@ -45,26 +45,43 @@ namespace KSPWheel
             postWheelCreated();
         }
 
+        /// <summary>
+        /// Called directly after the wheel has been initialized in the flight scene.
+        /// This is the first point at which the wheel and wheel transform fields are populated,
+        /// and should be used to do any setup necessary prior to physics being enabled.
+        /// </summary>
         internal virtual void postWheelCreated()
         {
 
         }
 
+        /// <summary>
+        /// Called after controller module has been initialized.  At this point the control modules state has been loaded, but no other cross-module state is guaranteed
+        /// </summary>
         internal virtual void postControllerSetup()
         {
 
         }
 
+        /// <summary>
+        /// Called prior to updating wheel physics, only if wheel physics are enabled for that frame.
+        /// </summary>
         internal virtual void preWheelPhysicsUpdate()
         {
 
         }
 
+        /// <summary>
+        /// Called after updating wheel physics, only if wheel physics are enabled for that frame
+        /// </summary>
         internal virtual void postWheelPhysicsUpdate()
         {
 
         }
 
+        /// <summary>
+        /// Called during controlling modules Update() method, only if there is a valid wheel object
+        /// </summary>
         internal virtual void preWheelFrameUpdate()
         {
 
