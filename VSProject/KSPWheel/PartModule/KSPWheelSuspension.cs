@@ -15,8 +15,7 @@ namespace KSPWheel
         /// <summary>
         /// The visual offset to the suspension transform compared to its default location and the wheel-colliders location.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "off"),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = -5, maxValue = 5, incrementSmall = 0.25f, incrementLarge = 1f, incrementSlide = 0.0125f, sigFigs = 4)]
+        [KSPField]
         public float suspensionOffset = 0f;
 
         /// <summary>
@@ -31,18 +30,31 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+        }
+
+        internal override void postControllerSetup()
+        {
+            base.postControllerSetup();
             suspensionTransform = part.transform.FindRecursive(suspensionName);
+            if (suspensionTransform == null)
+            {
+                MonoBehaviour.print("ERROR: Suspension transform was null for name: " + suspensionName);
+                MonoBehaviour.print("Model Hierarchy: ");
+                Utils.printHierarchy(part.gameObject);
+            }
             defaultPos = suspensionTransform.localPosition;
         }
 
-        public void Update()
+        internal override void preWheelFrameUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight || wheel==null) { return; }
+            base.preWheelFrameUpdate();
             if (suspensionTransform != null)
             {
                 float scale = suspensionTransform.parent.localScale.y;
-                float offset = (wheel.length - wheel.compressionDistance + suspensionOffset) / scale;
-                suspensionTransform.localPosition = defaultPos - suspensionAxis * offset;
+                float offset = (wheel.length - wheel.compressionDistance + suspensionOffset);
+                Vector3 o = suspensionTransform.TransformDirection(suspensionAxis);
+                suspensionTransform.localPosition = defaultPos;
+                suspensionTransform.position -= o * offset;
             }
         }
 
