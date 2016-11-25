@@ -46,7 +46,7 @@ namespace KSPWheel
         /// Needs to be set on a per-part/model basis.
         /// </summary>
         [KSPField]
-        public float wheelColliderOffset;
+        public float wheelColliderOffset = 0f;
         
         /// <summary>
         /// An offset to the rotation of the wheel collider, in euler angles
@@ -54,35 +54,38 @@ namespace KSPWheel
         [KSPField]
         public Vector3 wheelColliderRotation = Vector3.zero;
 
-        [KSPField(guiName = "Radius", guiActive = true),
-         UI_FloatRange(suppressEditorShipModified = true, minValue = 0.025f, maxValue = 3f, stepIncrement = 0.025f)]
-        public float wheelRadius = -1;
+        [KSPField]
+        public float wheelRadius = 0.25f;
 
         [KSPField]
-        public float wheelMass = -1;
-
-        [KSPField(guiName = "Length", guiActive = true),
-         UI_FloatRange(suppressEditorShipModified = true, minValue = 0.025f, maxValue = 2f, stepIncrement = 0.025f)]
-        public float suspensionTravel = -1;
+        public float wheelMass = 0.25f;
 
         [KSPField]
-        public float suspensionTarget = -1;
+        public float suspensionTravel = 0.25f;
 
-        [KSPField]
-        public float suspensionSpring = -1;
+        [KSPField(guiName = "RideHeight", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0.05f, maxValue = 1, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        public float suspensionTarget = 0.5f;
 
-        [KSPField]
-        public float suspensionDamper = -1;
-        
         [KSPField(guiName = "LoadRating", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0.05f, maxValue = 5, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float loadRating = 0.05f;
+        public float loadRating = 2.5f;
 
         [KSPField]
         public float minLoadRating = 0.05f;
 
         [KSPField]
         public float maxLoadRating = 5f;
+
+        [KSPField(guiName = "DampRatio", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        UI_FloatRange(minValue = 0.05f, maxValue = 2, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+        public float dampRatio = 0.65f;
+
+        [KSPField]
+        public float minDampRatio = 0.05f;
+
+        [KSPField]
+        public float maxDampRatio = 2f;
 
         #endregion
 
@@ -107,73 +110,23 @@ namespace KSPWheel
         private Transform wheelColliderTransform;//the transform that the wheel-collider is attached to
         private Transform[] wheelPivotTransforms;//
         private KSPWheelCollider wheel;
-        private GameObject bumpStopCollider;
-        private GameObject debugHitObject;
-
-        #endregion
-
-        #region REGION - Debug fields
-
-        [KSPField(guiName = "SpringMult", guiActive = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 10, stepIncrement = 0.05f, suppressEditorShipModified =true)]
-        public float springMult = 1f;
-
-        [KSPField(guiName = "DampMult", guiActive = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 10, stepIncrement = 0.05f, suppressEditorShipModified =true)]
-        public float dampMult = 1f;        
-
-        [KSPField(guiName = "Hit", guiActive = true)]
-        public string colliderHit;
-
-        [KSPField(guiName = "RPM", guiActive = true)]
-        public float rpm;
-
-        [KSPField(guiName = "fLong", guiActive = true)]
-        public float fLong;
-
-        [KSPField(guiName = "fLat", guiActive = true)]
-        public float fLat;
-
-        [KSPField(guiName = "comp", guiActive = true)]
-        public float comp;
-
-        [KSPField(guiName = "spr", guiActive = true)]
-        public float spr;
-
-        [KSPField(guiName = "dmp", guiActive = true)]
-        public float dmp;
+        private GameObject bumpStopGameObject;
+        private SphereCollider bumpStopCollider;
+        private GameObject boundsGameObject;
+        private BoxCollider boundsCollider;
 
         #endregion
 
         #region REGION - GUI Handling methods
 
-        public void onSpringUpdated(BaseField field, object obj)
-        {
-            if ((float)obj != springMult)
-            {
-                wheel.spring = suspensionSpring * springMult;
-                spr = wheel.spring;
-            }
-        }
-
-        public void onDamperUpdated(BaseField field, object obj)
-        {
-            if ((float)obj != dampMult)
-            {
-                wheel.damper = suspensionDamper * dampMult;
-                dmp = wheel.damper;
-            }
-        }
-
         public void onLoadUpdated(BaseField field, object obj)
         {
-            if ((float)obj != loadRating)
+            float suspensionSpring, suspensionDamper;
+            calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+            if (wheel != null)
             {
-                calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1, out suspensionSpring, out suspensionDamper);
-                wheel.spring = suspensionSpring * springMult;
-                wheel.damper = suspensionDamper * dampMult;
-                spr = wheel.spring;
-                dmp = wheel.damper;
+                wheel.spring = suspensionSpring;
+                wheel.damper = suspensionDamper;
             }
         }
 
@@ -200,6 +153,7 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            //Utils.printHierarchy(part.gameObject);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
             locateTransforms();
 
@@ -208,34 +162,41 @@ namespace KSPWheel
             {
                 GameObject.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
             }
-            bumpStopCollider = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
-            bumpStopCollider.layer = 26;
-            bumpStopCollider.transform.NestToParent(wheelColliderTransform);
-            SphereCollider sc = bumpStopCollider.AddComponent<SphereCollider>();
-            sc.center = Vector3.zero;
-            sc.radius = wheelRadius;
+            bumpStopGameObject = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
+            bumpStopGameObject.layer = 26;
+            bumpStopGameObject.transform.NestToParent(wheelColliderTransform);
+            bumpStopCollider = bumpStopGameObject.AddComponent<SphereCollider>();
+            bumpStopCollider.center = Vector3.zero;
+            bumpStopCollider.radius = wheelRadius;
             PhysicMaterial mat = new PhysicMaterial("TEST");
             mat.bounciness = 0.0f;
             mat.dynamicFriction = 0;
             mat.staticFriction = 0;
-            sc.material = mat;
+            bumpStopCollider.material = mat;
+            bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED;
 
-            if (loadRating > 0)
-            {
-                calcSuspension(loadRating, suspensionTravel, suspensionTarget, 1.0f, out suspensionSpring, out suspensionDamper);
-            }
-
-            Fields["springMult"].uiControlFlight.onFieldChanged = onSpringUpdated;
-            Fields["dampMult"].uiControlFlight.onFieldChanged = onDamperUpdated;
-            BaseField f = Fields["loadRating"];
-            f.uiControlEditor.onFieldChanged = f.uiControlFlight.onFieldChanged = onLoadUpdated;
-            UI_FloatRange rng = (UI_FloatRange)f.uiControlFlight;
+            BaseField field = Fields[nameof(loadRating)];
+            field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
+            UI_FloatRange rng = (UI_FloatRange)field.uiControlFlight;
             if (rng != null)
             {
                 rng.minValue = minLoadRating;
                 rng.maxValue = maxLoadRating;
                 rng.stepIncrement = 0.1f;
             }
+
+            field = Fields[nameof(dampRatio)];
+            field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
+            rng = (UI_FloatRange)field.uiControlFlight;
+            if (rng != null)
+            {
+                rng.minValue = minDampRatio;
+                rng.maxValue = maxDampRatio;
+                rng.stepIncrement = 0.1f;
+            }
+
+            field = Fields[nameof(suspensionTarget)];
+            field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
 
             //TODO -- there has got to be an easier way to handle these; perhaps check if the collider is part of the 
             // model hierarchy for the part/vessel?
@@ -255,11 +216,6 @@ namespace KSPWheel
                         GameObject.Destroy(colliders[i].gameObject);
                     }
                 }
-                debugHitObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Collider c = debugHitObject.GetComponent<Collider>();
-                GameObject.Destroy(c);
-                debugHitObject.transform.NestToParent(part.transform);
-                debugHitObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
             }
             part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
             
@@ -295,6 +251,8 @@ namespace KSPWheel
                     wheel.mass = wheelMass;
                     wheel.length = suspensionTravel;
                     wheel.target = 0f;// suspensionTarget;
+                    float suspensionSpring, suspensionDamper;
+                    calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
                     wheel.spring = suspensionSpring;
                     wheel.damper = suspensionDamper;
                     //wheel.isGrounded = grounded;
@@ -303,11 +261,10 @@ namespace KSPWheel
                 }
             }
 
-            if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }            
-            
-            //Update the wheel physics state as long as it is not broken or fully retracted
-            //yes, this means updates happen during deploy and retract animations (as they should! -- wheels don't just work when they are deployed...).
-            if (wheelState != KSPWheelState.BROKEN && wheelState != KSPWheelState.RETRACTED)
+            if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }
+            bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED;
+
+            if (wheelState == KSPWheelState.DEPLOYED)
             {
                 wheel.radius = wheelRadius;
                 wheel.length = suspensionTravel;
@@ -315,20 +272,10 @@ namespace KSPWheel
                 for (int i = 0; i < subModules.Count; i++) { subModules[i].preWheelPhysicsUpdate(); }
                 wheel.updateWheel();
                 for (int i = 0; i < subModules.Count; i++) { subModules[i].postWheelPhysicsUpdate(); }
-                debugHitObject.transform.position = wheelColliderTransform.position - (wheelColliderTransform.up * suspensionTravel) + (wheelColliderTransform.up * wheel.compressionDistance) - (wheelColliderTransform.up * wheelRadius);
             }
 
             updateLandedState();
 
-            //gui debug values
-            spr = wheel.spring;
-            dmp = wheel.damper;
-            fLong = wheel.longitudinalForce;
-            fLat = wheel.lateralForce;
-            rpm = wheel.rpm;
-            grounded = wheel.isGrounded;
-            comp = wheel.compressionDistance;
-            colliderHit = grounded ? wheel.contactColliderHit.gameObject.name+" : "+wheel.contactColliderHit.gameObject.layer : "None";            
         }
 
         /// <summary>
@@ -359,6 +306,15 @@ namespace KSPWheel
 
         #region REGION - Custom update methods
 
+        internal void onWheelConfigChanged(KSPWheelSubmodule module)
+        {
+            int len = subModules.Count;
+            for (int i = 0; i < len; i++)
+            {
+                subModules[i].onWheelConfigChanged(module);
+            }
+        }
+
         internal void addSubmodule(KSPWheelSubmodule module)
         {
             subModules.AddUnique(module);
@@ -381,7 +337,7 @@ namespace KSPWheel
         //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow
         private void updateLandedState()
         {
-            bool grounded = wheel.isGrounded;
+            grounded = wheel.isGrounded;
             part.GroundContact = grounded;
             vessel.checkLanded();
         }
