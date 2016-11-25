@@ -86,6 +86,13 @@ namespace KSPWheel
 
         [KSPField]
         public float maxDampRatio = 2f;
+        
+        /// <summary>
+        /// If true the steering will be locked to zero and will not respond to steering input.
+        /// </summary>
+        [KSPField(guiName = "Auto-Tune", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+        public bool autoTuneSuspension = false;
 
         #endregion
 
@@ -269,13 +276,16 @@ namespace KSPWheel
                 wheel.radius = wheelRadius;
                 wheel.length = suspensionTravel;
                 wheel.gravityVector = vessel.gravityForPos;
+                if (autoTuneSuspension)
+                {
+                    updateSuspension();
+                }
                 for (int i = 0; i < subModules.Count; i++) { subModules[i].preWheelPhysicsUpdate(); }
                 wheel.updateWheel();
                 for (int i = 0; i < subModules.Count; i++) { subModules[i].postWheelPhysicsUpdate(); }
             }
 
             updateLandedState();
-
         }
 
         /// <summary>
@@ -305,6 +315,25 @@ namespace KSPWheel
         #endregion
 
         #region REGION - Custom update methods
+
+        [KSPField]
+        float susRes = 1f;
+
+        /// <summary>
+        /// Auto-suspension tuning.
+        /// Works, but causes interference with traction and normal suspension response.
+        /// </summary>
+        private void updateSuspension()
+        {
+            float target = wheel.springForce * 0.1f;
+            if (target < minLoadRating) { target = minLoadRating; }
+            if (target > maxLoadRating) { target = maxLoadRating; }
+            loadRating = Mathf.Lerp(loadRating, target, Time.deltaTime * susRes);
+            float suspensionSpring, suspensionDamper;
+            calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+            wheel.spring = suspensionSpring;
+            wheel.damper = suspensionDamper;
+        }
 
         internal void onWheelConfigChanged(KSPWheelSubmodule module)
         {
