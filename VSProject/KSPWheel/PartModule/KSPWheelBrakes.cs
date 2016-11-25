@@ -40,14 +40,13 @@ namespace KSPWheel
         {
             base.preWheelPhysicsUpdate();
             float bI = brakesLocked ? 1 : part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
-            if (!brakesLocked && brakeResponse > 0)
+            if (!brakesLocked && brakeResponse > 0 && bI > 0)
             {
                 bI = Mathf.Lerp(brakeInput, bI, brakeResponse * Time.deltaTime);
             }
 
             brakeInput = bI;
             wheel.brakeTorque = maxBrakeTorque * brakeInput;
-
         }
 
         internal override void preWheelFrameUpdate()
