@@ -128,7 +128,7 @@ namespace KSPWheel
                 collider.radius = wheel.radius;
                 collider.height = wheel.length + wheel.radius * 2;
                 collider.center = new Vector3(0, -collider.height * 0.5f + collider.radius, 0);
-                collider.enabled = controller.wheelState != KSPWheelState.DEPLOYED;
+                collider.enabled = controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING;
             }
         }
 
@@ -143,7 +143,7 @@ namespace KSPWheel
             base.preWheelPhysicsUpdate();
             if (collider != null)
             {
-                collider.enabled = controller.wheelState != KSPWheelState.DEPLOYED;
+                collider.enabled = controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState==KSPWheelState.DEPLOYING;
             }
         }
 
