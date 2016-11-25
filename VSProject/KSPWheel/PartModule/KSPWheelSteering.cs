@@ -39,7 +39,7 @@ namespace KSPWheel
         public bool invertSteering = false;
 
 
-        [KSPField(guiName = "latFrict", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Steering Bias", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
         public float steeringBias = 0f;
         
@@ -83,6 +83,17 @@ namespace KSPWheel
             {
                 rI = Mathf.Lerp(rotInput, rI, steeringResponse * Time.deltaTime);
             }
+            float bias = steeringBias;
+            if (rI < 0)
+            {
+                rI = rI * (1 - bias);
+            }
+            if (rI > 0)
+            {
+                rI = rI * (1 + bias);
+            }
+            if (rI > 1) { rI = 1; }
+            if (rI < 1) { rI = -1; }
             rotInput = rI;
             if (useSteeringCurve)
             {
