@@ -48,7 +48,7 @@ namespace KSPWheel
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            if (suspensionTransform != null)
+            if (controller.wheelState == KSPWheelState.DEPLOYED && suspensionTransform != null)
             {
                 float scale = suspensionTransform.parent.localScale.y;
                 float offset = (wheel.length - wheel.compressionDistance + suspensionOffset);
