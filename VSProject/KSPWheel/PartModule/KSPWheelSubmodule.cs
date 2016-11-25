@@ -69,5 +69,11 @@ namespace KSPWheel
         {
 
         }
+
+        internal virtual void onWheelConfigChanged(KSPWheelSubmodule module)
+        {
+
+        }
+
     }
 }

@@ -66,6 +66,11 @@ namespace KSPWheel
         public void onWheelImpact(Vector3 localImpactVelocity)
         {
             //TODO
+            MonoBehaviour.print("Wheel impact, velocity: " + localImpactVelocity);
+            if (localImpactVelocity.sqrMagnitude > impactTolerance*impactTolerance)
+            {
+                MonoBehaviour.print("EXPLOSIONS!!! -- Impact tolerance exceeded, should destroy part!");
+            }
         }
 
     }

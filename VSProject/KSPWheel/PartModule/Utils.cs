@@ -272,11 +272,11 @@ namespace KSPWheel
 
         public static void printHierarchy(Transform tr, string prefix)
         {
-            prefix = prefix + "  ";
+            prefix = prefix + "    ";
             MonoBehaviour.print(prefix+"GO: "+tr.gameObject + " -- scale: "+tr.localScale+" : "+tr.lossyScale);
             foreach (UnityEngine.Component c in tr.gameObject.GetComponents<UnityEngine.Component>())
             {
-                MonoBehaviour.print(prefix + "CP: " + c);
+                MonoBehaviour.print(prefix + " CP: " + c);
             }
             foreach (Transform trc in tr)
             {
