@@ -20,6 +20,9 @@ namespace KSPWheel
         [KSPField]
         public int raycastMask = ~(1 << 26 | 1 << 10);
 
+        [KSPField]
+        public bool useParentRigidbody = true;
+
         /// <summary>
         /// Name of the transform that the wheel collider component should be attached to/manipulate.
         /// </summary>
@@ -239,7 +242,7 @@ namespace KSPWheel
             if (!initializedWheels)
             {
                 Rigidbody rb = part.GetComponent<Rigidbody>();
-                //if (part.parent != null) { rb = part.parent.GetComponent<Rigidbody>(); }
+                if (useParentRigidbody && part.parent != null) { rb = part.parent.GetComponent<Rigidbody>(); }
                 if (rb == null)
                 {
                     return;
@@ -263,6 +266,15 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 wheelData[i].bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED;
+            }
+            if (useParentRigidbody && part.parent == null)
+            {
+                useParentRigidbody = false;
+                Rigidbody rb = part.GetComponent<Rigidbody>();
+                for (int i = 0; i < len; i++)
+                {
+                    wheelData[i].wheel.rigidbody = rb;
+                }
             }
             if (wheelState == KSPWheelState.DEPLOYED)
             {
