@@ -14,17 +14,17 @@ namespace KSPWheel
         #region REGION - Basic config parameters
 
         /// <summary>
-        /// Name of the transform that the wheel collider component should be attached to/manipulate.
-        /// </summary>
-        [KSPField]
-        public string wheelColliderName;
-
-        /// <summary>
         /// The raycast mask to use for the wheel-collider suspension sweep. <para/>
         /// By default ignore layers 26 and 10 (wheelCollidersIgnore & scaledScenery)
         /// </summary>
         [KSPField]
         public int raycastMask = ~(1 << 26 | 1 << 10);
+
+        /// <summary>
+        /// Name of the transform that the wheel collider component should be attached to/manipulate.
+        /// </summary>
+        [KSPField]
+        public string wheelColliderName;
                 
         /// <summary>
         /// Determines how far above the initial position in the model that the wheel-collider should be located.
@@ -94,11 +94,11 @@ namespace KSPWheel
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
+        [Persistent]
+        public string configNodeData = string.Empty;
+        private bool initializedWheels = false;
+        public KSPWheelData[] wheelData;
         private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
-        private Transform wheelColliderTransform;//the transform that the wheel-collider is attached to
-        private KSPWheelCollider wheel;
-        private GameObject bumpStopGameObject;
-        private SphereCollider bumpStopCollider;
         private GameObject boundsGameObject;
         private BoxCollider boundsCollider;
 
@@ -108,12 +108,20 @@ namespace KSPWheel
 
         public void onLoadUpdated(BaseField field, object obj)
         {
-            float suspensionSpring, suspensionDamper;
-            calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-            if (wheel != null)
+            if (wheelData != null)
             {
-                wheel.spring = suspensionSpring;
-                wheel.damper = suspensionDamper;
+                KSPWheelData wheel;
+                float suspensionSpring, suspensionDamper;
+                float rating;
+                int len = wheelData.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    wheel = wheelData[i];
+                    rating = loadRating * wheel.loadShare;
+                    calcSuspension(rating, wheel.suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+                    wheel.wheel.spring = suspensionSpring;
+                    wheel.wheel.damper = suspensionDamper;
+                }
             }
         }
 
@@ -124,7 +132,10 @@ namespace KSPWheel
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
-            //NOOP?
+            if (string.IsNullOrEmpty(configNodeData))
+            {
+                configNodeData = node.ToString();
+            }
         }
 
         public override void OnSave(ConfigNode node)
@@ -140,28 +151,33 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            //Utils.printHierarchy(part.gameObject);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-            wheelColliderTransform = part.transform.FindRecursive(wheelColliderName);
 
-            WheelCollider collider = wheelColliderTransform.GetComponent<WheelCollider>();
-            if (collider != null)
+            ConfigNode node = ConfigNode.Parse(configNodeData).nodes[0];
+
+            List<KSPWheelData> wheelDatas = new List<KSPWheelData>();
+            if (!string.IsNullOrEmpty(wheelColliderName))
             {
-                GameObject.Destroy(collider);//remove that stock crap, replace it with some new hotness below in the Start() method
+                ConfigNode newWheelNode = new ConfigNode("WHEEL");
+                newWheelNode.AddValue("radius", wheelRadius);
+                newWheelNode.AddValue("mass", wheelMass);
+                newWheelNode.AddValue("travel", suspensionTravel);
+                newWheelNode.AddValue("colliderName", wheelColliderName);
+                newWheelNode.AddValue("offset", wheelColliderOffset);
+                wheelDatas.Add(new KSPWheelData(newWheelNode));
             }
-            bumpStopGameObject = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
-            bumpStopGameObject.layer = 26;
-            bumpStopGameObject.transform.NestToParent(wheelColliderTransform);
-            bumpStopCollider = bumpStopGameObject.AddComponent<SphereCollider>();
-            bumpStopCollider.center = Vector3.zero;
-            bumpStopCollider.radius = wheelRadius;
-            PhysicMaterial mat = new PhysicMaterial("TEST");
-            mat.bounciness = 0.0f;
-            mat.dynamicFriction = 0;
-            mat.staticFriction = 0;
-            bumpStopCollider.material = mat;
-            bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED;
 
+            ConfigNode[] wheelnodes = node.GetNodes("WHEEL");
+            foreach (ConfigNode wn in wheelnodes)
+            {
+                wheelDatas.Add(new KSPWheelData(wn));
+            }
+            wheelData = wheelDatas.ToArray();
+            foreach (KSPWheelData wheel in wheelDatas)
+            {                
+                wheel.locateTransform(part.transform);
+            }
+            
             BaseField field = Fields[nameof(loadRating)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
             UI_FloatRange rng = (UI_FloatRange)field.uiControlFlight;
@@ -209,9 +225,6 @@ namespace KSPWheel
                     GameObject.Destroy(boundsCollider.gameObject);
                 }
             }
-            
-            //offset to wheel collider for stock wheels
-            wheelColliderTransform.localPosition += Vector3.up * wheelColliderOffset;
         }
 
         /// <summary>
@@ -219,54 +232,59 @@ namespace KSPWheel
         /// </summary>
         public void FixedUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight) { return; }
-            if (!FlightGlobals.ready || !FlightDriver.fetch) { return; }
-            //workaround for part rigidbody not being present during start/load or initial fixedupdate ticks
-            //TODO can set it up in a coroutine, continuing to yield until rigidbody is present?
-            //      is that really a simpler solution? still have  to check for null each fixed-update tick until the wheel is present
-            //      but might allow for specific co-routines to be ran for each specific update function -- one for wait and check, one for actual updates
-            //      WHAT is the overhead cost of coroutines
-            if (wheel == null)
+            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch) { return; }
+            if (!initializedWheels)
             {
                 Rigidbody rb = part.GetComponent<Rigidbody>();
-                if (part.parent != null) { rb = part.parent.GetComponent<Rigidbody>(); }
+                //if (part.parent != null) { rb = part.parent.GetComponent<Rigidbody>(); }
                 if (rb == null)
                 {
                     return;
                 }
                 else
                 {
-                    wheel = wheelColliderTransform.gameObject.AddComponent<KSPWheelCollider>();
-                    wheel.rigidbody = rb;
-                    wheel.radius = wheelRadius;
-                    wheel.mass = wheelMass;
-                    wheel.length = suspensionTravel;
-                    wheel.target = 0f;// suspensionTarget;
-                    float suspensionSpring, suspensionDamper;
-                    calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-                    wheel.spring = suspensionSpring;
-                    wheel.damper = suspensionDamper;
-                    //wheel.isGrounded = grounded;
-                    wheel.raycastMask = raycastMask;
-                    onWheelCreated(wheelColliderTransform, wheel);
+                    initializedWheels = true;
+                    int count = wheelData.Length;
+                    for (int i = 0; i < count; i++)
+                    {
+                        wheelData[i].setupWheel(rb, raycastMask);
+                        onWheelCreated(i, wheelData[i]);
+                    }
+                    onLoadUpdated(null, null);
                 }
             }
 
             if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }
-            bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED;
 
+            int len = wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                wheelData[i].bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED;
+            }
             if (wheelState == KSPWheelState.DEPLOYED)
             {
-                wheel.radius = wheelRadius;
-                wheel.length = suspensionTravel;
-                wheel.gravityVector = vessel.gravityForPos;
                 if (autoTuneSuspension)
                 {
                     updateSuspension();
                 }
-                for (int i = 0; i < subModules.Count; i++) { subModules[i].preWheelPhysicsUpdate(); }
-                wheel.updateWheel();
-                for (int i = 0; i < subModules.Count; i++) { subModules[i].postWheelPhysicsUpdate(); }
+                KSPWheelCollider wheel;
+                int subLen = subModules.Count;
+                for (int i = 0; i < subLen; i++)
+                {
+                    subModules[i].preWheelPhysicsUpdate();
+                }
+                for (int i = 0; i < len; i++)
+                {
+                    wheel = wheelData[i].wheel;
+                    wheel.gravityVector = vessel.gravityForPos;
+                    for (int k = 0; k < subModules.Count; k++) { if (subModules[i].wheelIndex == i) {  } }
+                    wheel.updateWheel();
+                    for (int k = 0; k < subModules.Count; k++) {if (subModules[i].wheelIndex == i) {  } }
+                }
+                for (int i = 0; i < subLen; i++)
+                {
+                    subModules[i].postWheelPhysicsUpdate();
+                }
             }
 
             updateLandedState();
@@ -277,7 +295,7 @@ namespace KSPWheel
         /// </summary>
         public void Update()
         {
-            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch || wheel == null) { return; }
+            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch || wheelData == null || !initializedWheels) { return; }
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
@@ -298,22 +316,18 @@ namespace KSPWheel
         /// </summary>
         private void updateSuspension()
         {
-            float target = wheel.springForce * 0.1f;
-            if (target < minLoadRating) { target = minLoadRating; }
-            if (target > maxLoadRating) { target = maxLoadRating; }
-            loadRating = Mathf.Lerp(loadRating, target, Time.deltaTime * susRes);
-            float suspensionSpring, suspensionDamper;
-            calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-            wheel.spring = suspensionSpring;
-            wheel.damper = suspensionDamper;
-        }
-
-        internal void onWheelConfigChanged(KSPWheelSubmodule module)
-        {
-            int len = subModules.Count;
+            int len = wheelData.Length;
             for (int i = 0; i < len; i++)
             {
-                subModules[i].onWheelConfigChanged(module);
+                KSPWheelCollider wheel = wheelData[i].wheel;
+                float target = wheel.springForce * 0.1f;
+                if (target < minLoadRating) { target = minLoadRating; }
+                if (target > maxLoadRating) { target = maxLoadRating; }
+                loadRating = Mathf.Lerp(loadRating, target, Time.deltaTime * susRes);
+                float suspensionSpring, suspensionDamper;
+                calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+                wheel.spring = suspensionSpring;
+                wheel.damper = suspensionDamper;
             }
         }
 
@@ -327,19 +341,28 @@ namespace KSPWheel
             subModules.Remove(module);
         }
 
-        private void onWheelCreated(Transform tr, KSPWheelCollider wheel)
+        private void onWheelCreated(int index, KSPWheelData wheelData)
         {
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
-                subModules[i].onWheelCreated(tr, wheel);
+                if (subModules[i].wheelIndex == index)
+                {
+                    MonoBehaviour.print("calling wheel created for index: " + index + " for module: "+subModules[i]);
+                    subModules[i].onWheelCreated(wheelData.wheelTransform, wheelData.wheel);
+                }
             }
         }
 
         //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow
         private void updateLandedState()
         {
-            grounded = wheel.isGrounded;
+            grounded = false;
+            int len = wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                if (wheelData[i].wheel.isGrounded) { grounded = true; break; }
+            }
             part.GroundContact = grounded;
             vessel.checkLanded();
         }
@@ -363,6 +386,60 @@ namespace KSPWheel
 
         #endregion
 
+        public class KSPWheelData
+        {
+            public readonly String wheelColliderName;
+            public readonly float wheelRadius;
+            public readonly float wheelMass;
+            public readonly float suspensionTravel;
+            public readonly float loadShare;
+            public readonly float offset;
+            public KSPWheelCollider wheel;
+            public Transform wheelTransform;
+            public GameObject bumpStopGameObject;
+            public SphereCollider bumpStopCollider;
+
+            public KSPWheelData(ConfigNode node)
+            {
+                wheelColliderName = node.GetStringValue("colliderName", "WheelCollider");
+                wheelRadius = node.GetFloatValue("radius", 0.25f);
+                wheelMass = node.GetFloatValue("mass", 0.05f);
+                suspensionTravel = node.GetFloatValue("travel", 0.25f);
+                loadShare = node.GetFloatValue("load", 1f);
+                offset = node.GetFloatValue("offset");
+            }
+
+            public void locateTransform(Transform root)
+            {
+                wheelTransform = root.FindRecursive(wheelColliderName);
+                WheelCollider wc = wheelTransform.GetComponent<WheelCollider>();
+                GameObject.Destroy(wc);
+            }
+
+            public void setupWheel(Rigidbody rb, int raycastMask)
+            {
+                wheelTransform.localPosition += Vector3.up * offset;
+                wheel = wheelTransform.gameObject.AddComponent<KSPWheelCollider>();
+                wheel.rigidbody = rb;
+                wheel.radius = wheelRadius;
+                wheel.mass = wheelMass;
+                wheel.length = suspensionTravel;
+                wheel.raycastMask = raycastMask;
+
+                bumpStopGameObject = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
+                bumpStopGameObject.layer = 26;
+                bumpStopGameObject.transform.NestToParent(wheelTransform);
+                bumpStopCollider = bumpStopGameObject.AddComponent<SphereCollider>();
+                bumpStopCollider.center = Vector3.zero;
+                bumpStopCollider.radius = wheelRadius;
+                PhysicMaterial mat = new PhysicMaterial("TEST");
+                mat.bounciness = 0.0f;
+                mat.dynamicFriction = 0;
+                mat.staticFriction = 0;
+                bumpStopCollider.material = mat;
+            }
+
+        }
     }
 
 }

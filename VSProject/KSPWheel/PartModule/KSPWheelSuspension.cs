@@ -58,6 +58,7 @@ namespace KSPWheel
         {
             base.OnStart(state);
             Fields[nameof(lockSuspension)].guiActive = allowLockedSuspension;
+            Fields[nameof(lockSuspension)].guiActiveEditor = false;
             Fields[nameof(lockSuspension)].uiControlFlight.onFieldChanged = suspensionLockChanged;
         }
 

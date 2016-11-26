@@ -13,6 +13,12 @@ namespace KSPWheel
         [KSPField]
         public int baseModuleIndex = 0;
 
+        /// <summary>
+        /// The index of the wheel that this module controls, in case multiple wheel colliders exist on the part
+        /// </summary>
+        [KSPField]
+        public int wheelIndex = 0;
+
         protected KSPWheelBase controller;
         protected Transform wheelTransform;
         protected KSPWheelCollider wheel;
@@ -83,11 +89,6 @@ namespace KSPWheel
         /// Called during controlling modules Update() method, only if there is a valid wheel object
         /// </summary>
         internal virtual void preWheelFrameUpdate()
-        {
-
-        }
-
-        internal virtual void onWheelConfigChanged(KSPWheelSubmodule module)
         {
 
         }

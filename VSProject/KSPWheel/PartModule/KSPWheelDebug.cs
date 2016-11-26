@@ -60,7 +60,12 @@ namespace KSPWheel
 
         private void sweepTypeUpdated(BaseField field, System.Object obj)
         {
-            wheel.sweepType = (KSPWheelSweepType)Enum.Parse(typeof(KSPWheelSweepType), sweepType);
+            int len = controller.wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                KSPWheelCollider wheel = controller.wheelData[i].wheel;
+                wheel.sweepType = (KSPWheelSweepType)Enum.Parse(typeof(KSPWheelSweepType), sweepType);
+            }
         }
 
         public override void OnStart(StartState state)
@@ -105,8 +110,13 @@ namespace KSPWheel
         internal override void preWheelPhysicsUpdate()
         {
             base.preWheelPhysicsUpdate();
-            wheel.forwardFrictionCoefficient = longTractMult;
-            wheel.sideFrictionCoefficient = latTractMult;
+            int len = controller.wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                KSPWheelCollider wheel = controller.wheelData[i].wheel;
+                wheel.forwardFrictionCoefficient = longTractMult;
+                wheel.sideFrictionCoefficient = latTractMult;
+            }
         }
 
         internal override void postWheelPhysicsUpdate()
