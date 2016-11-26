@@ -66,6 +66,7 @@ namespace KSPWheel
         public float tractionControl = 0.1f;
 
         private float fwdInput;
+        public float torqueOutput;
 
         public override void OnStart(StartState state)
         {
@@ -116,7 +117,7 @@ namespace KSPWheel
             else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
             fwdInput = fI * updateResourceDrain(Mathf.Abs(fI));
             float mult = useTorqueCurve ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
-            wheel.motorTorque = maxMotorTorque * fwdInput * mult;
+            torqueOutput = wheel.motorTorque = maxMotorTorque * fwdInput * mult;
         }
 
         //TODO fix resource drain, it was causing the world to explode...

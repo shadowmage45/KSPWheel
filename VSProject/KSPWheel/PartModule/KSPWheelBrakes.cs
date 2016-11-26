@@ -22,7 +22,9 @@ namespace KSPWheel
         
         [KSPField]
         public bool brakesLocked = false;
-        
+
+        public float torqueOutput;
+
         private float brakeInput;
         private ModuleStatusLight statusLightModule;
 
@@ -46,7 +48,7 @@ namespace KSPWheel
             }
 
             brakeInput = bI;
-            wheel.brakeTorque = maxBrakeTorque * brakeInput;
+            torqueOutput = wheel.brakeTorque = maxBrakeTorque * brakeInput;
         }
 
         internal override void preWheelFrameUpdate()
