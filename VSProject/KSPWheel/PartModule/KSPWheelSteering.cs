@@ -50,7 +50,7 @@ namespace KSPWheel
         public Vector3 steeringAxis = Vector3.up;
 
         [KSPField]
-        public bool useSteeringCurve = true;
+        public bool useSteeringCurve = false;
 
         [KSPField]
         public FloatCurve steeringCurve = new FloatCurve();
@@ -68,7 +68,8 @@ namespace KSPWheel
             {
                 steeringCurve = new FloatCurve();
                 steeringCurve.Add(0, 1, 0, 0);
-                steeringCurve.Add(30, 0, 0, 0);
+                steeringCurve.Add(10, 1, 0, 0);
+                steeringCurve.Add(30, 0.5f, 0, 0);
             }
         }
 
@@ -94,13 +95,13 @@ namespace KSPWheel
             }
             if (rI > 1) { rI = 1; }
             if (rI < -1) { rI = -1; }
-            rotInput = rI;
             if (useSteeringCurve)
             {
                 float speed = wheel.wheelLocalVelocity.magnitude;
                 float mult = steeringCurve.Evaluate(speed);
                 rI *= mult;
             }
+            rotInput = rI;
             wheel.steeringAngle = maxSteeringAngle * rotInput;
         }
 
