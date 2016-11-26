@@ -1903,7 +1903,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -26.9699993
+      value: -27
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1911,7 +1911,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 82.5599976
+      value: 29.3799992
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1919,7 +1919,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.y
-      value: .707106829
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.z
@@ -1927,7 +1927,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_LocalRotation.w
-      value: .707106709
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 400018, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -1955,11 +1955,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 400004, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 400002, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
       propertyPath: m_RootOrder
@@ -2145,8 +2145,8 @@ MonoBehaviour:
   damper: 2500
   maxMotorTorque: 0
   rpmLimit: 1100
-  maxBrakeTorque: 0
-  maxSteerAngle: 35
+  maxBrakeTorque: 1500
+  maxSteerAngle: 20
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
@@ -2157,7 +2157,7 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 1
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -2209,8 +2209,8 @@ MonoBehaviour:
   damper: 2500
   maxMotorTorque: 0
   rpmLimit: 1100
-  maxBrakeTorque: 0
-  maxSteerAngle: 35
+  maxBrakeTorque: 1500
+  maxSteerAngle: 20
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
@@ -2221,7 +2221,7 @@ MonoBehaviour:
   invertSteer: 0
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 1
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -2288,13 +2288,13 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  sideFrictionCoefficient: 1.5
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 1
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
@@ -2337,13 +2337,13 @@ MonoBehaviour:
   steeringResponse: 10
   brakeResponse: 10
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1
+  sideFrictionCoefficient: 1.5
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
   invertMotor: 0
   frictionModel: 0
-  sweepType: 0
+  sweepType: 1
   debug: 0
   susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}

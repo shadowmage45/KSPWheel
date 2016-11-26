@@ -41,6 +41,7 @@ namespace KSPWheel
             this.asVal = asVal;
             this.tailVal = tailVal;
             setupCurve();
+            //exportCurve("temp" + extSlip + ".png", 1024, 1024);
         }
 
         public float extremumSlip
@@ -119,7 +120,7 @@ namespace KSPWheel
                 texture.SetPixel(i, outY, Color.green);
             }
             byte[] fileBytes = texture.EncodeToPNG();
-            //File.WriteAllBytes(fileName, fileBytes);
+            System.IO.File.WriteAllBytes(fileName, fileBytes);
         }
 
         /// <summary>

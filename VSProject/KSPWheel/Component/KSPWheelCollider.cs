@@ -29,8 +29,8 @@ namespace KSPWheel
         private int currentRaycastMask = ~(1 << 26);//default cast to all layers except 26; 1<<26 sets 26 to the layer; ~inverts all bits in the mask (26 = KSP WheelColliderIgnore layer)
         private KSPWheelFrictionType currentFrictionModel = KSPWheelFrictionType.STANDARD;
         private KSPWheelSweepType currentSweepType = KSPWheelSweepType.RAY;
-        private KSPWheelFrictionCurve fwdFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);//current forward friction curve
-        private KSPWheelFrictionCurve sideFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.08f, 1.0f, 0.65f);//current sideways friction curve
+        private KSPWheelFrictionCurve fwdFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.065f, 1.25f, 0.7f);//current forward friction curve
+        private KSPWheelFrictionCurve sideFrictionCurve = new KSPWheelFrictionCurve(0.03f, 1.0f, 0.04f, 1.05f, 0.7f);//current sideways friction curve
         private bool automaticUpdates = false;
         //set from get/set method
         private Vector3 gravity = new Vector3(0, -9.81f, 0);
