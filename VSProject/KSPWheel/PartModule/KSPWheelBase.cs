@@ -119,8 +119,11 @@ namespace KSPWheel
                     wheel = wheelData[i];
                     rating = loadRating * wheel.loadShare;
                     calcSuspension(rating, wheel.suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-                    wheel.wheel.spring = suspensionSpring;
-                    wheel.wheel.damper = suspensionDamper;
+                    if (wheel.wheel != null)
+                    {
+                        wheel.wheel.spring = suspensionSpring;
+                        wheel.wheel.damper = suspensionDamper;
+                    }
                 }
             }
         }
