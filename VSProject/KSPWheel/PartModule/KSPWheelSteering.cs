@@ -50,10 +50,10 @@ namespace KSPWheel
         public Vector3 steeringAxis = Vector3.up;
 
         [KSPField]
-        public bool useSteeringCurve = false;
+        public bool useSteeringCurve = true;
 
         [KSPField]
-        public FloatCurve steeringCurve;
+        public FloatCurve steeringCurve = new FloatCurve();
 
         private Transform steeringTransform;
         private Quaternion defaultRotation;
@@ -64,11 +64,11 @@ namespace KSPWheel
             base.OnStart(state);
             steeringTransform = part.transform.FindRecursive(steeringName);
             defaultRotation = steeringTransform.localRotation;
-            if(steeringCurve== null)
+            if(steeringCurve== null || steeringCurve.Curve.length==0)
             {
                 steeringCurve = new FloatCurve();
                 steeringCurve.Add(0, 1, 0, 0);
-                steeringCurve.Add(1, 1, 0, 0);
+                steeringCurve.Add(30, 0, 0, 0);
             }
         }
 
