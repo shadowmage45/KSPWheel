@@ -52,10 +52,10 @@ namespace KSPWheel
         public float guiResourceUse = 0f;
 
         [KSPField]
-        public bool useTorqueCurve = false;
+        public bool useTorqueCurve = true;
 
         [KSPField]
-        public FloatCurve torqueCurve;
+        public FloatCurve torqueCurve = new FloatCurve();
 
         [KSPField(guiName = "Traction Control", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
@@ -71,14 +71,10 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            if (tankSteering)
+            Fields[nameof(invertSteering)].guiActive = tankSteering;
+            Fields[nameof(invertSteering)].guiActiveEditor = tankSteering;
+            if (torqueCurve.Curve.length == 0)
             {
-                Fields[nameof(invertSteering)].guiActive = true;
-                Fields[nameof(invertSteering)].guiActiveEditor = true;
-            }
-            if (torqueCurve == null)
-            {
-                torqueCurve = new FloatCurve();
                 torqueCurve.Add(0, 1, 0, 0);
                 torqueCurve.Add(1, 0, 0, 0);
             }
