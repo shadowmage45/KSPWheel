@@ -6,6 +6,7 @@ namespace KSPWheel
 {
     public class KSPWheelSteering : KSPWheelSubmodule
     {
+
         /// <summary>
         /// Name of the transform that will be rotated for visual steering effect
         /// </summary>
@@ -38,6 +39,9 @@ namespace KSPWheel
          UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool invertSteering = false;
 
+        [KSPField(guiName = "Steering Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
+        public float steeringLimit = 1f;
 
         [KSPField(guiName = "Steering Bias", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
@@ -102,7 +106,7 @@ namespace KSPWheel
                 rI *= mult;
             }
             rotInput = rI;
-            wheel.steeringAngle = maxSteeringAngle * rotInput;
+            wheel.steeringAngle = maxSteeringAngle * rotInput * steeringLimit;
         }
 
         public void Update()
