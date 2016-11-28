@@ -30,9 +30,13 @@ namespace KSPWheel
         [KSPField]
         public bool tankSteering = false;
 
-        [KSPField(guiName = "Invert Steering", guiActive = false, guiActiveEditor = false, isPersistant = true),
+        [KSPField(guiName = "Tank Steer Invert", guiActive = false, guiActiveEditor = false, isPersistant = true),
          UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool invertSteering = false;
+
+        [KSPField(guiName = "Tank Steer Lock", guiActive = false, guiActiveEditor = false, isPersistant = true),
+         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+        public bool steeringLocked = false;
 
         /// <summary>
         /// If true, motor response will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
@@ -73,6 +77,8 @@ namespace KSPWheel
             base.OnStart(state);
             Fields[nameof(invertSteering)].guiActive = tankSteering;
             Fields[nameof(invertSteering)].guiActiveEditor = tankSteering;
+            Fields[nameof(steeringLocked)].guiActive = tankSteering;
+            Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering;
             if (torqueCurve.Curve.length == 0)
             {
                 torqueCurve.Add(0, 1, 0, 0);
@@ -86,7 +92,7 @@ namespace KSPWheel
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             if (motorLocked) { fI = 0; }
             if (invertMotor) { fI = -fI; }
-            if (tankSteering)
+            if (tankSteering && !steeringLocked)
             {
                 float rI = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
                 if (invertSteering) { rI = -rI; }
