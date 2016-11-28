@@ -8,6 +8,7 @@ namespace KSPWheel
 {
     public class KSPWheelTransformRemoval : KSPWheelSubmodule
     {
+
         [Persistent]
         public string configNodeData = String.Empty;
 
@@ -47,7 +48,6 @@ namespace KSPWheel
 
         private void process()
         {
-            MonoBehaviour.print("Processing transforms to remove:\n " + configNodeData);
             int curWhen = 0;
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -69,8 +69,7 @@ namespace KSPWheel
                     Transform[] trs = part.transform.FindChildren(data[i].name);
                     foreach (Transform tr in trs)
                     {
-                        MonoBehaviour.print("Destroying GO: " + tr);
-                        GameObject.Destroy(tr.gameObject);
+                        GameObject.DestroyImmediate(tr.gameObject);
                     }
                 }
             }
