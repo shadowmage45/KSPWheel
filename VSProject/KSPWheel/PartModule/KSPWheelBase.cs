@@ -47,6 +47,9 @@ namespace KSPWheel
         [KSPField]
         public float suspensionTravel = 0.25f;
 
+        [KSPField]
+        public float frictionMult = 1f;
+
         [KSPField(guiName = "RideHeight", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0.05f, maxValue = 1, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float suspensionTarget = 0.5f;
@@ -254,6 +257,7 @@ namespace KSPWheel
                     for (int i = 0; i < count; i++)
                     {
                         wheelData[i].setupWheel(rb, raycastMask);
+                        wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
                         onWheelCreated(i, wheelData[i]);
                     }
                     onLoadUpdated(null, null);
@@ -292,9 +296,7 @@ namespace KSPWheel
                 {
                     wheel = wheelData[i].wheel;
                     wheel.gravityVector = vessel.gravityForPos;
-                    for (int k = 0; k < subModules.Count; k++) { if (subModules[i].wheelIndex == i) {  } }
                     wheel.updateWheel();
-                    for (int k = 0; k < subModules.Count; k++) {if (subModules[i].wheelIndex == i) {  } }
                 }
                 for (int i = 0; i < subLen; i++)
                 {
