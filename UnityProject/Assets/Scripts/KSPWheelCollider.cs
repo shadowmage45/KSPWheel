@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace KSPWheel
 {
-
-    [AddComponentMenu("Physics/KSPWheelCollider")]
     public class KSPWheelCollider : MonoBehaviour
     {
 
@@ -48,16 +46,6 @@ namespace KSPWheel
         private float radiusInverse;//cached radius inverse used to eliminate division operations from per-tick update code
         private float massInverse;//cached mass inverse used to eliminate division operations from per-tick update code
 
-        //sticky-friction vars;
-        //TODO -- add get/set methods for these to expose them for configuration
-        //TODO -- finish implementing sticky friction stuff =\
-        private float maxStickyVelocity = 0.00f;
-        private float sideStickyTimeMax = 0.25f;
-        private float fwdStickyTimeMax = 0.25f;
-        private float sideStickyTimer = 0;
-        private float fwdStickyTimer = 0;
-        private Vector3 wF, wR;
-        
         //internal friction model values
         private float prevFSpring;
         private float currentSuspensionCompression = 0f;
@@ -67,6 +55,7 @@ namespace KSPWheel
         private float fDamp;//force exerted by the damper this physics frame, in newtons
 
         //wheel axis directions are calculated each frame during update processing
+        private Vector3 wF, wR;
         private Vector3 wheelUp;
         private Vector3 wheelForward;
         private Vector3 wheelRight;
@@ -305,8 +294,6 @@ namespace KSPWheel
             postUpdateCallback = callback;
         }
 
-        //below here are Get-only method defs
-
         /// <summary>
         /// Return true/false if tire was grounded on the last suspension check
         /// </summary>
@@ -511,14 +498,13 @@ namespace KSPWheel
                 hitCollider = null;
                 localVelocity = Vector3.zero;
             }
-            updateStickyJoint();
         }
 
         #endregion ENDREGION - Update methods -- internal, external
 
         #region REGION - Private/internal update methods
 
-        public float susResponse = 1f;
+        public float susResponse = 0f;
 
         private float prevSpring = 0f;
         private float prevFLong = 0f;
@@ -603,119 +589,7 @@ namespace KSPWheel
             // and finally, integrate it into wheel angular velocity
             currentAngularVelocity += wBrake * -Mathf.Sign(currentAngularVelocity);
         }
-
-        private ConfigurableJoint bumpStopJoint;
-        private GameObject hitPointObject;
-        private Rigidbody hitPointRigidbody;
-
-        /// <summary>
-        /// Per-fixed-update configuration of the rigidbody joints that are used for sticky friction and anti-punchthrough behaviour
-        /// </summary>
-        /// <param name="fwd"></param>
-        /// <param name="side"></param>
-        private void updateStickyJoint()
-        {
-            //if (bumpStopJoint == null)
-            //{
-            //    hitPointObject = new GameObject("HIT");
-            //    hitPointRigidbody = hitPointObject.AddComponent<Rigidbody>();
-            //    hitPointRigidbody.isKinematic = true;
-            //    hitPointRigidbody.mass = 1f;
-
-            //    bumpStopJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
-            //    bumpStopJoint.anchor = wheel.transform.localPosition;// - (currentSuspenionLength + currentWheelRadius) * Vector3.up;
-            //    bumpStopJoint.axis = Vector3.right;
-            //    bumpStopJoint.connectedBody = hitPointRigidbody;
-            //    bumpStopJoint.autoConfigureConnectedAnchor = false;
-            //    bumpStopJoint.secondaryAxis = Vector3.up;
-            //    bumpStopJoint.targetPosition = -Vector3.up * (currentWheelRadius*1.0125f);
-
-            //    //SoftJointLimitSpring bumpStopLimitSpring = new SoftJointLimitSpring();
-            //    //bumpStopLimitSpring.spring = 0;
-            //    //bumpStopLimitSpring.damper = 0;
-            //    //bumpStopJoint.linearLimitSpring = bumpStopLimitSpring;
-
-            //    SoftJointLimit bumpStopLimit = new SoftJointLimit();
-            //    bumpStopLimit.bounciness = 0;
-            //    bumpStopLimit.limit = currentSuspensionLength + currentWheelRadius*1.5f;
-            //    bumpStopLimit.contactDistance = 0f;
-            //    bumpStopJoint.linearLimit = bumpStopLimit;
-
-            //    JointDrive YD = new JointDrive();
-            //    YD.positionSpring = 200000;
-            //    YD.positionDamper = 0;
-            //    YD.maximumForce = 10000000;
-            //    YD.mode = JointDriveMode.Position;
-            //    bumpStopJoint.yDrive = YD;                
-            //}
-            //hitPointObject.transform.position = wheel.transform.position - wheelUp * (currentSuspensionLength - currentSuspensionCompression + currentWheelRadius);
-            //bumpStopJoint.connectedAnchor = Vector3.zero;
-            //if (grounded && currentSuspensionCompression > currentSuspensionLength)
-            //{
-            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Limited;
-            //}
-            //else
-            //{
-            //    bumpStopJoint.yMotion = ConfigurableJointMotion.Free;
-            //}
-            
-
-            //if (grounded)
-            //{
-            //}
-            //else
-            //{
-            //    
-            //}
-
-            //if (stickyJoint == null)
-            //{
-            //    stickyJoint = rigidBody.gameObject.AddComponent<ConfigurableJoint>();
-            //    stickyJoint.anchor = wheel.transform.localPosition;
-            //    stickyJoint.axis = Vector3.right;
-            //    stickyJoint.autoConfigureConnectedAnchor = false;
-            //    stickyJoint.secondaryAxis = Vector3.up;
-            //}
-
-            // this will either be the contact point as seen by the wheel
-            // or.. some arbitrary point in space at the bottom of the wheels droop
-
-            //stickyJoint.connectedAnchor = wheel.transform.position - wheelUp * ((currentSuspenionLength - currentSuspensionCompression) + currentWheelRadius);
-            //if (grounded && Math.Abs(localVelocity.z) < maxStickyVelocity && currentMotorTorque == 0)
-            //{
-            //    fwdStickyTimer += Time.fixedDeltaTime;
-            //}
-            //else
-            //{
-            //    fwdStickyTimer = 0;
-            //}
-
-            //if (grounded && Math.Abs(localVelocity.x) < maxStickyVelocity && Mathf.Abs(localForce.x) < springForce * 0.1f)
-            //{
-            //    sideStickyTimer +=Time.fixedDeltaTime;
-            //}
-            //else
-            //{
-            //    sideStickyTimer = 0;
-            //}
-            //if (fwdStickyTimer >= fwdStickyTimeMax)
-            //{
-            //    stickyJoint.zMotion = ConfigurableJointMotion.Locked;
-            //}
-            //else
-            //{
-            //    stickyJoint.zMotion = ConfigurableJointMotion.Free;
-            //}
-            //if (sideStickyTimer >= sideStickyTimeMax)
-            //{
-            //    stickyJoint.xMotion = ConfigurableJointMotion.Locked;
-            //}
-            //else
-            //{
-            //    stickyJoint.xMotion = ConfigurableJointMotion.Free;
-            //}
-        }
-
+        
         /// <summary>
         /// Uses either ray- or sphere-cast to check for suspension contact with the ground, calculates current suspension compression, and caches the world-velocity at the contact point
         /// </summary>
