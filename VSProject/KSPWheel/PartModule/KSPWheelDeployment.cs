@@ -24,6 +24,9 @@ namespace KSPWheel
         [KSPField]
         public float tempColliderOffset = 0f;
 
+        [KSPField]
+        public float tempColliderRadius = 0.1f;
+
         private CapsuleCollider collider;
         private Transform tempColliderTransform;
         private WheelAnimationHandler animationControl;
@@ -69,8 +72,9 @@ namespace KSPWheel
                 animationControl.setToAnimationState(controller.wheelState, false);
                 if (collider != null)
                 {
-                    collider.height = wheel.length + wheel.radius*2 - wheel.compressionDistance;
-                    collider.center = new Vector3(0, -collider.height * 0.5f + collider.radius, 0);
+                    float totalHeight = wheel.length + wheel.radius * 2 - wheel.compressionDistance;
+                    collider.height = totalHeight;
+                    collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                     collider.enabled = true;
                 }
             }
@@ -80,8 +84,9 @@ namespace KSPWheel
                 animationControl.setToAnimationState(controller.wheelState, false);
                 if (collider != null)
                 {
-                    collider.height = wheel.length + wheel.radius * 2;// - wheel.compressionDistance;
-                    collider.center = new Vector3(0, -collider.height * 0.5f + collider.radius, 0);
+                    float totalHeight = wheel.length + wheel.radius * 2;
+                    collider.height = totalHeight;
+                    collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                     collider.enabled = true;
                 }
             }
@@ -125,9 +130,9 @@ namespace KSPWheel
                 standInCollider.transform.localPosition = pos;
                 standInCollider.layer = 26;
                 collider = standInCollider.AddComponent<CapsuleCollider>();
-                collider.radius = wheel.radius;
+                collider.radius = tempColliderRadius;
                 collider.height = wheel.length + wheel.radius * 2;
-                collider.center = new Vector3(0, -collider.height * 0.5f + collider.radius, 0);
+                collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                 collider.enabled = controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING;
             }
         }
