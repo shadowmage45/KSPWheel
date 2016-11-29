@@ -97,13 +97,11 @@ namespace KSPWheel
         [KSPField(isPersistant = true)]
         public bool grounded = false;
 
-
-
         #endregion
 
         #region REGION - Private working/cached variables
 
-        public float tweakScale = 1f;
+        public float tweakScaleCorrector = 1f;
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
@@ -127,8 +125,8 @@ namespace KSPWheel
                 for (int i = 0; i < len; i++)
                 {
                     wheel = wheelData[i];
-                    rating = loadRating * wheel.loadShare;
-                    calcSuspension(rating, wheel.suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+                    rating = loadRating * wheel.loadShare * tweakScaleCorrector;
+                    calcSuspension(rating, wheel.suspensionTravel * tweakScaleCorrector, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
                     if (wheel.wheel != null)
                     {
                         wheel.wheel.spring = suspensionSpring;
@@ -274,7 +272,7 @@ namespace KSPWheel
                     int count = wheelData.Length;
                     for (int i = 0; i < count; i++)
                     {
-                        wheelData[i].setupWheel(rb, raycastMask);
+                        wheelData[i].setupWheel(rb, raycastMask, tweakScaleCorrector);
                         wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
                         onWheelCreated(i, wheelData[i]);
                     }
@@ -344,7 +342,7 @@ namespace KSPWheel
         /// <param name="phq"></param>
         public void OnPutToGround(PartHeightQuery phq)
         {
-            float pos = part.transform.position.y - groundHeightOffset;
+            float pos = part.transform.position.y - groundHeightOffset * tweakScaleCorrector;
             MonoBehaviour.print("put on ground: " + pos+"  current: "+phq.lowestOnParts[part]+" tot: "+phq.lowestPoint);
             phq.lowestOnParts[part] = Mathf.Min(phq.lowestOnParts[part], pos);
             phq.lowestPoint = Mathf.Min(phq.lowestPoint, phq.lowestOnParts[part]);
@@ -464,14 +462,14 @@ namespace KSPWheel
                 GameObject.Destroy(wc);
             }
 
-            public void setupWheel(Rigidbody rb, int raycastMask)
+            public void setupWheel(Rigidbody rb, int raycastMask, float scaleFactor)
             {
-                wheelTransform.localPosition += Vector3.up * offset;
+                wheelTransform.localPosition += Vector3.up * offset * scaleFactor;
                 wheel = wheelTransform.gameObject.AddComponent<KSPWheelCollider>();
                 wheel.rigidbody = rb;
-                wheel.radius = wheelRadius;
-                wheel.mass = wheelMass;
-                wheel.length = suspensionTravel;
+                wheel.radius = wheelRadius * scaleFactor;
+                wheel.mass = wheelMass * scaleFactor;
+                wheel.length = suspensionTravel * scaleFactor;
                 wheel.raycastMask = raycastMask;
 
                 bumpStopGameObject = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
@@ -479,7 +477,7 @@ namespace KSPWheel
                 bumpStopGameObject.transform.NestToParent(wheelTransform);
                 bumpStopCollider = bumpStopGameObject.AddComponent<SphereCollider>();
                 bumpStopCollider.center = Vector3.zero;
-                bumpStopCollider.radius = wheelRadius;
+                bumpStopCollider.radius = wheelRadius * scaleFactor;
                 PhysicMaterial mat = new PhysicMaterial("TEST");
                 mat.bounciness = 0.0f;
                 mat.dynamicFriction = 0;

@@ -846,7 +846,7 @@ namespace KSPWheel
                 currentAngularVelocity = 0;
                 wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
                 float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs(localForce.z));//remaining 'max' traction left
-                float fMax2 = Mathf.Max(0, localForce.y * Mathf.Abs(localVelocity.z) * 2 - Mathf.Abs(localForce.z));
+                float fMax2 = Mathf.Max(0, localForce.y * Mathf.Abs(localVelocity.z) - Mathf.Abs(localForce.z));
                 float fBrakeMax = Mathf.Min(fMax, fMax2);
                 localForce.z += fBrakeMax * -Mathf.Sign(localVelocity.z);
             }

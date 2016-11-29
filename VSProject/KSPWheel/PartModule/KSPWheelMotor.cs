@@ -25,9 +25,6 @@ namespace KSPWheel
         public float resourceAmount = 0f;
 
         [KSPField]
-        public float throttleResponse = 5f;
-
-        [KSPField]
         public float maxRPM = 600f;
 
         [KSPField]
@@ -109,14 +106,6 @@ namespace KSPWheel
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             if (motorLocked) { fI = 0; }
             if (invertMotor) { fI = -fI; }
-            if (tankSteering && !steeringLocked)
-            {
-                float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
-                if (invertSteering) { rI = -rI; }
-                fI = fI + rI;
-                if (fI > 1) { fI = 1; }
-                if (fI < -1) { fI = -1; }
-            }
 
             if (useTractionControl)
             {
@@ -126,18 +115,28 @@ namespace KSPWheel
                 }
             }
 
-            if (throttleResponse > 0 && fI !=0)
-            {
-                fI = Mathf.Lerp(fwdInput, fI, throttleResponse * Time.deltaTime);
-            }
-
             float rpm = wheel.rpm;
             if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
             else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
-            fI *= motorOutput;
-            fwdInput = fI * updateResourceDrain(Mathf.Abs(fI));
-            float mult = useTorqueCurve ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
-            torqueOutput = wheel.motorTorque = maxMotorTorque * fwdInput * mult;
+
+            fI *= (motorOutput * 0.01f);
+
+            float mult = useTorqueCurve && maxRPM > 0 ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
+            fI  = mult;
+
+            if (tankSteering && !steeringLocked)
+            {
+                float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
+                if (invertSteering) { rI = -rI; }
+                fI = fI + rI;
+                if (fI > 1) { fI = 1; }
+                if (fI < -1) { fI = -1; }
+            }
+
+            fI *= updateResourceDrain(Mathf.Abs(fI));
+            
+            fwdInput = fI;
+            torqueOutput = wheel.motorTorque = maxMotorTorque * fwdInput * mult * controller.tweakScaleCorrector;
         }
 
         //TODO fix resource drain, it was causing the world to explode...
