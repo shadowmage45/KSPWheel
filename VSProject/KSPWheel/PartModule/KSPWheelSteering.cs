@@ -23,14 +23,14 @@ namespace KSPWheel
         /// If true the steering will be locked to zero and will not respond to steering input.
         /// </summary>
         [KSPField(guiName = "Steering Lock", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public bool steeringLocked;
 
         /// <summary>
         /// If true, steering will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
         /// </summary>
         [KSPField(guiName = "Invert Steering", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public bool invertSteering = false;
 
         [KSPField(guiName = "Steering Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
