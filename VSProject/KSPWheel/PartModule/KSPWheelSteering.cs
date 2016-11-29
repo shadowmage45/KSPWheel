@@ -20,12 +20,6 @@ namespace KSPWheel
         public float maxSteeringAngle = 0f;
 
         /// <summary>
-        /// Steering lerp response speed.  Higher values = faster response.
-        /// </summary>
-        [KSPField]
-        public float steeringResponse = 0;
-
-        /// <summary>
         /// If true the steering will be locked to zero and will not respond to steering input.
         /// </summary>
         [KSPField(guiName = "Steering Lock", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -83,10 +77,6 @@ namespace KSPWheel
             float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
             if (steeringLocked) { rI = 0; }
             if (invertSteering) { rI = -rI; }
-            if (steeringResponse > 0)
-            {
-                rI = Mathf.Lerp(rotInput, rI, steeringResponse * Time.deltaTime);
-            }
             float bias = steeringBias;
             if (rI < 0)
             {
