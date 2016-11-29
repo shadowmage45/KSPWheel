@@ -122,7 +122,7 @@ namespace KSPWheel
             fI *= (motorOutput * 0.01f);
 
             float mult = useTorqueCurve && maxRPM > 0 ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
-            fI  = mult;
+            fI *= mult;
 
             if (tankSteering && !steeringLocked)
             {
