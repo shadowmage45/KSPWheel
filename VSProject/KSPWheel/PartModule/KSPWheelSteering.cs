@@ -80,8 +80,7 @@ namespace KSPWheel
         internal override void preWheelPhysicsUpdate()
         {
             base.preWheelPhysicsUpdate();
-            float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
-            float rI = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
+            float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
             if (steeringLocked) { rI = 0; }
             if (invertSteering) { rI = -rI; }
             if (steeringResponse > 0)
