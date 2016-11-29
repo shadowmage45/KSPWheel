@@ -130,7 +130,7 @@ namespace KSPWheel
                 {
                     wheel = wheelData[i];
                     rating = loadRating * wheel.loadShare;
-                    calcSuspension(rating, wheel.suspensionTravel * tweakScaleCorrector, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+                    calcSuspension(rating, wheel.suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
                     if (wheel.wheel != null)
                     {
                         wheel.wheel.spring = suspensionSpring;
@@ -277,7 +277,7 @@ namespace KSPWheel
                     int count = wheelData.Length;
                     for (int i = 0; i < count; i++)
                     {
-                        wheelData[i].setupWheel(rb, raycastMask, tweakScaleCorrector);
+                        wheelData[i].setupWheel(rb, raycastMask, tweakScaleCorrector * part.rescaleFactor);
                         wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
                         onWheelCreated(i, wheelData[i]);
                     }
@@ -305,7 +305,7 @@ namespace KSPWheel
             {
                 if (autoTuneSuspension)
                 {
-                    updateSuspension();
+                    //updateSuspension();
                 }
                 KSPWheelCollider wheel;
                 int subLen = subModules.Count;
@@ -350,7 +350,7 @@ namespace KSPWheel
         /// <param name="phq"></param>
         public void OnPutToGround(PartHeightQuery phq)
         {
-            float pos = part.transform.position.y - groundHeightOffset * tweakScaleCorrector;
+            float pos = part.transform.position.y - groundHeightOffset * (tweakScaleCorrector * part.rescaleFactor);
             MonoBehaviour.print("put on ground: " + pos+"  current: "+phq.lowestOnParts[part]+" tot: "+phq.lowestPoint);
             phq.lowestOnParts[part] = Mathf.Min(phq.lowestOnParts[part], pos);
             phq.lowestPoint = Mathf.Min(phq.lowestPoint, phq.lowestOnParts[part]);
@@ -368,22 +368,22 @@ namespace KSPWheel
         /// Auto-suspension tuning.
         /// Works, but causes interference with traction and normal suspension response.
         /// </summary>
-        private void updateSuspension()
-        {
-            int len = wheelData.Length;
-            for (int i = 0; i < len; i++)
-            {
-                KSPWheelCollider wheel = wheelData[i].wheel;
-                float target = wheel.springForce * 0.1f;
-                if (target < minLoadRating) { target = minLoadRating; }
-                if (target > maxLoadRating) { target = maxLoadRating; }
-                loadRating = Mathf.Lerp(loadRating, target, Time.deltaTime * susRes);
-                float suspensionSpring, suspensionDamper;
-                calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-                wheel.spring = suspensionSpring;
-                wheel.damper = suspensionDamper;
-            }
-        }
+        //private void updateSuspension()
+        //{
+        //    int len = wheelData.Length;
+        //    for (int i = 0; i < len; i++)
+        //    {
+        //        KSPWheelCollider wheel = wheelData[i].wheel;
+        //        float target = wheel.springForce * 0.1f;
+        //        if (target < minLoadRating) { target = minLoadRating; }
+        //        if (target > maxLoadRating) { target = maxLoadRating; }
+        //        loadRating = Mathf.Lerp(loadRating, target, Time.deltaTime * susRes);
+        //        float suspensionSpring, suspensionDamper;
+        //        calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+        //        wheel.spring = suspensionSpring;
+        //        wheel.damper = suspensionDamper;
+        //    }
+        //}
 
         internal void addSubmodule(KSPWheelSubmodule module)
         {
@@ -472,7 +472,7 @@ namespace KSPWheel
 
             public void setupWheel(Rigidbody rb, int raycastMask, float scaleFactor)
             {
-                wheelTransform.localPosition += Vector3.up * offset * scaleFactor;
+                wheelTransform.localPosition += Vector3.up * offset;
                 wheel = wheelTransform.gameObject.AddComponent<KSPWheelCollider>();
                 wheel.rigidbody = rb;
                 wheel.radius = wheelRadius * scaleFactor;
