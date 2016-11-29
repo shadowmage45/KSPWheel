@@ -73,7 +73,11 @@ namespace KSPWheel
 
         [KSPField]
         public float maxDampRatio = 2f;
-        
+
+        [KSPField(guiName = "Compression", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
+        public float guiCompression = 0.65f;
+
         /// <summary>
         /// If true the steering will be locked to zero and will not respond to steering input.
         /// </summary>
@@ -309,11 +313,14 @@ namespace KSPWheel
                 {
                     subModules[i].preWheelPhysicsUpdate();
                 }
+                guiCompression = 0f;
                 for (int i = 0; i < len; i++)
                 {
                     wheel = wheelData[i].wheel;
                     wheel.gravityVector = vessel.gravityForPos;
                     wheel.updateWheel();
+                    float p = wheel.compressionDistance / wheel.length;
+                    if (p > guiCompression) { guiCompression = p; }
                 }
                 for (int i = 0; i < subLen; i++)
                 {
