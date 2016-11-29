@@ -50,11 +50,11 @@ namespace KSPWheel
         [KSPField]
         public float frictionMult = 1f;
 
-        [KSPField(guiName = "RideHeight", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Ride Height", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0.05f, maxValue = 1, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float suspensionTarget = 0.5f;
 
-        [KSPField(guiName = "LoadRating", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Load Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0.05f, maxValue = 5, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float loadRating = 2.5f;
 
@@ -64,7 +64,7 @@ namespace KSPWheel
         [KSPField]
         public float maxLoadRating = 5f;
 
-        [KSPField(guiName = "DampRatio", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
         UI_FloatRange(minValue = 0.05f, maxValue = 2, stepIncrement = 0.025f, suppressEditorShipModified = true)]
         public float dampRatio = 0.65f;
 
@@ -77,12 +77,15 @@ namespace KSPWheel
         /// <summary>
         /// If true the steering will be locked to zero and will not respond to steering input.
         /// </summary>
-        [KSPField(guiName = "Auto-Tune", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Auto-Tune(WIP)", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool autoTuneSuspension = false;
 
         [KSPField]
         public string boundsColliderName = String.Empty;
+
+        [KSPField]
+        public float groundHeightOffset = 0f;
 
         #endregion
 
@@ -94,9 +97,13 @@ namespace KSPWheel
         [KSPField(isPersistant = true)]
         public bool grounded = false;
 
+
+
         #endregion
 
         #region REGION - Private working/cached variables
+
+        public float tweakScale = 1f;
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
@@ -104,10 +111,7 @@ namespace KSPWheel
         public string configNodeData = string.Empty;
         private bool initializedWheels = false;
         public KSPWheelData[] wheelData;
-        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
-        private GameObject boundsGameObject;
-        private BoxCollider boundsCollider;
-
+        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();        
         #endregion
 
         #region REGION - GUI Handling methods
@@ -196,10 +200,24 @@ namespace KSPWheel
                 rng.maxValue = maxLoadRating;
                 rng.stepIncrement = 0.1f;
             }
+            rng = (UI_FloatRange)field.uiControlEditor;
+            if (rng != null)
+            {
+                rng.minValue = minLoadRating;
+                rng.maxValue = maxLoadRating;
+                rng.stepIncrement = 0.1f;
+            }
 
             field = Fields[nameof(dampRatio)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
             rng = (UI_FloatRange)field.uiControlFlight;
+            if (rng != null)
+            {
+                rng.minValue = minDampRatio;
+                rng.maxValue = maxDampRatio;
+                rng.stepIncrement = 0.1f;
+            }
+            rng = (UI_FloatRange)field.uiControlEditor;
             if (rng != null)
             {
                 rng.minValue = minDampRatio;
@@ -318,6 +336,19 @@ namespace KSPWheel
             {
                 subModules[i].preWheelFrameUpdate();
             }
+        }
+
+        /// <summary>
+        /// Override of stock code use of Unity SendMessage mechanic.
+        /// </summary>
+        /// <param name="phq"></param>
+        public void OnPutToGround(PartHeightQuery phq)
+        {
+            float pos = part.transform.position.y - groundHeightOffset;
+            MonoBehaviour.print("put on ground: " + pos+"  current: "+phq.lowestOnParts[part]+" tot: "+phq.lowestPoint);
+            phq.lowestOnParts[part] = Mathf.Min(phq.lowestOnParts[part], pos);
+            phq.lowestPoint = Mathf.Min(phq.lowestPoint, phq.lowestOnParts[part]);
+            MonoBehaviour.print("post put on ground: "+ phq.lowestOnParts[part] + " tot: " + phq.lowestPoint);
         }
 
         #endregion
