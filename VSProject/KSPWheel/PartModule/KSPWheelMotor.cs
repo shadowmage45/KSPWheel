@@ -14,9 +14,12 @@ namespace KSPWheel
     public class KSPWheelMotor : KSPWheelSubmodule
     {
         
-        [KSPField(guiName = "Motor Torque", guiActive = true, guiActiveEditor = true),
-         UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 0.5f)]
+        [KSPField]
         public float maxMotorTorque = 0f;
+
+        [KSPField(guiName = "Motor Torque", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f)]
+        public float motorOutput = 100f;
 
         [KSPField]
         public float resourceAmount = 0f;
@@ -49,7 +52,7 @@ namespace KSPWheel
         /// If true, motor response will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
         /// </summary>
         [KSPField(guiName = "Motor Lock", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public bool motorLocked;
 
         [KSPField(guiActive = true, guiName = "Motor EC Use", guiUnits = "ec/s")]
@@ -66,15 +69,24 @@ namespace KSPWheel
         public bool useTractionControl = false;
 
         [KSPField(guiName = "Traction Val", guiActive = true, guiActiveEditor = true),
-         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.025f)]
+         UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.001f)]
         public float tractionControl = 0.1f;
 
         private float fwdInput;
         public float torqueOutput;
 
+        public void onMotorInvert(BaseField field, System.Object obj)
+        {
+            if (HighLogic.LoadedSceneIsEditor && part.symmetryCounterparts.Count==1)
+            {
+                part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor = !invertMotor;
+            }
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            Fields[nameof(invertMotor)].uiControlEditor.onFieldChanged = onMotorInvert;
             Fields[nameof(invertSteering)].guiActive = tankSteering;
             Fields[nameof(invertSteering)].guiActiveEditor = tankSteering;
             Fields[nameof(steeringLocked)].guiActive = tankSteering;
@@ -84,6 +96,11 @@ namespace KSPWheel
                 torqueCurve.Add(0, 1, 0, 0);
                 torqueCurve.Add(1, 0, 0, 0);
             }
+            if (HighLogic.LoadedSceneIsEditor && part.isClone)
+            {
+                invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
+            }
+            //TODO how to determine if is 'original' part or a symmetry part?
         }
 
         internal override void preWheelPhysicsUpdate()
@@ -94,7 +111,7 @@ namespace KSPWheel
             if (invertMotor) { fI = -fI; }
             if (tankSteering && !steeringLocked)
             {
-                float rI = part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim;
+                float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
                 if (invertSteering) { rI = -rI; }
                 fI = fI + rI;
                 if (fI > 1) { fI = 1; }
@@ -109,7 +126,7 @@ namespace KSPWheel
                 }
             }
 
-            if (throttleResponse > 0)
+            if (throttleResponse > 0 && fI !=0)
             {
                 fI = Mathf.Lerp(fwdInput, fI, throttleResponse * Time.deltaTime);
             }
@@ -117,6 +134,7 @@ namespace KSPWheel
             float rpm = wheel.rpm;
             if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
             else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
+            fI *= motorOutput;
             fwdInput = fI * updateResourceDrain(Mathf.Abs(fI));
             float mult = useTorqueCurve ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
             torqueOutput = wheel.motorTorque = maxMotorTorque * fwdInput * mult;
