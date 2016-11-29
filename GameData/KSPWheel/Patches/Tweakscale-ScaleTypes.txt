@@ -1,0 +1,99 @@
+//hastily copied from KF configs; to get some sort of TS compatibility rolling
+SCALETYPE
+{
+	// Small wheels may become unusable at extremely small scales.  80%-300% range.
+	name = KSPWheelSmallWheel
+	freeScale = false
+	scaleFactors = 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.8, 3.0
+	incrementSlide = 0.2
+	defaultScale = 1.0
+	TWEAKSCALEEXPONENTS
+	{
+		name = KSPWheelBase
+		!tweakScaleCorrector = 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.8, 3.0
+	}
+}
+SCALETYPE
+{
+	// Medium wheels have a wide range of 40%-260% to keep them in that medium range.
+	name = KSPWheelMediumWheel
+	freeScale = false
+	scaleFactors = 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.0, 2.2, 2.4, 2.6
+	defaultScale = 1.0
+	incrementSlide = 0.2
+	TWEAKSCALEEXPONENTS
+	{
+		name = KSPWheelBase
+		!tweakScaleCorrector = 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.0, 2.2, 2.4, 2.6
+	}
+}
+SCALETYPE
+{
+	// Large wheels are best kept at a 10%-140% range so they don't get too big to handle.
+	name = KSPWheelLargeWheel
+	freeScale = false
+	scaleFactors = 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4
+	defaultScale = 1.0
+	incrementSlide = 0.2
+	TWEAKSCALEEXPONENTS
+	{
+		name = KSPWheelBase
+		!tweakScaleCorrector = 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4
+	}
+}
+SCALETYPE
+{
+	// Samll Track scaler. Different scale range: 40%-340%
+	name = KSPWheelTrackSmall
+	freeScale = false
+	scaleFactors = 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4
+	incrementSlide = 0.2
+	defaultScale = 1.0
+	TWEAKSCALEEXPONENTS
+	{
+		name = KSPWheelBase
+		!tweakScaleCorrector = 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4
+	}
+}
+SCALETYPE
+{
+	// Track scaler. Largest range of all the scaletypes: 20%-400%
+	name = KSPWheelTrackMedium
+	freeScale = false
+	scaleFactors = 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0
+	defaultScale = 1.0
+	incrementSlide = 0.2
+	TWEAKSCALEEXPONENTS
+	{
+		name = KSPWheelBase
+		!tweakScaleCorrector = 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0
+	}
+}
+SCALETYPE
+{
+	// Large Track scaler: 20%-160%
+	name = KSPWheelTrackLarge
+	freeScale = false
+	scaleFactors = 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6
+	defaultScale = 1.0
+	incrementSlide = 0.2
+	TWEAKSCALEEXPONENTS
+	{
+		name = KSPWheelBase
+		!tweakScaleCorrector = 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6
+	}
+}
+SCALETYPE
+{
+	// Repulsor scaler.  Uses fixed scaling; so that the modules know to update things properly...
+	name = KSPWheelRepulsor
+	freeScale = false
+	scaleFactors = 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6
+	defaultScale = 1.0
+	incrementSlide = 0.2
+	TWEAKSCALEEXPONENTS
+	{
+		name = KSPWheelBase
+		!tweakScaleCorrector = 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6
+	}
+}
