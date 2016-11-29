@@ -125,7 +125,7 @@ namespace KSPWheel
                 for (int i = 0; i < len; i++)
                 {
                     wheel = wheelData[i];
-                    rating = loadRating * wheel.loadShare * tweakScaleCorrector;
+                    rating = loadRating * wheel.loadShare;
                     calcSuspension(rating, wheel.suspensionTravel * tweakScaleCorrector, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
                     if (wheel.wheel != null)
                     {
@@ -194,17 +194,18 @@ namespace KSPWheel
             UI_FloatRange rng = (UI_FloatRange)field.uiControlFlight;
             if (rng != null)
             {
-                rng.minValue = minLoadRating;
-                rng.maxValue = maxLoadRating;
+                rng.minValue = minLoadRating * tweakScaleCorrector;
+                rng.maxValue = maxLoadRating * tweakScaleCorrector;
                 rng.stepIncrement = 0.1f;
             }
             rng = (UI_FloatRange)field.uiControlEditor;
             if (rng != null)
             {
-                rng.minValue = minLoadRating;
-                rng.maxValue = maxLoadRating;
+                rng.minValue = minLoadRating * tweakScaleCorrector;
+                rng.maxValue = maxLoadRating * tweakScaleCorrector;
                 rng.stepIncrement = 0.1f;
             }
+            if (loadRating > maxLoadRating * tweakScaleCorrector) { loadRating = maxLoadRating * tweakScaleCorrector; }
 
             field = Fields[nameof(dampRatio)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
@@ -474,7 +475,6 @@ namespace KSPWheel
 
                 bumpStopGameObject = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
                 bumpStopGameObject.layer = 26;
-                bumpStopGameObject.transform.NestToParent(wheelTransform);
                 bumpStopCollider = bumpStopGameObject.AddComponent<SphereCollider>();
                 bumpStopCollider.center = Vector3.zero;
                 bumpStopCollider.radius = wheelRadius * scaleFactor;
@@ -483,6 +483,7 @@ namespace KSPWheel
                 mat.dynamicFriction = 0;
                 mat.staticFriction = 0;
                 bumpStopCollider.material = mat;
+                bumpStopGameObject.transform.NestToParent(wheelTransform);
             }
 
         }
