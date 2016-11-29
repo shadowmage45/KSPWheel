@@ -126,7 +126,7 @@ namespace KSPWheel
                 //nest it to the wheel collider, with y+ orientation
                 standInCollider.transform.NestToParent(tempColliderTransform);
                 Vector3 pos = standInCollider.transform.localPosition;
-                pos.y += tempColliderOffset;
+                pos.y += tempColliderOffset * controller.tweakScaleCorrector * part.rescaleFactor;
                 standInCollider.transform.localPosition = pos;
                 standInCollider.layer = 26;
                 collider = standInCollider.AddComponent<CapsuleCollider>();
