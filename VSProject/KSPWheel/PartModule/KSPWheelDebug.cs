@@ -39,6 +39,14 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0.05f, maxValue = 3, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float latTractMult = 1f;
 
+        [KSPField(guiName = "latSlip", guiActive = true, guiActiveEditor = false, isPersistant = false),
+         UI_ProgressBar(minValue = 0, maxValue = 1)]
+        public float latSlip = 0f;
+
+        [KSPField(guiName = "longSlip", guiActive = true, guiActiveEditor = false, isPersistant = false),
+         UI_ProgressBar(minValue = 0, maxValue = 1)]
+        public float longSlip = 0f;
+
         /// <summary>
         /// The visual offset to the suspension transform compared to its default location and the wheel-colliders location.
         /// </summary>
@@ -130,6 +138,8 @@ namespace KSPWheel
             fSpring = wheel.springForce;
             rpm = wheel.rpm;
             comp = wheel.compressionDistance;
+            latSlip = wheel.lateralSlip;
+            longSlip = wheel.longitudinalSlip;
             colliderHit = wheel.isGrounded ? wheel.contactColliderHit.gameObject.name + " : " + wheel.contactColliderHit.gameObject.layer : "None";
             debugHitObject.transform.position = wheelTransform.position - (wheelTransform.up * wheel.length) + (wheelTransform.up * wheel.compressionDistance) - (wheelTransform.up * wheel.radius);
         }

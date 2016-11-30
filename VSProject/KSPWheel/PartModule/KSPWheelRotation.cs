@@ -16,6 +16,10 @@ namespace KSPWheel
         [KSPField]
         public Vector3 rotationAxis = Vector3.left;
 
+        [KSPField(guiName = "Display Fwd Rotation", guiActive = false, guiActiveEditor = true, isPersistant = false),
+         UI_Toggle(enabledText = "True", disabledText = "False", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
+        public bool editorRotation = false;
+
         private Transform wheelMeshTransform;
 
         internal override void postWheelCreated()
@@ -27,6 +31,10 @@ namespace KSPWheel
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
+            if (HighLogic.LoadedSceneIsEditor && editorRotation)
+            {
+                wheelMeshTransform.Rotate(rotationAxis * 72 * Time.deltaTime, Space.Self);//72 deg/sec rotation speed
+            }
             wheelMeshTransform.Rotate(rotationAxis * wheel.perFrameRotation, Space.Self);
         }
 
