@@ -45,14 +45,12 @@ namespace KSPWheel
             toggleDeploy();
         }
 
-        [KSPEvent(guiName = "Deploy Gear", guiActive = true, guiActiveEditor = true)]
         public void deploy()
         {
             if (controller == null) { return; }
             if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING) { toggleDeploy(); }
         }
 
-        [KSPEvent(guiName = "Retract Gear", guiActive = true, guiActiveEditor = true)]
         public void retract()
         {
             if (controller == null) { return; }
@@ -97,12 +95,18 @@ namespace KSPWheel
             base.OnStart(state);
         }
 
+        public void Update()
+        {
+            if (animationControl != null)
+            {
+                animationControl.updateAnimationState();
+            }
+        }
+
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
             animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState);
-            Events[nameof(deploy)].active = controller.wheelState == KSPWheelState.RETRACTED;
-            Events[nameof(retract)].active = controller.wheelState == KSPWheelState.DEPLOYED;
             animationControl.setToAnimationState(controller.wheelState, false);
 
             lightModule = part.GetComponent<ModuleLight>();
@@ -135,12 +139,6 @@ namespace KSPWheel
                 collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                 collider.enabled = controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING;
             }
-        }
-
-        internal override void preWheelFrameUpdate()
-        {
-            base.preWheelFrameUpdate();
-            animationControl.updateAnimationState();
         }
 
         internal override void preWheelPhysicsUpdate()

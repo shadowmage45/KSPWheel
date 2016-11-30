@@ -46,9 +46,6 @@
     <Reference Include="KSPAssets">
       <HintPath>libs\KSPAssets.dll</HintPath>
     </Reference>
-    <Reference Include="MiscUtil-r285">
-      <HintPath>libs\MiscUtil-r285.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -58,17 +55,11 @@
     <Reference Include="UnityEngine">
       <HintPath>libs\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.Networking">
-      <HintPath>libs\UnityEngine.Networking.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>libs\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityScript.Lang">
       <HintPath>libs\UnityScript.Lang.dll</HintPath>
-    </Reference>
-    <Reference Include="Vectrosity">
-      <HintPath>libs\Vectrosity.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
