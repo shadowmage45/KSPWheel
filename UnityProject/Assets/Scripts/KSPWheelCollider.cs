@@ -567,7 +567,13 @@ namespace KSPWheel
             // cross the left/right with the hitNorm to derive the up/down-hill direction
             Vector3 upDown = Vector3.Cross(hitGravCross, hitNormal);
             // and pray that all the rhs/lhs coordinates are correct...
-            agFix = upDown * agForce;
+            float slopeLatDot = Vector3.Dot(upDown, wR);
+            agFix = agForce * slopeLatDot * wR;
+            if (brakeTorque > 0) //&& Mathf.Abs(localVelocity.z) > 1f)
+            {
+                float slopeLongDot = Vector3.Dot(upDown, wF);
+                agFix += agForce * slopeLongDot * wF;
+            }
             return agFix;
         }
 
