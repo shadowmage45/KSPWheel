@@ -20,6 +20,9 @@ namespace KSPWheel
         [KSPField]
         public int raycastMask = ~(1 << 26 | 1 << 10);
 
+        /// <summary>
+        /// If true, will use the rigidbody of the parent part rather than this.part.  Aides in jitter reduction and joint flex by (hopefully) applying forces to a part with higher mass.
+        /// </summary>
         [KSPField]
         public bool useParentRigidbody = true;
 
@@ -78,9 +81,6 @@ namespace KSPWheel
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
         public float guiCompression = 0.65f;
 
-        /// <summary>
-        /// If true the steering will be locked to zero and will not respond to steering input.
-        /// </summary>
         [KSPField(guiName = "Auto-Tune(WIP)", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool autoTuneSuspension = false;
