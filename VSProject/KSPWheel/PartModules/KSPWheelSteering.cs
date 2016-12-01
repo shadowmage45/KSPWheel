@@ -103,7 +103,10 @@ namespace KSPWheel
             if (!HighLogic.LoadedSceneIsFlight || steeringTransform == null) { return; }
             if (wheel == null) { return; }
             steeringTransform.localRotation = defaultRotation;
-            steeringTransform.Rotate(wheel.steeringAngle * steeringAxis, Space.Self);
+            if (controller.wheelState == KSPWheelState.DEPLOYED)
+            {
+                steeringTransform.Rotate(wheel.steeringAngle * steeringAxis, Space.Self);
+            }
         }
 
     }
