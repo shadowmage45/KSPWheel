@@ -31,20 +31,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
+    <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>libs\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-UnityScript">
+    <Reference Include="Assembly-UnityScript, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\Assembly-UnityScript.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-UnityScript-firstpass">
-      <HintPath>libs\Assembly-UnityScript-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPAssets">
-      <HintPath>libs\KSPAssets.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,14 +45,9 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine">
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>libs\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityScript.Lang">
-      <HintPath>libs\UnityScript.Lang.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -68,24 +56,25 @@
     <Compile Include="Component\KSPWheelConstraint.cs" />
     <Compile Include="Component\KSPWheelFrictionCurve.cs" />
     <Compile Include="Component\KSPWheelStickyConstraint.cs" />
-    <Compile Include="PartModule\KSPWheelBase.cs" />
-    <Compile Include="PartModule\KSPWheelBogey.cs" />
-    <Compile Include="PartModule\KSPWheelBrakes.cs" />
-    <Compile Include="PartModule\KSPWheelDamage.cs" />
-    <Compile Include="PartModule\KSPWheelDebug.cs" />
-    <Compile Include="PartModule\KSPWheelDeployment.cs" />
-    <Compile Include="PartModule\KSPWheelMotor.cs" />
-    <Compile Include="PartModule\KSPWheelAnimationState.cs" />
-    <Compile Include="PartModule\KSPWheelRepulsor.cs" />
-    <Compile Include="PartModule\KSPWheelRotation.cs" />
-    <Compile Include="PartModule\KSPWheelState.cs" />
-    <Compile Include="PartModule\KSPWheelSteering.cs" />
-    <Compile Include="PartModule\KSPWheelSubmodule.cs" />
-    <Compile Include="PartModule\KSPWheelSuspension.cs" />
-    <Compile Include="PartModule\KSPWheelTracks.cs" />
-    <Compile Include="PartModule\KSPWheelTransformRemoval.cs" />
-    <Compile Include="PartModule\Utils.cs" />
-    <Compile Include="PartModule\WheelAnimationHandler.cs" />
+    <Compile Include="PartModules\KSPWheelBase.cs" />
+    <Compile Include="PartModules\KSPWheelBogey.cs" />
+    <Compile Include="PartModules\KSPWheelBrakes.cs" />
+    <Compile Include="PartModules\KSPWheelDamage.cs" />
+    <Compile Include="PartModules\KSPWheelDebug.cs" />
+    <Compile Include="PartModules\KSPWheelDeployment.cs" />
+    <Compile Include="PartModules\KSPWheelMotor.cs" />
+    <Compile Include="PartModules\KSPWheelAnimationState.cs" />
+    <Compile Include="PartModules\KSPWheelRepulsor.cs" />
+    <Compile Include="PartModules\KSPWheelRotation.cs" />
+    <Compile Include="PartModules\KSPWheelSounds.cs" />
+    <Compile Include="PartModules\KSPWheelState.cs" />
+    <Compile Include="PartModules\KSPWheelSteering.cs" />
+    <Compile Include="PartModules\KSPWheelSubmodule.cs" />
+    <Compile Include="PartModules\KSPWheelSuspension.cs" />
+    <Compile Include="PartModules\KSPWheelTracks.cs" />
+    <Compile Include="PartModules\KSPWheelTransformRemoval.cs" />
+    <Compile Include="PartModules\Utils.cs" />
+    <Compile Include="PartModules\WheelAnimationHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

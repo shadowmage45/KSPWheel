@@ -813,7 +813,6 @@ namespace KSPWheel
 
             float fLongMax = fwdFrictionCurve.evaluate(sLong) * localForce.y * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
             float fLatMax = sideFrictionCurve.evaluate(sLat) * localForce.y * currentSideFrictionCoef * currentSurfaceFrictionCoef;
-
             // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame
             // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
             localForce.x = fLatMax;
@@ -861,11 +860,81 @@ namespace KSPWheel
                 currentAngularVelocity += -Mathf.Sign(currentAngularVelocity) * wBrakeDelta;//traction from this will be applied next frame from wheel slip, but we're integrating here basically for rendering purposes
             }
 
+            //combinatorialFrictionModelOne(fLatMax, fLongMax, localForce.x, localForce.z, out localForce.x, out localForce.z);
+            //combinatorialFrictionModelTwo(fLatMax, fLongMax, localForce.x, localForce.z, out localForce.x, out localForce.z);
+            //combinatorialFrictionModelThree(fLatMax, fLongMax, localForce.x, localForce.z, out localForce.x, out localForce.z);
+            combinatorialFrictionModelFour(fLatMax, fLongMax, localForce.x, localForce.z, out localForce.x, out localForce.z);
+            //TODO technically wheel angular velocity integration should not occur until after the force is capped here, otherwise things will get out of synch
+        }
+
+        /// <summary>
+        /// Simple combinatorial friction model; longitudinal friction overrides lateral if it would exceed friction cap
+        /// </summary>
+        private void combinatorialFrictionModelOne(float latMax, float longMax, float fLat, float fLong, out float combLat, out float combLong)
+        {
             // cap friction / combined friction
             // in this simplified model, longitudinal force wins
-            float cap = Mathf.Max(fLatMax, fLongMax);
-            float latLimit = cap - Mathf.Abs(localForce.z);
-            if (Mathf.Abs(localForce.x) > latLimit) { localForce.x = latLimit * Mathf.Sign(localForce.x); }
+            float max = (fwdFrictionCurve.max + sideFrictionCurve.max) * 0.5f * localForce.y;
+            float cap = max;// Mathf.Max(latMax, longMax);
+            float latLimit = cap - Mathf.Abs(fLong);
+            if (Mathf.Abs(fLat) > latLimit) { fLat = latLimit * Mathf.Sign(fLat); }
+            combLat = fLat;
+            combLong = fLong;
+        }
+
+        /// <summary>
+        /// Slightly less-simple friction circle based integration, sadly the force with the lowest maximum has the greatest influence on the total output
+        /// </summary>
+        private void combinatorialFrictionModelTwo(float latMax, float longMax, float fLat, float fLong, out float combLat, out float combLong)
+        {
+            float absLatMax = Mathf.Abs(latMax);
+            float absLongMax = Mathf.Abs(longMax);
+            float cap = (absLatMax + absLongMax)/2;
+            float tot = Mathf.Abs(fLat) + Mathf.Abs(fLong);
+            float pct = tot / cap;
+            if (pct < 1 || float.IsNaN(pct)) { pct = 1; }
+            combLat = pct==0? 0 : fLat / pct;
+            combLong = pct==0? 0 : fLong / pct;
+        }
+
+        /// <summary>
+        /// Honestly, I played around in excel until I found something that looked right...
+        /// </summary>
+        private void combinatorialFrictionModelThree(float latMax, float longMax, float fLat, float fLong, out float combLat, out float combLong)
+        {
+            float absLatMax = Mathf.Abs(latMax);
+            float absLongMax = Mathf.Abs(longMax);
+            float maxLen = Mathf.Sqrt(absLatMax * absLatMax + absLongMax * absLongMax);
+            float fLen = Mathf.Sqrt(fLat * fLat + fLong * fLong);
+            float cap = (absLatMax + absLongMax);
+            float tot = Mathf.Abs(fLat) + Mathf.Abs(fLong);
+            float nR1 = maxLen==0 ? 0 : absLatMax / maxLen;
+            float nR2 = maxLen==0 ? 0 : absLongMax / maxLen;
+            float nR3 = Mathf.Abs(fLat) / fLen;
+            float nR4 = Mathf.Abs(fLong) / fLen;
+            float nR5 = nR1==0? 0 : nR3 / nR1;
+            float nR6 = nR2==0? 0 : nR4 / nR2;
+            combLat = fLat * nR1 * nR5;
+            combLong = fLong * nR2 * nR6;
+        }
+
+        /// <summary>
+        /// Simple and effective; limit their sum to the absolute maximum friction that the tire 
+        /// can ever produce, as calculated by the (averaged=/) peak points of the friction curve. 
+        /// This keeps the total friction output below the max of the tire while allowing the greatest range of optimal output for both lat and long friction.
+        /// -Ideally- slip ratio would be brought into the calculation somewhere, but not sure how it should be used.
+        /// </summary>
+        private void combinatorialFrictionModelFour(float latMax, float longMax, float fLat, float fLong, out float combLat, out float combLong)
+        {
+            float max = (fwdFrictionCurve.max + sideFrictionCurve.max) * 0.5f * localForce.y;
+            float tot = Mathf.Abs(fLat) + Mathf.Abs(fLong);
+            float pct = 1f;
+            if (tot > max)
+            {
+                pct = max / tot;
+            }
+            combLat = fLat * pct;
+            combLong = fLong * pct;
         }
 
         #endregion ENDREGION - Standard Friction Model

@@ -74,6 +74,11 @@ namespace KSPWheel
             set { tailVal = value;  setupCurve(); }
         }
 
+        public float max
+        {
+            get { return Mathf.Max(asVal, extVal); }
+        }
+
         /// <summary>
         /// Input = slip percent or cosin<para/>
         /// Value must be between 0...1 (inclusive)
