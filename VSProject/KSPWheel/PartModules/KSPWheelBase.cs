@@ -45,6 +45,9 @@ namespace KSPWheel
         public float wheelRadius = 0.25f;
 
         [KSPField]
+        public float wheelWidth = -1;
+
+        [KSPField]
         public float wheelMass = 0.25f;
 
         [KSPField]
@@ -175,6 +178,7 @@ namespace KSPWheel
             {
                 ConfigNode newWheelNode = new ConfigNode("WHEEL");
                 newWheelNode.AddValue("radius", wheelRadius);
+                newWheelNode.AddValue("width", wheelWidth > 0 ? wheelWidth : wheelRadius * 0.2f);
                 newWheelNode.AddValue("mass", wheelMass);
                 newWheelNode.AddValue("travel", suspensionTravel);
                 newWheelNode.AddValue("colliderName", wheelColliderName);
@@ -444,6 +448,7 @@ namespace KSPWheel
         {
             public readonly String wheelColliderName;
             public readonly float wheelRadius;
+            public readonly float wheelWidth;
             public readonly float wheelMass;
             public readonly float suspensionTravel;
             public readonly float loadShare;
@@ -451,12 +456,13 @@ namespace KSPWheel
             public KSPWheelCollider wheel;
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
-            public SphereCollider bumpStopCollider;
+            public MeshCollider bumpStopCollider;
 
             public KSPWheelData(ConfigNode node)
             {
                 wheelColliderName = node.GetStringValue("colliderName", "WheelCollider");
                 wheelRadius = node.GetFloatValue("radius", 0.25f);
+                wheelWidth = node.GetFloatValue("width", wheelRadius * 0.2f);
                 wheelMass = node.GetFloatValue("mass", 0.05f);
                 suspensionTravel = node.GetFloatValue("travel", 0.25f);
                 loadShare = node.GetFloatValue("load", 1f);
@@ -480,17 +486,29 @@ namespace KSPWheel
                 wheel.length = suspensionTravel * scaleFactor;
                 wheel.raycastMask = raycastMask;
 
+                //calculate the size/scale of the bump-stop collider
+                float scaleY = wheel.radius * 0.2f;//wheel width
+                scaleY *= 0.5f;//default is 2 units high, fix to 1 unit * width
+                float scaleXZ = wheel.radius;
+                bumpStopGameObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                bumpStopGameObject.transform.localScale = new Vector3(scaleXZ, scaleY, scaleXZ);
+
                 bumpStopGameObject = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
                 bumpStopGameObject.layer = 26;
-                bumpStopCollider = bumpStopGameObject.AddComponent<SphereCollider>();
-                bumpStopCollider.center = Vector3.zero;
-                bumpStopCollider.radius = wheelRadius * scaleFactor;
+                //remove existing capsule collider
+                GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<CapsuleCollider>());
+                //remove existing mesh renderer
+                GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<MeshRenderer>());
+                //add mesh collider
+                bumpStopCollider = bumpStopGameObject.AddComponent<MeshCollider>();
+
                 PhysicMaterial mat = new PhysicMaterial("TEST");
                 mat.bounciness = 0.0f;
                 mat.dynamicFriction = 0;
                 mat.staticFriction = 0;
                 bumpStopCollider.material = mat;
                 bumpStopGameObject.transform.NestToParent(wheelTransform);
+                bumpStopGameObject.transform.Rotate(90, 0, 0, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
             }
 
         }
