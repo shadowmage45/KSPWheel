@@ -529,12 +529,10 @@ namespace KSPWheel
             {
                 localForce.x *= fMult;
             }
-            //no clue if this is correct or not, but does seem to clean up some suspension force application problems at high incident angles
-            float suspensionDot = Vector3.Dot(hitNormal, wheelUp);
-            Vector3 calculatedForces = hitNormal * localForce.y * suspensionDot;
+            Vector3 calculatedForces = hitNormal * localForce.y;
             calculatedForces += localForce.z * wF;
             calculatedForces += localForce.x * wR;
-            calculatedForces += calcAG(hitNormal, localForce.y * suspensionDot);
+            calculatedForces += calcAG(hitNormal, localForce.y);
             rigidBody.AddForceAtPosition(calculatedForces, hitPoint, ForceMode.Force);
             if (hitCollider.attachedRigidbody != null && !hitCollider.attachedRigidbody.isKinematic)
             {
