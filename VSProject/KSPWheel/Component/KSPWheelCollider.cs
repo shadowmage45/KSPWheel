@@ -55,22 +55,24 @@ namespace KSPWheel
         private float fDamp;//force exerted by the damper this physics frame, in newtons
 
         //wheel axis directions are calculated each frame during update processing
-        private Vector3 wF, wR;
-        private Vector3 wheelUp;
-        private Vector3 wheelForward;
-        private Vector3 wheelRight;
-        private Vector3 localVelocity;
+        private Vector3 wF, wR;//contact-patch forward and right directions
+        private Vector3 wheelUp;//wheel up (suspension) direction
+        private Vector3 wheelForward;//wheel forward direction (actual wheel, not contact patch)
+        private Vector3 wheelRight;//wheel right direction (actual wheel, not contact patch)
+        private Vector3 localVelocity;//the wheel local velocity at that contact patch
         private Vector3 localForce;//the wheel(contact-patch?) local forces; x=lat, y=spring, z=long
-        private float vWheel;
-        private float vWheelDelta;
-        private float sLong;
-        private float sLat;
+        private float vWheel;//linear velocity of the wheel at contact patch
+        private float vWheelDelta;//linear velocity delta between wheel and surface
+        private float sLong;//longitudinal slip ratio
+        private float sLat;//lateral slip ratio
         private Vector3 hitPoint;//world-space position of contact patch
-        private Vector3 hitNormal;
-        private Collider hitCollider;
+        private Vector3 hitNormal;//world-coordinate hit-normal of the contact
+        private Collider hitCollider;//the collider that a hit was detected against
 
         //run-time references to various objects
-        private ConfigurableJoint stickyJoint;//the joint used for sticky friction
+        public float susResponse = 0f;
+        private float prevFLong = 0f;
+        private float prevFLat = 0f;
 
         #endregion ENDREGION - Private variables
 
@@ -504,12 +506,6 @@ namespace KSPWheel
 
         #region REGION - Private/internal update methods
 
-        public float susResponse = 0f;
-
-        private float prevSpring = 0f;
-        private float prevFLong = 0f;
-        private float prevFLat = 0f;
-
         /// <summary>
         /// Integrate the torques and forces for a grounded wheel, using the pre-calculated fSpring downforce value.
         /// </summary>
@@ -518,8 +514,10 @@ namespace KSPWheel
             calcFriction();
             if (susResponse > 0)
             {
-                localForce.y = Mathf.Lerp(prevSpring, localForce.y, susResponse / Time.fixedDeltaTime);
+                localForce.y = Mathf.Lerp(prevFSpring, localForce.y, susResponse / Time.fixedDeltaTime);
             }
+            //anti-jitter handling code; if lateral or long forces are oscillating, damp them on the rebound
+            //could possibly even zero them out for the rebound, but this method allows for some force
             float fMult = 0.1f;
             if ((prevFLong < 0 && localForce.z > 0) || (prevFLong > 0 && localForce.z < 0))
             {
@@ -538,7 +536,6 @@ namespace KSPWheel
             {
                 hitCollider.attachedRigidbody.AddForceAtPosition(-calculatedForces, hitPoint, ForceMode.Force);
             }
-            prevSpring = localForce.y;
             prevFLong = localForce.z;
             prevFLat = localForce.x;
         }
