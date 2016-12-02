@@ -38,6 +38,8 @@ namespace KSPWheel
         private Action<KSPWheelCollider> preUpdateCallback;//if automatic updates are enabled, this field may optionally be populated with a pre-update callback method; will be called directly prior to the wheels internal update code being processed
         private Action<KSPWheelCollider> postUpdateCallback;//if automatic updates are enabled, this field may optionally be populated with a post-update callback method; will be called directly after the wheels internal update code processing.
 
+        private float extSpringForce = 0f;
+
         //private vars with external get methods (cannot be set, for data viewing/debug purposes only)
         private bool grounded = false;
 
@@ -355,12 +357,21 @@ namespace KSPWheel
         }
 
         /// <summary>
+        /// The external additional down force to use for friction calculations.  Should be set by the vehicle controller in cases of bump-stop compression being reached, to emulate friction even when external colliders are providing the support/downforce.
+        /// </summary>
+        public float externalSpringForce
+        {
+            get { return extSpringForce; }
+            set { extSpringForce = value; }
+        }
+
+        /// <summary>
         /// Returns the last calculated value for spring force, in newtons; this is the force that is exerted on rigidoby along suspension axis<para/>
         /// This already has dampForce applied to it; for raw spring force = springForce-dampForce
         /// </summary>
         public float springForce
         {
-            get { return localForce.y; }
+            get { return localForce.y + extSpringForce; }
         }
 
         /// <summary>
@@ -806,15 +817,15 @@ namespace KSPWheel
             sLat = calcLatSlip(localVelocity.z, localVelocity.x);
             vWheelDelta = vWheel - localVelocity.z;
 
-            float fLongMax = fwdFrictionCurve.evaluate(sLong) * localForce.y * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
-            float fLatMax = sideFrictionCurve.evaluate(sLat) * localForce.y * currentSideFrictionCoef * currentSurfaceFrictionCoef;
+            float fLongMax = fwdFrictionCurve.evaluate(sLong) * (localForce.y + extSpringForce) * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
+            float fLatMax = sideFrictionCurve.evaluate(sLat) * (localForce.y + extSpringForce) * currentSideFrictionCoef * currentSurfaceFrictionCoef;
             // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame
             // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
             localForce.x = fLatMax;
             // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero
             // TODO - may need to adjust the multiplier when arresting downward motion so as to not induce jitter, as at times it may be greater than the actual sprung mass
             float fMult = 1f;
-            if (localForce.x > Mathf.Abs(localVelocity.x) * localForce.y * fMult) { localForce.x = Mathf.Abs(localVelocity.x) * localForce.y * fMult; }
+            if (localForce.x > Mathf.Abs(localVelocity.x) * (localForce.y + extSpringForce) * fMult) { localForce.x = Mathf.Abs(localVelocity.x) * (localForce.y + extSpringForce) * fMult; }
             // if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
             localForce.x *= -Mathf.Sign(localVelocity.x);// sign it opposite to the current vLat
 
@@ -846,7 +857,7 @@ namespace KSPWheel
                 currentAngularVelocity = 0;
                 wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
                 float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs(localForce.z));//remaining 'max' traction left
-                float fMax2 = Mathf.Max(0, localForce.y * Mathf.Abs(localVelocity.z) - Mathf.Abs(localForce.z));
+                float fMax2 = Mathf.Max(0, (localForce.y + extSpringForce) * Mathf.Abs(localVelocity.z) - Mathf.Abs(localForce.z));
                 float fBrakeMax = Mathf.Min(fMax, fMax2);
                 localForce.z += fBrakeMax * -Mathf.Sign(localVelocity.z);
             }
