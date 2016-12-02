@@ -57,7 +57,7 @@ namespace KSPWheel
         public float frictionMult = 1f;
 
         [KSPField(guiName = "Ride Height", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 1, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0.2f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float suspensionTarget = 0.5f;
 
         [KSPField(guiName = "Load Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -80,13 +80,17 @@ namespace KSPWheel
         [KSPField]
         public float maxDampRatio = 2f;
 
-        [KSPField(guiName = "Compression", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Compression", guiActive = true, guiActiveEditor = false, isPersistant = false),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
-        public float guiCompression = 0.65f;
+        public float guiCompression = 0.0f;
 
         [KSPField(guiName = "Auto-Tune(WIP)", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool autoTuneSuspension = false;
+
+        [KSPField(guiName = "Auto-Tune Load %", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 1f, suppressEditorShipModified = true)]
+        public float autoLoadShare = 25f;
 
         [KSPField]
         public string boundsColliderName = String.Empty;
@@ -116,7 +120,7 @@ namespace KSPWheel
         public string configNodeData = string.Empty;
         private bool initializedWheels = false;
         public KSPWheelData[] wheelData;
-        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();        
+        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
         #endregion
 
         #region REGION - GUI Handling methods
@@ -309,7 +313,7 @@ namespace KSPWheel
             {
                 if (autoTuneSuspension)
                 {
-                    //updateSuspension();
+                    updateSuspension();
                 }
                 KSPWheelCollider wheel;
                 int subLen = subModules.Count;
@@ -365,29 +369,27 @@ namespace KSPWheel
 
         #region REGION - Custom update methods
 
-        [KSPField]
-        float susRes = 1f;
-
         /// <summary>
         /// Auto-suspension tuning.
-        /// Works, but causes interference with traction and normal suspension response.
+        /// Needs a bit more work so as to not cause interference with traction; perhaps just changed response rate.<para/>
+        /// Could certainly be cleaned up a bit more to change output in a smoother manner.
         /// </summary>
-        //private void updateSuspension()
-        //{
-        //    int len = wheelData.Length;
-        //    for (int i = 0; i < len; i++)
-        //    {
-        //        KSPWheelCollider wheel = wheelData[i].wheel;
-        //        float target = wheel.springForce * 0.1f;
-        //        if (target < minLoadRating) { target = minLoadRating; }
-        //        if (target > maxLoadRating) { target = maxLoadRating; }
-        //        loadRating = Mathf.Lerp(loadRating, target, Time.deltaTime * susRes);
-        //        float suspensionSpring, suspensionDamper;
-        //        calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-        //        wheel.spring = suspensionSpring;
-        //        wheel.damper = suspensionDamper;
-        //    }
-        //}
+        private void updateSuspension()
+        {
+            float mass = (float)vessel.totalMass;
+            int len = wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                KSPWheelCollider wheel = wheelData[i].wheel;
+                float target = mass * autoLoadShare * 0.01f * wheelData[i].loadShare;
+                target = Mathf.Clamp(target, minLoadRating, maxLoadRating);
+                loadRating = Mathf.MoveTowards(loadRating, target, maxLoadRating * 0.1f);
+                float suspensionSpring, suspensionDamper;
+                calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+                wheel.spring = suspensionSpring;
+                wheel.damper = suspensionDamper;
+            }
+        }
 
         internal void addSubmodule(KSPWheelSubmodule module)
         {
