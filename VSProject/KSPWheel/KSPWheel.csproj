@@ -53,9 +53,7 @@
   <ItemGroup>
     <Compile Include="Component\KSPWheelCollider.cs" />
     <Compile Include="Component\KSPWheelComponent.cs" />
-    <Compile Include="Component\KSPWheelConstraint.cs" />
     <Compile Include="Component\KSPWheelFrictionCurve.cs" />
-    <Compile Include="Component\KSPWheelStickyConstraint.cs" />
     <Compile Include="PartModules\KSPWheelBase.cs" />
     <Compile Include="PartModules\KSPWheelBogey.cs" />
     <Compile Include="PartModules\KSPWheelBrakes.cs" />

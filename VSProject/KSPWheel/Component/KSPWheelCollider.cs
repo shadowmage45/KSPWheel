@@ -946,46 +946,7 @@ namespace KSPWheel
 
         public void calcFrictionPacejka()
         {
-            // TODO
-            // really this should just be an adjustment to the curve parameters
-            // as all that the pacejka formulas do is define the curves used by slip ratio to calculate maximum force output
-            
-            vWheel = currentAngularVelocity * wheelRadius;
-            sLong = calcLongSlip(localVelocity.z, vWheel);
-            sLat = calcLatSlip(localVelocity.z, localVelocity.x);
-            vWheelDelta = vWheel - localVelocity.z;
-
-            // 'simple' magic-formula
-            float B = 10f;//stiffness
-            // float C = 1.9f;
-            float Clat = 1.3f;
-            float Clong = 1.65f;
-            float D = 1;
-            float E = 0.97f;
-            // F = Fz * D * sin(C * atan(B*slip - E * (B*slip - atan(B*slip))))
-            float Fz = localForce.y;
-            float slipLat = sLat * 100f;
-            float slipLong = sLong * 100f;
-            float fLatMax = localForce.x = Fz * D * Mathf.Sin(Clat * Mathf.Atan(B * slipLat - E * (B * slipLat - Mathf.Atan(B * slipLat))));
-            float fLongMax = localForce.z = Fz * D * Mathf.Sin(Clong * Mathf.Atan(B * slipLong - E * (B * slipLong - Mathf.Atan(B * slipLong))));
-
-            if (localForce.x > Mathf.Abs(localVelocity.x) * localForce.y * 2f) { localForce.x = Mathf.Abs(localVelocity.x) * localForce.y * 2f; }
-            localForce.x *= -Mathf.Sign(localVelocity.x);// sign it opposite to the current vLat
-            
-            //angular velocity delta between wheel and surface in radians per second; radius inverse used to avoid div operations
-            float wDelta = vWheelDelta * radiusInverse;
-            //amount of torque needed to bring wheel to surface speed over one second
-            float tDelta = wDelta * currentMomentOfInertia;
-            //newtons of force needed to bring wheel to surface speed over one update tick
-            float fDelta = tDelta * radiusInverse / Time.fixedDeltaTime;
-            localForce.z = Mathf.Min(Mathf.Abs(fDelta), localForce.z) * Mathf.Sign(fDelta);
-            float tTract = -localForce.z * wheelRadius;
-            currentAngularVelocity += tTract * Time.fixedDeltaTime * inertiaInverse;
-            currentAngularVelocity += currentMotorTorque * Time.fixedDeltaTime * inertiaInverse;
-            
-            float cap = Mathf.Max(fLatMax, fLongMax);
-            float latLimit = cap - Mathf.Abs(localForce.z);
-            if (Mathf.Abs(localForce.x) > latLimit) { localForce.x = latLimit * Mathf.Sign(localForce.x); }
+            calcFrictionStandard();
         }
 
         #endregion ENDREGION - Alternate friction model
