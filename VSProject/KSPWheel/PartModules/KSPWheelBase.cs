@@ -406,7 +406,6 @@ namespace KSPWheel
             {
                 if (subModules[i].wheelIndex == index)
                 {
-                    MonoBehaviour.print("calling wheel created for index: " + index + " for module: "+subModules[i]);
                     subModules[i].onWheelCreated(wheelData.wheelTransform, wheelData.wheel);
                 }
             }
@@ -487,13 +486,12 @@ namespace KSPWheel
                 wheel.raycastMask = raycastMask;
 
                 //calculate the size/scale of the bump-stop collider
-                float scaleY = wheel.radius * 0.2f;//wheel width
+                float scaleY = wheelRadius * 0.2f * scaleFactor;//wheel width
                 scaleY *= 0.5f;//default is 2 units high, fix to 1 unit * width
-                float scaleXZ = wheel.radius;
+                float scaleXZ = wheelRadius * 2 * scaleFactor;
                 bumpStopGameObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                bumpStopGameObject.name = "KSPWheelBumpStop-" + wheelColliderName;
                 bumpStopGameObject.transform.localScale = new Vector3(scaleXZ, scaleY, scaleXZ);
-
-                bumpStopGameObject = new GameObject("KSPWheelBumpStop-" + wheelColliderName);
                 bumpStopGameObject.layer = 26;
                 //remove existing capsule collider
                 GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<CapsuleCollider>());
@@ -501,6 +499,8 @@ namespace KSPWheel
                 GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<MeshRenderer>());
                 //add mesh collider
                 bumpStopCollider = bumpStopGameObject.AddComponent<MeshCollider>();
+                //mark as convex
+                bumpStopCollider.convex = true;
 
                 PhysicMaterial mat = new PhysicMaterial("TEST");
                 mat.bounciness = 0.0f;
@@ -508,7 +508,7 @@ namespace KSPWheel
                 mat.staticFriction = 0;
                 bumpStopCollider.material = mat;
                 bumpStopGameObject.transform.NestToParent(wheelTransform);
-                bumpStopGameObject.transform.Rotate(90, 0, 0, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
+                bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
             }
 
         }
