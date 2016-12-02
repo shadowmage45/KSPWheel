@@ -27,6 +27,15 @@ namespace KSPWheel
         [KSPField]
         public float tempColliderRadius = 0.1f;
 
+        [KSPField]
+        public string deployEffect = String.Empty;
+
+        [KSPField]
+        public bool useDeployForRetract = true;
+
+        [KSPField]
+        public string retractEffect = String.Empty;
+
         private CapsuleCollider collider;
         private Transform tempColliderTransform;
         private WheelAnimationHandler animationControl;
@@ -75,6 +84,8 @@ namespace KSPWheel
                     collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                     collider.enabled = true;
                 }
+                if (!string.IsNullOrEmpty(retractEffect)) { part.Effect(retractEffect, 1.0f); }
+                else if (useDeployForRetract && !string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 1.0f); }
             }
             else if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING)
             {
@@ -87,6 +98,7 @@ namespace KSPWheel
                     collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                     collider.enabled = true;
                 }
+                if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 1.0f); }
             }
         }
 
