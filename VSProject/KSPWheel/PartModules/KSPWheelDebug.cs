@@ -139,7 +139,12 @@ namespace KSPWheel
             fLong = wheel.longitudinalForce;
             fLat = wheel.lateralForce;
             fSpring = wheel.springForce;
-            fSpringExt = wheel.externalSpringForce;
+            fSpringExt = 0;
+            int len = controller.wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                fSpringExt += controller.wheelData[i].wheel.externalSpringForce;
+            }
             rpm = wheel.rpm;
             comp = wheel.compressionDistance;
             latSlip = wheel.lateralSlip;
