@@ -878,7 +878,7 @@ namespace KSPWheel
         /// </summary>
         private void combinatorialFriction(float latMax, float longMax, float fLat, float fLong, out float combLat, out float combLong)
         {
-            float max = (fwdFrictionCurve.max + sideFrictionCurve.max) * 0.5f * localForce.y;
+            float max = (fwdFrictionCurve.max + sideFrictionCurve.max) * 0.5f * (localForce.y + extSpringForce);
             float tot = Mathf.Abs(fLat) + Mathf.Abs(fLong);
             float pct = 1f;
             if (tot > max)
