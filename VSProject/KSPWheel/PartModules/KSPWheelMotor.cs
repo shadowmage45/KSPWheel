@@ -61,13 +61,13 @@ namespace KSPWheel
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
 
-        [KSPField(guiName = "Traction Control", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+        //[KSPField(guiName = "Traction Control", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        // UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool useTractionControl = false;
 
-        [KSPField(guiName = "Traction Val", guiActive = true, guiActiveEditor = true),
-         UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.001f)]
-        public float tractionControl = 0.1f;
+        //[KSPField(guiName = "Traction Val", guiActive = true, guiActiveEditor = true),
+        // UI_FloatRange(minValue = 0.05f, maxValue = 0.5f, stepIncrement = 0.01f)]
+        public float tractionControl = 0.25f;
 
         private float fwdInput;
         public float torqueOutput;
@@ -107,11 +107,17 @@ namespace KSPWheel
             if (motorLocked) { fI = 0; }
             if (invertMotor) { fI = -fI; }
 
+            fI *= (motorOutput * 0.01f);
+
             if (useTractionControl)
             {
                 if (wheel.longitudinalSlip > tractionControl)
                 {
-                    fI = 0;
+                    fI = Mathf.Lerp(fwdInput, 0, Time.deltaTime);
+                }
+                else if (fI!=0)
+                {
+                    fI = Mathf.Lerp(fwdInput, fI, Time.deltaTime);
                 }
             }
 
@@ -119,7 +125,6 @@ namespace KSPWheel
             if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
             else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
 
-            fI *= (motorOutput * 0.01f);
 
             float mult = useTorqueCurve && maxRPM > 0 ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
             fI *= mult;
@@ -143,13 +148,17 @@ namespace KSPWheel
         private float updateResourceDrain(float input)
         {
             float percent = 1f;
-            //if (input > 0 && resourceAmount > 0)
-            //{
-            //    float drain = maxMotorTorque * input * resourceAmount * TimeWarp.fixedDeltaTime;
-            //    double d = part.RequestResource("ElectricCharge", drain);
-            //    percent = (float)d / drain;
-            //    guiResourceUse = (float)d / TimeWarp.fixedDeltaTime;
-            //}
+            guiResourceUse = 0f;
+            if (input > 0)
+            {
+                float drain = input * resourceAmount * Time.fixedDeltaTime;
+                if (drain > 0)
+                {
+                    float used = part.RequestResource("ElectricCharge", drain);
+                    percent = used / drain;
+                    guiResourceUse = used / Time.fixedDeltaTime;
+                }
+            }
             return percent;
         }
     }
