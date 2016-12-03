@@ -84,7 +84,7 @@ namespace KSPWheel
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
         public float guiCompression = 0.0f;
 
-        [KSPField(guiName = "Auto-Tune(WIP)", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Auto-Tune Suspension", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool autoTuneSuspension = false;
 
@@ -327,7 +327,7 @@ namespace KSPWheel
                 for (int i = 0; i < len; i++)
                 {
                     wheel = wheelData[i].wheel;
-                    wheel.externalSpringForce = wheelData[i].bumpForce;
+                    wheel.externalSpringForce = (wheelData[i].bumpForce / Time.fixedDeltaTime);
                     wheel.gravityVector = vessel.gravityForPos;
                     wheel.updateWheel();
                     float p = wheel.compressionDistance / wheel.length;
@@ -562,6 +562,8 @@ namespace KSPWheel
                 mat.bounciness = 0.0f;
                 mat.dynamicFriction = 0;
                 mat.staticFriction = 0;
+                mat.frictionCombine = PhysicMaterialCombine.Minimum;
+                mat.bounceCombine = PhysicMaterialCombine.Minimum;
                 bumpStopCollider.material = mat;
                 bumpStopGameObject.transform.NestToParent(wheelTransform);
                 bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
