@@ -15,10 +15,10 @@ namespace KSPWheel
 
         /// <summary>
         /// The raycast mask to use for the wheel-collider suspension sweep. <para/>
-        /// By default ignore layers 26 and 10 (wheelCollidersIgnore & scaledScenery)
+        /// By default ignore layers 26 and 10 (wheelCollidersIgnore & scaledScenery & kerbals/IVAs)
         /// </summary>
         [KSPField]
-        public int raycastMask = ~(1 << 26 | 1 << 10);
+        public int raycastMask = ~(1 << 26 | 1 << 10 | 1 << 16);
 
         /// <summary>
         /// If true, will use the rigidbody of the parent part rather than this.part.  Aides in jitter reduction and joint flex by (hopefully) applying forces to a part with higher mass.
@@ -272,6 +272,7 @@ namespace KSPWheel
         /// </summary>
         public void FixedUpdate()
         {
+            if (HighLogic.LoadedSceneIsEditor && autoTuneSuspension && wheelData!=null) { updateSuspension(); }
             if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch) { return; }
             if (!initializedWheels)
             {
@@ -378,21 +379,36 @@ namespace KSPWheel
         /// </summary>
         private void updateSuspension()
         {
-            float massShare = (float)vessel.totalMass * autoLoadShare * 0.01f * (float)vessel.gravityForPos.magnitude * 0.1f;
+            float massShare;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                massShare = EditorLogic.fetch.ship.GetTotalMass() * autoLoadShare * 0.01f;
+            }
+            else if (HighLogic.LoadedSceneIsFlight)
+            {
+                massShare = (float)vessel.totalMass * autoLoadShare * 0.01f * (float)vessel.gravityForPos.magnitude * 0.1f;
+            }
+            else { return; }
             massShare = Mathf.Clamp(massShare, minLoadRating, maxLoadRating);
             int len = wheelData.Length;
+            bool finished = true;
             for (int i = 0; i < len; i++)
             {
                 KSPWheelCollider wheel = wheelData[i].wheel;
                 wheelData[i].loadTarget = massShare * wheelData[i].loadShare;
-                wheelData[i].loadRating = Mathf.MoveTowards(wheelData[i].loadRating, wheelData[i].loadTarget, maxLoadRating * 0.1f);
+                wheelData[i].loadRating = Mathf.MoveTowards(wheelData[i].loadRating, wheelData[i].loadTarget, maxLoadRating * Time.fixedDeltaTime);
+                if (wheelData[i].loadRating != wheelData[i].loadTarget) { finished = false; }
                 float suspensionSpring, suspensionDamper;
                 calcSuspension(wheelData[i].loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-                wheel.spring = suspensionSpring;
-                wheel.damper = suspensionDamper;
+                if (wheel != null)
+                {
+                    wheel.spring = suspensionSpring;
+                    wheel.damper = suspensionDamper;
+                }
             }
-            //update displayed load rating
-            loadRating = Mathf.Clamp(massShare, minLoadRating, maxLoadRating);
+            //update displayed/stored load rating
+            loadRating = massShare;
+            autoTuneSuspension = !finished;
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)
