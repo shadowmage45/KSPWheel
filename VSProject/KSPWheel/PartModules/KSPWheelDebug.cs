@@ -22,6 +22,9 @@ namespace KSPWheel
         [KSPField(guiName = "fSpring", guiActive = true)]
         public float fSpring;
 
+        [KSPField(guiName = "fSpringExt", guiActive = true)]
+        public float fSpringExt;
+
         [KSPField(guiName = "comp", guiActive = true)]
         public float comp;
 
@@ -136,10 +139,11 @@ namespace KSPWheel
             fLong = wheel.longitudinalForce;
             fLat = wheel.lateralForce;
             fSpring = wheel.springForce;
+            fSpringExt = wheel.externalSpringForce;
             rpm = wheel.rpm;
             comp = wheel.compressionDistance;
             latSlip = wheel.lateralSlip;
-            longSlip = wheel.longitudinalSlip;
+            longSlip = wheel.longitudinalSlip;            
             colliderHit = wheel.isGrounded ? wheel.contactColliderHit.gameObject.name + " : " + wheel.contactColliderHit.gameObject.layer : "None";
             debugHitObject.transform.position = wheelTransform.position - (wheelTransform.up * wheel.length) + (wheelTransform.up * wheel.compressionDistance) - (wheelTransform.up * wheel.radius);
         }

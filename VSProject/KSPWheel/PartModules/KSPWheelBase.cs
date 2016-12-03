@@ -143,6 +143,8 @@ namespace KSPWheel
                         wheel.wheel.spring = suspensionSpring;
                         wheel.wheel.damper = suspensionDamper;
                     }
+                    wheelData[i].loadRating = loadRating;
+                    wheelData[i].loadTarget = loadRating;
                 }
             }
         }
@@ -325,6 +327,7 @@ namespace KSPWheel
                 for (int i = 0; i < len; i++)
                 {
                     wheel = wheelData[i].wheel;
+                    wheel.externalSpringForce = wheelData[i].bumpForce;
                     wheel.gravityVector = vessel.gravityForPos;
                     wheel.updateWheel();
                     float p = wheel.compressionDistance / wheel.length;
@@ -334,6 +337,7 @@ namespace KSPWheel
                 {
                     subModules[i].postWheelPhysicsUpdate();
                 }
+                clearBumpForces();
             }
 
             updateLandedState();
@@ -365,6 +369,42 @@ namespace KSPWheel
             MonoBehaviour.print("post put on ground: "+ phq.lowestOnParts[part] + " tot: " + phq.lowestPoint);
         }
 
+        public void OnCollisionEnter(Collision c)
+        {
+            int len1 = c.contacts.Length;
+            for (int i = 0; i < len1; i++)
+            {
+                int len2 = wheelData.Length;
+                for (int k = 0; k < len2; k++)
+                {
+                    if (wheelData[k].bumpStopCollider == c.contacts[i].thisCollider)
+                    {
+                        float force = Vector3.Dot(c.impulse, wheelData[k].wheelTransform.up);
+                        //MonoBehaviour.print("OCE: " + wheelData[k].bumpStopCollider + " :: " + c.collider+" f: "+force);
+                        wheelData[k].bumpForce = force;
+                    }
+                }
+            }
+        }
+
+        public void OnCollisionStay(Collision c)
+        {
+            int len1 = c.contacts.Length;
+            for (int i = 0; i < len1; i++)
+            {
+                int len2 = wheelData.Length;
+                for (int k = 0; k < len2; k++)
+                {
+                    if (wheelData[k].bumpStopCollider == c.contacts[i].thisCollider)
+                    {
+                        float force = Vector3.Dot(c.impulse, wheelData[k].wheelTransform.up);
+                        //MonoBehaviour.print("OCS: " + wheelData[k].bumpStopCollider + " :: " + c.collider + " f: " + force);
+                        wheelData[k].bumpForce = force;
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region REGION - Custom update methods
@@ -381,13 +421,24 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 KSPWheelCollider wheel = wheelData[i].wheel;
-                float target = mass * autoLoadShare * 0.01f * wheelData[i].loadShare;
-                target = Mathf.Clamp(target, minLoadRating, maxLoadRating);
-                loadRating = Mathf.MoveTowards(loadRating, target, maxLoadRating * 0.1f);
+                wheelData[i].loadTarget = mass * autoLoadShare * 0.01f * wheelData[i].loadShare;
+                wheelData[i].loadTarget = Mathf.Clamp(wheelData[i].loadTarget, minLoadRating, maxLoadRating);
+                wheelData[i].loadRating = Mathf.MoveTowards(wheelData[i].loadRating, wheelData[i].loadTarget, maxLoadRating * 0.1f);
                 float suspensionSpring, suspensionDamper;
-                calcSuspension(loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
+                calcSuspension(wheelData[i].loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
                 wheel.spring = suspensionSpring;
                 wheel.damper = suspensionDamper;
+            }
+            loadRating = mass * autoLoadShare * 0.01f;
+            loadRating = Mathf.Clamp(loadRating, minLoadRating, maxLoadRating);
+        }
+
+        private void clearBumpForces()
+        {
+            int len = wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                wheelData[i].bumpForce = 0f;
             }
         }
 
@@ -458,6 +509,9 @@ namespace KSPWheel
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
             public MeshCollider bumpStopCollider;
+            public float loadRating;
+            public float loadTarget;
+            public float bumpForce;
 
             public KSPWheelData(ConfigNode node)
             {
