@@ -511,11 +511,11 @@ namespace KSPWheel
                 bumpStopCollider.convex = true;
 
                 PhysicMaterial mat = new PhysicMaterial("BumpStopPhysicsMaterial");
-                mat.bounciness = 1f;//to retain energy from collisions, otherwise it 'sticks'
+                mat.bounciness = 0f;
                 mat.dynamicFriction = 0;
                 mat.staticFriction = 0;
                 mat.frictionCombine = PhysicMaterialCombine.Minimum;
-                mat.bounceCombine = PhysicMaterialCombine.Maximum;
+                mat.bounceCombine = PhysicMaterialCombine.Minimum;
                 bumpStopCollider.material = mat;
                 bumpStopGameObject.transform.NestToParent(wheelTransform);
                 bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
