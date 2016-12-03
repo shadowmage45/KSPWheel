@@ -10,7 +10,7 @@ namespace KSPWheel
     {
 
         [KSPField]
-        public string animationName = String.Empty;
+        public string animationName = string.Empty;
 
         [KSPField]
         public float animationSpeed = 1;
@@ -28,13 +28,16 @@ namespace KSPWheel
         public float tempColliderRadius = 0.1f;
 
         [KSPField]
-        public string deployEffect = String.Empty;
+        public string deployEffect = string.Empty;
 
         [KSPField]
-        public bool useDeployForRetract = true;
+        public string deployedEffect = string.Empty;
 
         [KSPField]
-        public string retractEffect = String.Empty;
+        public string retractEffect = string.Empty;
+
+        [KSPField]
+        public string retractedEffect = string.Empty;
 
         private CapsuleCollider collider;
         private Transform tempColliderTransform;
@@ -84,8 +87,10 @@ namespace KSPWheel
                     collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                     collider.enabled = true;
                 }
-                if (!string.IsNullOrEmpty(retractEffect)) { part.Effect(retractEffect, 1.0f); }
-                else if (useDeployForRetract && !string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 1.0f); }
+                if (!string.IsNullOrEmpty(retractEffect)) { part.Effect(retractEffect, 1f); }
+                if (!string.IsNullOrEmpty(retractedEffect)) { part.Effect(retractedEffect, 0f); }
+                if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 0f); }
+                if (!string.IsNullOrEmpty(deployedEffect)) { part.Effect(deployedEffect, 0f); }
             }
             else if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING)
             {
@@ -98,7 +103,10 @@ namespace KSPWheel
                     collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                     collider.enabled = true;
                 }
-                if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 1.0f); }
+                if (!string.IsNullOrEmpty(retractEffect)) { part.Effect(retractEffect, 0f); }
+                if (!string.IsNullOrEmpty(retractedEffect)) { part.Effect(retractedEffect, 0f); }
+                if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 1f); }
+                if (!string.IsNullOrEmpty(deployedEffect)) { part.Effect(deployedEffect, 0f); }
             }
         }
 
@@ -174,10 +182,18 @@ namespace KSPWheel
             {
                 //TODO reset suspension and steering transforms to neutral?
                 if (lightModule != null) { lightModule.LightsOff(); }
+                if (!string.IsNullOrEmpty(retractEffect)) { part.Effect(retractEffect, 0f); }
+                if (!string.IsNullOrEmpty(retractedEffect)) { part.Effect(retractedEffect, 1f); }
+                if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 0f); }
+                if (!string.IsNullOrEmpty(deployedEffect)) { part.Effect(deployedEffect, 0f); }
             }
             else if (state == KSPWheelState.DEPLOYED)
             {
                 if (lightModule != null) { lightModule.LightsOn(); }
+                if (!string.IsNullOrEmpty(retractEffect)) { part.Effect(retractEffect, 0f); }
+                if (!string.IsNullOrEmpty(retractedEffect)) { part.Effect(retractedEffect, 0f); }
+                if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 0f); }
+                if (!string.IsNullOrEmpty(deployedEffect)) { part.Effect(deployedEffect, 1f); }
             }
         }
 
