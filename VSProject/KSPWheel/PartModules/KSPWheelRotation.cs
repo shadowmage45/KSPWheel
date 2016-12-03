@@ -23,21 +23,21 @@ namespace KSPWheel
         private Transform wheelMeshTransform;
         private KSPWheelMotor motor;
 
-        internal override void postWheelCreated()
+        public void Start()
         {
-            base.postWheelCreated();
-            wheelMeshTransform = part.transform.FindRecursive(wheelMeshName);
             motor = part.transform.GetComponent<KSPWheelMotor>();
+            wheelMeshTransform = part.transform.FindRecursive(wheelMeshName);
         }
 
-        internal override void preWheelFrameUpdate()
+        public void Update()
         {
-            base.preWheelFrameUpdate();
+            if (wheelMeshTransform == null) { return; }
             if (HighLogic.LoadedSceneIsEditor && editorRotation)
             {
                 float invert = motor == null ? 1 : motor.invertMotor ? -1 : 1;
                 wheelMeshTransform.Rotate(rotationAxis * 72 * Time.deltaTime * invert, Space.Self);//72 deg/sec rotation speed
             }
+            if (wheel == null) { return; }
             wheelMeshTransform.Rotate(rotationAxis * wheel.perFrameRotation, Space.Self);
         }
 
