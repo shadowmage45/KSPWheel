@@ -378,7 +378,7 @@ namespace KSPWheel
         /// </summary>
         private void updateSuspension()
         {
-            float massShare = (float)vessel.totalMass * autoLoadShare * 0.01f;
+            float massShare = (float)vessel.totalMass * autoLoadShare * 0.01f * (float)vessel.gravityForPos.magnitude * 0.1f;
             massShare = Mathf.Clamp(massShare, minLoadRating, maxLoadRating);
             int len = wheelData.Length;
             for (int i = 0; i < len; i++)
