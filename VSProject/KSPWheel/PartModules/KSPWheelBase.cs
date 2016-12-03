@@ -485,7 +485,7 @@ namespace KSPWheel
 
             public void setupWheel(Rigidbody rb, int raycastMask, float scaleFactor)
             {
-                wheelTransform.localPosition += Vector3.up * offset;
+                wheelTransform.position += wheelTransform.up * offset * scaleFactor;
                 wheel = wheelTransform.gameObject.AddComponent<KSPWheelCollider>();
                 wheel.rigidbody = rb;
                 wheel.radius = wheelRadius * scaleFactor;
