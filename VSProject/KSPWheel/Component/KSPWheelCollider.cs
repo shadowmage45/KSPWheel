@@ -879,14 +879,16 @@ namespace KSPWheel
         private void combinatorialFriction(float latMax, float longMax, float fLat, float fLong, out float combLat, out float combLong)
         {
             float max = (fwdFrictionCurve.max + sideFrictionCurve.max) * 0.5f * (localForce.y + extSpringForce);
-            float tot = Mathf.Abs(fLat) + Mathf.Abs(fLong);
-            float pct = 1f;
-            if (tot > max)
+            float len = Mathf.Sqrt(fLat * fLat + fLong * fLong);
+            if (len > max)
             {
-                pct = max / tot;
+                fLong /= len;
+                fLat /= len;
+                fLong *= max;
+                fLat *= max;
             }
-            combLat = fLat * pct;
-            combLong = fLong * pct;
+            combLat = fLat;
+            combLong = fLong;
         }
 
         #endregion ENDREGION - Standard Friction Model
