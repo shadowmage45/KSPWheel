@@ -195,6 +195,10 @@ namespace KSPWheel
                 if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 0f); }
                 if (!string.IsNullOrEmpty(deployedEffect)) { part.Effect(deployedEffect, 1f); }
             }
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
+            }
         }
 
         private void updateCollider()

@@ -160,11 +160,14 @@ namespace KSPWheel
             {
                 configNodeData = node.ToString();
             }
+            wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
+
         }
 
         public override void OnSave(ConfigNode node)
         {
             base.OnSave(node);
+            persistentState = wheelState.ToString();
             node.SetValue("persistentState", persistentState, true);
         }
         
