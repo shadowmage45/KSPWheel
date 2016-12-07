@@ -14,8 +14,8 @@ namespace KSPWheel
         private float wheelMass = 1f;
         private float wheelRadius = 0.5f;
         private float suspensionLength = 1f;
-        private float suspensionTarget = 0f;
         private float suspensionSpring = 10f;
+        private float suspensionSpringExp = 0f;
         private float suspensionDamper = 2f;
         private float currentFwdFrictionCoef = 1f;
         private float currentSideFrictionCoef = 1f;
@@ -40,6 +40,9 @@ namespace KSPWheel
 
         private float extSpringForce = 0f;
 
+        private float rollingResistanceCoefficient = 0.005f;//tire-deformation based rolling-resistance; scaled by spring force, is a flat force that will be subtracted from wheel velocity every tick
+        private float rotationalResistanceCoefficient = 0.005f;//bearing/friction based resistance; scaled by wheel rpm and 1/10 spring force
+
         //private vars with external get methods (cannot be set, for data viewing/debug purposes only)
         private bool grounded = false;
 
@@ -49,6 +52,8 @@ namespace KSPWheel
         private float massInverse;//cached mass inverse used to eliminate division operations from per-tick update code
 
         //internal friction model values
+        private float prevFLong = 0f;
+        private float prevFLat = 0f;
         private float prevFSpring;
         private float currentSuspensionCompression = 0f;
         private float prevSuspensionCompression = 0f;
@@ -70,11 +75,6 @@ namespace KSPWheel
         private Vector3 hitPoint;//world-space position of contact patch
         private Vector3 hitNormal;//world-coordinate hit-normal of the contact
         private Collider hitCollider;//the collider that a hit was detected against
-
-        //run-time references to various objects
-        public float susResponse = 0f;
-        private float prevFLong = 0f;
-        private float prevFLat = 0f;
 
         #endregion ENDREGION - Private variables
 
@@ -100,6 +100,12 @@ namespace KSPWheel
             set { suspensionSpring = value; }
         }
 
+        public float springCurve
+        {
+            get { return suspensionSpringExp; }
+            set { suspensionSpringExp = value; }
+        }
+
         /// <summary>
         /// Get/Set the current damper resistance value.  This is the configurable value that influences the 'dampForce' used in suspension calculations
         /// </summary>
@@ -116,15 +122,6 @@ namespace KSPWheel
         {
             get { return suspensionLength; }
             set { suspensionLength = value; }
-        }
-
-        /// <summary>
-        /// Get/Set the current target value.  This is a 0-1 value that determines how far up the suspension the wheel should be kept. Below this point there is no spring force, only damper forces.
-        /// </summary>
-        public float target
-        {
-            get { return suspensionTarget; }
-            set { suspensionTarget = value; }
         }
 
         /// <summary>
@@ -203,6 +200,24 @@ namespace KSPWheel
         {
             get { return currentSurfaceFrictionCoef; }
             set { currentSurfaceFrictionCoef = value; }
+        }
+
+        /// <summary>
+        /// Rolling resistance coefficient.  Determines the drag/friction applied to the wheel based on tire deformation.  Applied as a flat term multiplied by wheel load; independent of wheel RPM or slip ratios.
+        /// </summary>
+        public float rollingResistance
+        {
+            get { return rollingResistanceCoefficient; }
+            set { rollingResistanceCoefficient = value; }
+        }
+
+        /// <summary>
+        /// Rotational resistance factor -- drag and friction caused by bearings, axles, differentials, gearing, etc.  Scales linearly with wheel RPM; at zero rpm the torque will be zero, at max rpm the torque will be angularVelocity * rotationalResistance * deltaTime.
+        /// </summary>
+        public float rotationalResistance
+        {
+            get { return rotationalResistanceCoefficient; }
+            set { rotationalResistanceCoefficient = value; }
         }
 
         /// <summary>
@@ -523,10 +538,6 @@ namespace KSPWheel
         private void integrateForces()
         {
             calcFriction();
-            if (susResponse > 0)
-            {
-                localForce.y = Mathf.Lerp(prevFSpring, localForce.y, susResponse / Time.fixedDeltaTime);
-            }
             //anti-jitter handling code; if lateral or long forces are oscillating, damp them on the rebound
             //could possibly even zero them out for the rebound, but this method allows for some force
             float fMult = 0.1f;
@@ -593,13 +604,21 @@ namespace KSPWheel
             //velocity change due to motor; if brakes are engaged they can cancel this out the same tick
             //acceleration is in radians/second; only operating on fixedDeltaTime seconds, so only update for that length of time
             currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;
-            // maximum torque exerted by brakes onto wheel this frame
-            float wBrake = currentBrakeTorque * inertiaInverse * Time.fixedDeltaTime;
-            // clamp the max brake angular change to the current angular velocity
-            wBrake = Mathf.Min(Mathf.Abs(currentAngularVelocity), wBrake);
-            // sign it opposite of current wheel spin direction
-            // and finally, integrate it into wheel angular velocity
-            currentAngularVelocity += wBrake * -Mathf.Sign(currentAngularVelocity);
+            if (currentAngularVelocity != 0)
+            {
+                float rotationalDrag = rotationalResistanceCoefficient * currentAngularVelocity * inertiaInverse * Time.fixedDeltaTime;
+                rotationalDrag = Mathf.Min(Mathf.Abs(rotationalDrag), Mathf.Abs(currentAngularVelocity)) * Mathf.Sign(currentAngularVelocity);
+                currentAngularVelocity -= rotationalDrag;
+            }
+            if (currentAngularVelocity != 0)
+            {
+                // maximum torque exerted by brakes onto wheel this frame
+                float wBrake = currentBrakeTorque * inertiaInverse * Time.fixedDeltaTime;
+                // clamp the max brake angular change to the current angular velocity
+                wBrake = Mathf.Min(Mathf.Abs(currentAngularVelocity), wBrake) * Mathf.Sign(currentAngularVelocity);
+                // and finally, integrate it into wheel angular velocity
+                currentAngularVelocity -= wBrake;
+            }
         }
         
         /// <summary>
@@ -722,10 +741,9 @@ namespace KSPWheel
             //calculate damper force from the current compression velocity of the spring; damp force can be negative
             vSpring = (currentSuspensionCompression - prevSuspensionCompression) / Time.fixedDeltaTime;//per second velocity
             fDamp = suspensionDamper * vSpring;
-            //calculate spring force basically from displacement * spring
-            float fSpring = (currentSuspensionCompression - (suspensionLength * suspensionTarget)) * suspensionSpring;
-            //if spring would be negative at this point, zero it to allow the damper to still function; this normally occurs when target > 0, at the lower end of wheel droop below target position
-            if (fSpring < 0) { fSpring = 0; }
+            //calculate spring force basically from displacement * spring along with a secondary exponential term
+            // k = xy + axy^2
+            float fSpring = (suspensionSpring * currentSuspensionCompression) + (suspensionSpringExp * suspensionSpring * currentSuspensionCompression * currentSuspensionCompression);
             //integrate damper value into spring force
             fSpring += fDamp;
             //if final spring value is negative, zero it out; negative springs are not possible without attachment to the ground; gravity is our negative spring :)

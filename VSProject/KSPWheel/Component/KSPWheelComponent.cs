@@ -95,6 +95,8 @@ namespace KSPWheel
         /// </summary>
         public float brakeResponse = 2;
 
+        public float springCurve = 0f;
+
         /// <summary>
         /// The forward friction constant (rolling friction)
         /// </summary>
@@ -130,8 +132,6 @@ namespace KSPWheel
         public KSPWheelSweepType sweepType = KSPWheelSweepType.RAY;
         
         public bool debug = false;
-
-        public float susResp = 1f;
 
         #endregion ENDREGION - Unity Editor Inspector Assignable Fields
 
@@ -253,8 +253,8 @@ namespace KSPWheel
                 wheelCollider.radius = wheelRadius;
                 wheelCollider.mass = wheelMass;
                 wheelCollider.length = suspensionLength;
-                wheelCollider.target = target;
                 wheelCollider.spring = spring;
+                wheelCollider.springCurve = springCurve;
                 wheelCollider.damper = damper;
                 wheelCollider.motorTorque = maxMotorTorque;
                 wheelCollider.brakeTorque = maxBrakeTorque;
@@ -263,7 +263,6 @@ namespace KSPWheel
                 wheelCollider.surfaceFrictionCoefficient = surfaceFrictionCoefficient;
                 wheelCollider.sweepType = sweepType;
                 wheelCollider.frictionModel = frictionModel;
-                wheelCollider.susResponse = susResp;
 
                 SphereCollider sc = bumpStopCollider.GetComponent<SphereCollider>();
                 bumpStopCollider.layer = 26;
