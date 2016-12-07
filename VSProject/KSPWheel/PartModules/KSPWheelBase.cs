@@ -466,6 +466,24 @@ namespace KSPWheel
             damper = cd * dampRatio;
         }
 
+        /// <summary>
+        /// Input load in tons, suspension length, target (0-1), and desired damp ratio (1 = critical)
+        /// and output spring and damper for that load and ratio
+        /// </summary>
+        private void calcSuspensionCurved(float load, float length, float target, float dampRatio, float curveFactor, out float spring, out float damper)
+        {
+            float targetCompression = target * length;
+            if (targetCompression <= 0) { targetCompression = 0.1f; }
+            //k = x / (y(ay+1))
+            float k = (load * 10) / (targetCompression * (curveFactor * targetCompression + 1));
+            float o = Mathf.Sqrt(k / load);//natural frequency
+            float cd = 2 * load * o;//critical damping coefficient
+            //critical damping factor = 2 * Mathf.Sqrt(k * load);
+            //damper output = 2 * Mathf.Sqrt(load * spring) * dampRatio;
+            spring = k;
+            damper = cd * dampRatio;
+        }
+
         #endregion
 
         public class KSPWheelData
