@@ -820,7 +820,28 @@ namespace KSPWheel
             //initial motor/brake torque integration, brakes integrated further after friction applied
             //motor torque applied directly
             currentAngularVelocity += currentMotorTorque * inertiaInverse * Time.fixedDeltaTime;//acceleration is in radians/second; only operating on 1 * fixedDeltaTime seconds, so only update for that length of time
-            // maximum torque exerted by brakes onto wheel this frame
+
+            //rolling resistance integration
+            if (currentAngularVelocity != 0)
+            {
+                float fRollResist = localForce.y * rollingResistanceCoefficient;//rolling resistance force in newtons
+                float tRollResist = fRollResist * radiusInverse;//rolling resistance as a torque
+                float wRollResist = tRollResist * inertiaInverse * Time.fixedDeltaTime;//rolling resistance angular velocity change
+                wRollResist = Mathf.Min(wRollResist, Mathf.Abs(currentAngularVelocity)) * Mathf.Sign(currentAngularVelocity);
+                currentAngularVelocity -= wRollResist;
+            }
+
+            //rotational resistance integration
+            if (currentAngularVelocity != 0)
+            {
+                //float fRotResist = currentAngularVelocity * rotationalResistanceCoefficient;
+                //float tRotResist = fRotResist * radiusInverse;
+                //float wRotResist = tRotResist * inertiaInverse * Time.fixedDeltaTime;
+                //currentAngularVelocity -= wRotResist;
+                currentAngularVelocity -= currentAngularVelocity * rotationalResistanceCoefficient * radiusInverse * inertiaInverse * Time.fixedDeltaTime;
+            }
+
+            // maximum torque exerted by brakes onto wheel this frame as a change in angular velocity
             float wBrakeMax = currentBrakeTorque * inertiaInverse * Time.fixedDeltaTime;
             // clamp the max brake angular change to the current angular velocity
             float wBrake = Mathf.Min(Mathf.Abs(currentAngularVelocity), wBrakeMax);

@@ -351,6 +351,76 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 6
+--- !u!1 &84256253
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 84256254}
+  - 218: {fileID: 84256256}
+  - 154: {fileID: 84256255}
+  m_Layer: 0
+  m_Name: Terrain (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &84256254
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 84256253}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -500, y: 0, z: 500}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1564703897}
+  m_RootOrder: 7
+--- !u!154 &84256255
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 84256253}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &84256256
+Terrain:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 84256253}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_CastShadows: 1
+  m_DrawHeightmap: 1
+  m_DrawTreesAndFoliage: 1
+  m_ReflectionProbeUsage: 1
+  m_MaterialType: 0
+  m_LegacySpecular:
+    serializedVersion: 2
+    rgba: 4286545791
+  m_LegacyShininess: .078125
+  m_MaterialTemplate: {fileID: 0}
+  m_BakeLightProbesForTrees: 1
+  m_ScaleInLightmap: .0511999987
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!1 &97561716
 GameObject:
   m_ObjectHideFlags: 0
@@ -654,6 +724,76 @@ Camera:
   m_StereoConvergence: 10
   m_StereoSeparation: .0219999999
   m_StereoMirrorMode: 0
+--- !u!1 &187715087
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 187715088}
+  - 218: {fileID: 187715090}
+  - 154: {fileID: 187715089}
+  m_Layer: 0
+  m_Name: Terrain (6)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &187715088
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 187715087}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -500}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1564703897}
+  m_RootOrder: 10
+--- !u!154 &187715089
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 187715087}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &187715090
+Terrain:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 187715087}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_CastShadows: 1
+  m_DrawHeightmap: 1
+  m_DrawTreesAndFoliage: 1
+  m_ReflectionProbeUsage: 1
+  m_MaterialType: 0
+  m_LegacySpecular:
+    serializedVersion: 2
+    rgba: 4286545791
+  m_LegacyShininess: .078125
+  m_MaterialTemplate: {fileID: 0}
+  m_BakeLightProbesForTrees: 1
+  m_ScaleInLightmap: .0511999987
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!1 &189418339 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 100024, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -686,6 +826,7 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -695,7 +836,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1114,6 +1254,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -1123,7 +1264,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1455,6 +1595,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -1464,7 +1605,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1608,6 +1748,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -1617,7 +1758,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1689,6 +1829,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -1698,7 +1839,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -1873,6 +2013,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -1882,7 +2023,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2150,6 +2290,7 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -2159,7 +2300,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 1
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2214,6 +2354,7 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -2223,7 +2364,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 1
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2280,15 +2420,16 @@ MonoBehaviour:
   target: 0
   spring: 24000
   damper: 2500
-  maxMotorTorque: 1100
+  maxMotorTorque: 1500
   rpmLimit: 800
   maxBrakeTorque: 1500
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
+  springCurve: 0
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.5
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
@@ -2296,7 +2437,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 1
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2329,15 +2469,16 @@ MonoBehaviour:
   target: 0
   spring: 24000
   damper: 2500
-  maxMotorTorque: 1100
+  maxMotorTorque: 1500
   rpmLimit: 800
   maxBrakeTorque: 1500
   maxSteerAngle: 0
   throttleResponse: 5
   steeringResponse: 10
   brakeResponse: 10
+  springCurve: 0
   forwardFrictionCoefficient: 1
-  sideFrictionCoefficient: 1.5
+  sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
   tankSteer: 0
   invertSteer: 1
@@ -2345,7 +2486,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 1
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2426,6 +2566,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -2435,7 +2576,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -2829,6 +2969,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -2838,7 +2979,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -3006,6 +3146,76 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 694971870}
   m_Mesh: {fileID: 4300022, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+--- !u!1 &706380597
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 706380598}
+  - 218: {fileID: 706380600}
+  - 154: {fileID: 706380599}
+  m_Layer: 0
+  m_Name: Terrain (4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &706380598
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 706380597}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 500, y: 0, z: 500}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1564703897}
+  m_RootOrder: 8
+--- !u!154 &706380599
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 706380597}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &706380600
+Terrain:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 706380597}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_CastShadows: 1
+  m_DrawHeightmap: 1
+  m_DrawTreesAndFoliage: 1
+  m_ReflectionProbeUsage: 1
+  m_MaterialType: 0
+  m_LegacySpecular:
+    serializedVersion: 2
+    rgba: 4286545791
+  m_LegacyShininess: .078125
+  m_MaterialTemplate: {fileID: 0}
+  m_BakeLightProbesForTrees: 1
+  m_ScaleInLightmap: .0511999987
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!1 &711476088
 GameObject:
   m_ObjectHideFlags: 0
@@ -3142,6 +3352,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -3151,7 +3362,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -3220,6 +3430,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -3229,7 +3440,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -3970,6 +4180,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -3979,7 +4190,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -4233,6 +4443,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -4242,7 +4453,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -4378,6 +4588,76 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1019480984}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1044578557
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1044578558}
+  - 218: {fileID: 1044578560}
+  - 154: {fileID: 1044578559}
+  m_Layer: 0
+  m_Name: Terrain (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &1044578558
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1044578557}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 500, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1564703897}
+  m_RootOrder: 5
+--- !u!154 &1044578559
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1044578557}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &1044578560
+Terrain:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1044578557}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_CastShadows: 1
+  m_DrawHeightmap: 1
+  m_DrawTreesAndFoliage: 1
+  m_ReflectionProbeUsage: 1
+  m_MaterialType: 0
+  m_LegacySpecular:
+    serializedVersion: 2
+    rgba: 4286545791
+  m_LegacyShininess: .078125
+  m_MaterialTemplate: {fileID: 0}
+  m_BakeLightProbesForTrees: 1
+  m_ScaleInLightmap: .0511999987
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!1 &1087340635
 GameObject:
   m_ObjectHideFlags: 0
@@ -4545,6 +4825,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -4554,7 +4835,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -4704,6 +4984,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -4713,7 +4994,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -5264,6 +5544,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -5273,7 +5554,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -5449,6 +5729,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -5458,7 +5739,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -5706,6 +5986,76 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1381462346}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1404034776
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1404034777}
+  - 218: {fileID: 1404034779}
+  - 154: {fileID: 1404034778}
+  m_Layer: 0
+  m_Name: Terrain (5)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &1404034777
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1404034776}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 500}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1564703897}
+  m_RootOrder: 9
+--- !u!154 &1404034778
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1404034776}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &1404034779
+Terrain:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1404034776}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_CastShadows: 1
+  m_DrawHeightmap: 1
+  m_DrawTreesAndFoliage: 1
+  m_ReflectionProbeUsage: 1
+  m_MaterialType: 0
+  m_LegacySpecular:
+    serializedVersion: 2
+    rgba: 4286545791
+  m_LegacyShininess: .078125
+  m_MaterialTemplate: {fileID: 0}
+  m_BakeLightProbesForTrees: 1
+  m_ScaleInLightmap: .0511999987
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!1 &1424318562 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 100006, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -6206,6 +6556,14 @@ Transform:
   - {fileID: 880226834}
   - {fileID: 851116914}
   - {fileID: 1105374543}
+  - {fileID: 1044578558}
+  - {fileID: 1968011449}
+  - {fileID: 84256254}
+  - {fileID: 706380598}
+  - {fileID: 1404034777}
+  - {fileID: 187715088}
+  - {fileID: 2074981918}
+  - {fileID: 1746349614}
   m_Father: {fileID: 0}
   m_RootOrder: 5
 --- !u!1 &1597597590
@@ -6415,6 +6773,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -6424,7 +6783,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -6585,6 +6943,7 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -6594,7 +6953,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -6629,6 +6987,76 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!1 &1746349613
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1746349614}
+  - 218: {fileID: 1746349616}
+  - 154: {fileID: 1746349615}
+  m_Layer: 0
+  m_Name: Terrain (8)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &1746349614
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1746349613}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -500, y: 0, z: -500}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1564703897}
+  m_RootOrder: 12
+--- !u!154 &1746349615
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1746349613}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &1746349616
+Terrain:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1746349613}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_CastShadows: 1
+  m_DrawHeightmap: 1
+  m_DrawTreesAndFoliage: 1
+  m_ReflectionProbeUsage: 1
+  m_MaterialType: 0
+  m_LegacySpecular:
+    serializedVersion: 2
+    rgba: 4286545791
+  m_LegacyShininess: .078125
+  m_MaterialTemplate: {fileID: 0}
+  m_BakeLightProbesForTrees: 1
+  m_ScaleInLightmap: .0511999987
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!1 &1769334105
 GameObject:
   m_ObjectHideFlags: 0
@@ -6714,29 +7142,26 @@ GameObject:
   - 4: {fileID: 1773594034}
   - 33: {fileID: 1773594033}
   - 23: {fileID: 1773594032}
-  - 54: {fileID: 1773594030}
+  - 65: {fileID: 1773594030}
   m_Layer: 0
   m_Name: StickyFrictionTestAnchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!54 &1773594030
-Rigidbody:
+  m_IsActive: 0
+--- !u!65 &1773594030
+BoxCollider:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1773594029}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
   serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: .0500000007
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &1773594032
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -6777,7 +7202,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1773594029}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 16.9300003, y: 1.53999996, z: 44.7799988}
+  m_LocalPosition: {x: -27.0499992, y: 1.53999996, z: 28.6000004}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -6814,6 +7239,7 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -6823,7 +7249,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -7017,6 +7442,7 @@ MonoBehaviour:
   throttleResponse: 5
   steeringResponse: 8
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -7026,7 +7452,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -7198,6 +7623,76 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1932392385}
   m_Mesh: {fileID: 4300022, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
+--- !u!1 &1968011448
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1968011449}
+  - 218: {fileID: 1968011451}
+  - 154: {fileID: 1968011450}
+  m_Layer: 0
+  m_Name: Terrain (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &1968011449
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1968011448}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -500, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1564703897}
+  m_RootOrder: 6
+--- !u!154 &1968011450
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1968011448}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &1968011451
+Terrain:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1968011448}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_CastShadows: 1
+  m_DrawHeightmap: 1
+  m_DrawTreesAndFoliage: 1
+  m_ReflectionProbeUsage: 1
+  m_MaterialType: 0
+  m_LegacySpecular:
+    serializedVersion: 2
+    rgba: 4286545791
+  m_LegacyShininess: .078125
+  m_MaterialTemplate: {fileID: 0}
+  m_BakeLightProbesForTrees: 1
+  m_ScaleInLightmap: .0511999987
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1972014160 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400012, guid: a6143b6c79b85ba458b132eb80b5728a, type: 3}
@@ -7259,6 +7754,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1
   sideFrictionCoefficient: 1
   surfaceFrictionCoefficient: 1
@@ -7268,7 +7764,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -7361,6 +7856,7 @@ MonoBehaviour:
   throttleResponse: 2
   steeringResponse: 2
   brakeResponse: 2
+  springCurve: 0
   forwardFrictionCoefficient: 1.20000005
   sideFrictionCoefficient: 1.20000005
   surfaceFrictionCoefficient: 1
@@ -7370,7 +7866,6 @@ MonoBehaviour:
   frictionModel: 0
   sweepType: 0
   debug: 0
-  susResp: 1
   localVelocity: {x: 0, y: 0, z: 0}
   localAcceleration: {x: 0, y: 0, z: 0}
   rpm: 0
@@ -7607,6 +8102,76 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2070110459}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2074981917
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 2074981918}
+  - 218: {fileID: 2074981920}
+  - 154: {fileID: 2074981919}
+  m_Layer: 0
+  m_Name: Terrain (7)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &2074981918
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2074981917}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 500, y: 0, z: -500}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1564703897}
+  m_RootOrder: 11
+--- !u!154 &2074981919
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2074981917}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_EnableTreeColliders: 1
+--- !u!218 &2074981920
+Terrain:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2074981917}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_TerrainData: {fileID: 15600000, guid: 10386ff3f2ad0f14b9b03b83cee3b744, type: 2}
+  m_TreeDistance: 5000
+  m_TreeBillboardDistance: 50
+  m_TreeCrossFadeLength: 5
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_CastShadows: 1
+  m_DrawHeightmap: 1
+  m_DrawTreesAndFoliage: 1
+  m_ReflectionProbeUsage: 1
+  m_MaterialType: 0
+  m_LegacySpecular:
+    serializedVersion: 2
+    rgba: 4286545791
+  m_LegacyShininess: .078125
+  m_MaterialTemplate: {fileID: 0}
+  m_BakeLightProbesForTrees: 1
+  m_ScaleInLightmap: .0511999987
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!1 &2094230488
 GameObject:
   m_ObjectHideFlags: 0
