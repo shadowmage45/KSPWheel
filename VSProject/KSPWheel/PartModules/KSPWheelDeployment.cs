@@ -42,9 +42,13 @@ namespace KSPWheel
         [KSPField]
         public bool updateDragCubes = true;
 
+        [Persistent]
+        public string configNodeData = String.Empty;
+
         private CapsuleCollider collider;
         private Transform tempColliderTransform;
         private WheelAnimationHandler animationControl;
+        private WheelAnimationHandler secondaryAnimations;
         private ModuleLight lightModule;
 
         public bool IsMultipleCubesActive
@@ -124,9 +128,10 @@ namespace KSPWheel
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
+            if (string.IsNullOrEmpty(configNodeData)) { configNodeData = node.ToString(); }
             if (animationControl == null)
             {
-                setupAnimationController();
+                setupAnimationController(ConfigNode.Parse(configNodeData).nodes[0]);
             }
         }
 
@@ -135,7 +140,7 @@ namespace KSPWheel
             base.OnStart(state);
             if (animationControl == null)
             {
-                setupAnimationController();
+                setupAnimationController(ConfigNode.Parse(configNodeData).nodes[0]);
             }
         }
 
@@ -148,16 +153,17 @@ namespace KSPWheel
             }
         }
 
-        private void setupAnimationController()
+        private void setupAnimationController(ConfigNode node)
         {
             animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState);
             animationControl.setToAnimationState(controller.wheelState, false);
+            ConfigNode[] animNodes = node.GetNodes("ANIMATION");
+            animationControl.loadSecondaryAnimations(animNodes);
         }
 
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
-
             lightModule = part.GetComponent<ModuleLight>();
             if (lightModule != null && controller.wheelState == KSPWheelState.DEPLOYED)
             {
