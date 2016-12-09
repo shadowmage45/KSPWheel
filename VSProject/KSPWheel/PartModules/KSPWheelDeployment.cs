@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace KSPWheel
 {
-    public class KSPWheelDeployment : KSPWheelSubmodule
+    public class KSPWheelDeployment : KSPWheelSubmodule, IMultipleDragCube
     {
 
         [KSPField]
@@ -39,11 +39,22 @@ namespace KSPWheel
         [KSPField]
         public string retractedEffect = string.Empty;
 
+        [KSPField]
+        public bool updateDragCubes = true;
+
         private CapsuleCollider collider;
         private Transform tempColliderTransform;
         private WheelAnimationHandler animationControl;
         private ModuleLight lightModule;
-        
+
+        public bool IsMultipleCubesActive
+        {
+            get
+            {
+                return updateDragCubes;
+            }
+        }
+
         [KSPAction("Toggle Gear", KSPActionGroup.Gear)]
         public void toggleGearAction(KSPActionParam param)
         {
@@ -110,9 +121,22 @@ namespace KSPWheel
             }
         }
 
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            if (animationControl == null)
+            {
+                setupAnimationController();
+            }
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            if (animationControl == null)
+            {
+                setupAnimationController();
+            }
         }
 
         public void Update()
@@ -120,14 +144,19 @@ namespace KSPWheel
             if (animationControl != null)
             {
                 animationControl.updateAnimationState();
+                updateDragCube();
             }
+        }
+
+        private void setupAnimationController()
+        {
+            animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState);
+            animationControl.setToAnimationState(controller.wheelState, false);
         }
 
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
-            animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState);
-            animationControl.setToAnimationState(controller.wheelState, false);
 
             lightModule = part.GetComponent<ModuleLight>();
             if (lightModule != null && controller.wheelState == KSPWheelState.DEPLOYED)
@@ -177,7 +206,6 @@ namespace KSPWheel
         public void onAnimationStateChanged(KSPWheelState state)
         {
             controller.wheelState = state;
-            MonoBehaviour.print("Set wheel state to: " + state);
             if (state == KSPWheelState.RETRACTED)
             {
                 //TODO reset suspension and steering transforms to neutral?
@@ -201,9 +229,39 @@ namespace KSPWheel
             }
         }
 
-        private void updateCollider()
+        private void updateDragCube()
         {
+            if (!updateDragCubes) { return; }
+            float time = animationControl.animationTime;
+            part.DragCubes.SetCubeWeight("Retracted", 1f - time);
+            part.DragCubes.SetCubeWeight("Deployed", time);
+        }
 
+        public string[] GetDragCubeNames()
+        {
+            if (!updateDragCubes) { return new String[] { "Default" }; }
+            return new String[] { "Retracted", "Deployed" };
+        }
+
+        public void AssumeDragCubePosition(string name)
+        {
+            if (animationControl == null || !updateDragCubes) { return; }
+            switch (name)
+            {
+                case "Retracted":
+                    animationControl.setToAnimationState(KSPWheelState.RETRACTED, false);
+                    break;
+                case "Deployed":
+                    animationControl.setToAnimationState(KSPWheelState.DEPLOYED, false);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public bool UsesProceduralDragCubes()
+        {
+            return false;
         }
     }
 }

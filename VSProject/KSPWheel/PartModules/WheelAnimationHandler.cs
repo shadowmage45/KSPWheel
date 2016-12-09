@@ -12,6 +12,7 @@ namespace KSPWheel
         private readonly KSPWheelDeployment module;
         private KSPWheelState currentAnimState;        
         private AnimationData animationData;
+        private float animTime = 0f;
 
         public WheelAnimationHandler(KSPWheelDeployment module, string animationName, float animationSpeed, int animationLayer, KSPWheelState initialState)
         {
@@ -25,6 +26,8 @@ namespace KSPWheel
         /// </summary>
         public void updateAnimationState()
         {
+            animTime = 0f;
+            float time;
             if (currentAnimState == KSPWheelState.RETRACTING || currentAnimState == KSPWheelState.DEPLOYING)
             {
                 bool playing = false;
@@ -34,6 +37,8 @@ namespace KSPWheel
                     if (animationData.anims[i][animationData.animationName].enabled)
                     {
                         playing = true;
+                        time = animationData.anims[i][animationData.animationName].normalizedTime;
+                        if (time > animTime) { animTime = time; }
                     }
                 }
                 //if no longer playing, set the new animation state and inform the callback of the change
@@ -43,6 +48,11 @@ namespace KSPWheel
                     setToAnimationState(newState, true);
                 }
             }
+        }
+
+        public float animationTime
+        {
+            get { return animTime; }
         }
 
         public void setToAnimationState(KSPWheelState state, bool callback)
@@ -171,6 +181,7 @@ namespace KSPWheel
             foreach (Animation a in anims)
             {
                 a[animationName].normalizedTime = time;
+                a.Sample();
             }
         }
 
