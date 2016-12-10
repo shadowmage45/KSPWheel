@@ -11,24 +11,24 @@ namespace KSPWheel
     {
         private readonly KSPWheelDeployment module;
         private KSPWheelState currentAnimState;
-        private AnimationData animationData;
+        List<AnimationData> animationData = new List<AnimationData>();
+        //private AnimationData animationData;
         private float animTime = 0f;
-        private AnimationData[] secondaryAnimationData;
+        //private AnimationData[] secondaryAnimationData = new AnimationData[0];
 
         public WheelAnimationHandler(KSPWheelDeployment module, string animationName, float animationSpeed, int animationLayer, KSPWheelState initialState)
         {
             this.module = module;
             this.currentAnimState = initialState;
-            this.animationData = new AnimationData(module.part, animationName, animationSpeed, animationLayer);
+            this.animationData.Add(new AnimationData(module.part, animationName, animationSpeed, animationLayer));
         }
 
         public void loadSecondaryAnimations(ConfigNode[] animNodes)
         {
             int len = animNodes.Length;
-            secondaryAnimationData = new AnimationData[len];
             for (int i = 0; i < len; i++)
             {
-                secondaryAnimationData[i] = new AnimationData(module.part, animNodes[i]);
+                animationData.Add(new AnimationData(module.part, animNodes[i]));
             }
         }
         
@@ -38,32 +38,17 @@ namespace KSPWheel
         public void updateAnimationState()
         {
             animTime = 0f;
-            float time;
+            float time=0f;
             if (currentAnimState == KSPWheelState.RETRACTING || currentAnimState == KSPWheelState.DEPLOYING)
             {
                 bool playing = false;
-                int len = animationData.anims.Length;
-                for (int i = 0; i < len && !playing; i++)
-                {
-                    if (animationData.anims[i][animationData.animationName].enabled)
-                    {
-                        playing = true;
-                        time = animationData.anims[i][animationData.animationName].normalizedTime;
-                        if (time > animTime) { animTime = time; }
-                    }
-                }
-                len = secondaryAnimationData.Length;
-                int len2;
+                int len = animationData.Count;
+                AnimationData data;
                 for (int i = 0; i < len; i++)
                 {
-                    len2 = secondaryAnimationData[i].anims.Length;
-                    for (int k = 0; k < len2; k++)
-                    {
-                        if (secondaryAnimationData[i].anims[k].enabled)
-                        {
-                            playing = true;
-                        }
-                    }
+                    data = animationData[i];
+                    if (data.updateAnimations()) { playing = true; }
+                    if (data.time > time) { time = data.time; }
                 }
                 //if no longer playing, set the new animation state and inform the callback of the change
                 if (!playing)
@@ -81,6 +66,7 @@ namespace KSPWheel
 
         public void setToAnimationState(KSPWheelState state, bool callback)
         {
+            MonoBehaviour.print("setting to internal anim state: " + state + " from current state: "+currentAnimState);
             switch (state)
             {
                 case KSPWheelState.RETRACTING:
@@ -129,41 +115,37 @@ namespace KSPWheel
 
         private void playAnimation()
         {
-            animationData.playAnimation();
-            int len = secondaryAnimationData.Length;
+            int len = animationData.Count;
             for (int i = 0; i < len; i++)
             {
-                secondaryAnimationData[i].playAnimation();
+                animationData[i].playAnimation();
             }
         }
 
         private void stopAnimation()
         {
-            animationData.stopAnimation();
-            int len = secondaryAnimationData.Length;
+            int len = animationData.Count;
             for (int i = 0; i < len; i++)
             {
-                secondaryAnimationData[i].stopAnimation();
+                animationData[i].stopAnimation();
             }
         }
 
         private void setAnimTime(float time)
         {
-            animationData.setAnimTime(time);
-            int len = secondaryAnimationData.Length;
+            int len = animationData.Count;
             for (int i = 0; i < len; i++)
             {
-                secondaryAnimationData[i].setAnimTime(time);
+                animationData[i].setAnimTime(time);
             }
         }
 
         private void setAnimSpeed(float speed)
         {
-            animationData.setAnimSpeed(speed);
-            int len = secondaryAnimationData.Length;
+            int len = animationData.Count;
             for (int i = 0; i < len; i++)
             {
-                secondaryAnimationData[i].setAnimSpeed(speed);
+                animationData[i].setAnimSpeed(speed);
             }
         }
     }
@@ -174,6 +156,8 @@ namespace KSPWheel
         public readonly String animationName;
         public readonly float animationSpeed = 1;
         public readonly int animationLayer = 1;
+
+        public float time = 0f;
 
         public AnimationData(Part part, string name, float speed, int layer)
         {
@@ -207,17 +191,32 @@ namespace KSPWheel
                 }
             }
             Animation[] anims = al.ToArray();
-            if (this.anims == null || this.anims.Length == 0)
+            if (anims == null || anims.Length == 0)
             {
                 MonoBehaviour.print("ERROR: No animations found for animation name: " + animationName);
             }
-            foreach (Animation a in this.anims)
+            foreach (Animation a in anims)
             {
                 a[animationName].layer = animationLayer;
                 a[animationName].wrapMode = WrapMode.Once;
                 a.wrapMode = WrapMode.Once;
             }
             return anims;
+        }
+
+        public bool updateAnimations()
+        {
+            bool playing = false;
+            time = 0f;
+            int len = anims.Length;
+            AnimationState state;
+            for (int i = 0; i < len; i++)
+            {
+                state = anims[i][animationName];
+                if (state.normalizedTime > time) { time = state.normalizedTime; }
+                if (state.enabled){ playing = true; }
+            }
+            return playing;
         }
 
         public void playAnimation()

@@ -23,9 +23,21 @@ namespace KSPWheel
         protected Transform wheelTransform;
         protected KSPWheelCollider wheel;
 
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            initializeController();
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            if (controller != null) { return; }
+            initializeController();
+        }
+
+        private void initializeController()
+        {
             KSPWheelBase[] bases = part.GetComponents<KSPWheelBase>();
             controller = bases[baseModuleIndex];
             if (controller == null)
@@ -62,7 +74,8 @@ namespace KSPWheel
         }
 
         /// <summary>
-        /// Called after controller module has been initialized.  At this point the control modules state has been loaded, but no other cross-module state is guaranteed
+        /// Called after controller module has been initialized.  At this point the control modules state has been loaded, but no other cross-module state is guaranteed.
+        /// May be called from either OnLoad() or OnStart(), whichever is called first
         /// </summary>
         internal virtual void postControllerSetup()
         {

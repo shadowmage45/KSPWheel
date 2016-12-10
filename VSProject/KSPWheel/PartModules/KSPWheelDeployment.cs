@@ -48,7 +48,6 @@ namespace KSPWheel
         private CapsuleCollider collider;
         private Transform tempColliderTransform;
         private WheelAnimationHandler animationControl;
-        private WheelAnimationHandler secondaryAnimations;
         private ModuleLight lightModule;
 
         public bool IsMultipleCubesActive
@@ -127,21 +126,11 @@ namespace KSPWheel
 
         public override void OnLoad(ConfigNode node)
         {
+            if (string.IsNullOrEmpty(configNodeData))
+            {
+                configNodeData = node.ToString();
+            }
             base.OnLoad(node);
-            if (string.IsNullOrEmpty(configNodeData)) { configNodeData = node.ToString(); }
-            if (animationControl == null)
-            {
-                setupAnimationController(ConfigNode.Parse(configNodeData).nodes[0]);
-            }
-        }
-
-        public override void OnStart(StartState state)
-        {
-            base.OnStart(state);
-            if (animationControl == null)
-            {
-                setupAnimationController(ConfigNode.Parse(configNodeData).nodes[0]);
-            }
         }
 
         public void Update()
@@ -153,17 +142,26 @@ namespace KSPWheel
             }
         }
 
-        private void setupAnimationController(ConfigNode node)
+        private void setupAnimationController()
         {
             animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState);
+            ConfigNode node = ConfigNode.Parse(configNodeData);
+            if (node != null)
+            {
+                node = node.nodes[0];
+                if (node != null)
+                {
+                    ConfigNode[] animNodes = node.GetNodes("ANIMATION");
+                    animationControl.loadSecondaryAnimations(animNodes);
+                }
+            }
             animationControl.setToAnimationState(controller.wheelState, false);
-            ConfigNode[] animNodes = node.GetNodes("ANIMATION");
-            animationControl.loadSecondaryAnimations(animNodes);
         }
 
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
+            setupAnimationController();
             lightModule = part.GetComponent<ModuleLight>();
             if (lightModule != null && controller.wheelState == KSPWheelState.DEPLOYED)
             {
