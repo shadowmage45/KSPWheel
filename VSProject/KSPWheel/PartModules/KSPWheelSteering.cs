@@ -57,12 +57,12 @@ namespace KSPWheel
         private Quaternion defaultRotation;
         private float rotInput;
 
-        public override void OnStart(StartState state)
+        internal override void postControllerSetup()
         {
-            base.OnStart(state);
+            base.postControllerSetup();
             steeringTransform = part.transform.FindRecursive(steeringName);
             defaultRotation = steeringTransform.localRotation;
-            if(steeringCurve== null || steeringCurve.Curve.length==0)
+            if (steeringCurve == null || steeringCurve.Curve.length == 0)
             {
                 steeringCurve = new FloatCurve();
                 steeringCurve.Add(0, 1, 0, 0);
@@ -100,8 +100,7 @@ namespace KSPWheel
 
         public void Update()
         {
-            if (!HighLogic.LoadedSceneIsFlight || steeringTransform == null) { return; }
-            if (wheel == null) { return; }
+            if (!HighLogic.LoadedSceneIsFlight || steeringTransform == null || wheel==null) { return; }
             steeringTransform.localRotation = defaultRotation;
             if (controller.wheelState == KSPWheelState.DEPLOYED)
             {
