@@ -41,7 +41,7 @@ namespace KSPWheel
         private float extSpringForce = 0f;
 
         private float rollingResistanceCoefficient = 0.005f;//tire-deformation based rolling-resistance; scaled by spring force, is a flat force that will be subtracted from wheel velocity every tick
-        private float rotationalResistanceCoefficient = 0.005f;//bearing/friction based resistance; scaled by wheel rpm and 1/10 spring force
+        private float rotationalResistanceCoefficient = 0f;//bearing/friction based resistance; scaled by wheel rpm and 1/10 spring force
 
         //private vars with external get methods (cannot be set, for data viewing/debug purposes only)
         private bool grounded = false;
