@@ -54,7 +54,10 @@ Replacement for U4 wheel collider, geared for use in KSP.
   * steering angle
 
 ## Source Code License
-Source code for this project is currently licensed under All-Rights Reserved; please ask if you wish to make use of this code.  Once initial development has finished it will be released under the most appropriate liberal open-source license(s) that I can find (aiming to not cause any license issues with any re-use; might even just become public domain).
+Source code for this project is currently licensed under GPL3.0 (or later).  Please see the accompanying License-GPL3.txt file for full licensing details.  Or alternatively the license may be viewed online at https://www.gnu.org/licenses/gpl-3.0.txt
+
+## Configs Licensing
+Config files, if applicable, are hereby released into the Public Domain, and are free to be used, altered, and redistributed.
 
 ## Example Assets
 Assets included in this project are for academic purposes only and are not intended for redistribution in any format.  
