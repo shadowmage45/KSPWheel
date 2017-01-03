@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace KSPWheel
 {
+
     /// <summary>
     /// A replacement for the stock wheel system that uses the KSPWheelCollider class for phsyics handling.
     /// Intended to be a fully-functional (but possibly not fully-equivalent) replacement for the stock wheel modules and U5 WheelCollider component
@@ -15,7 +16,7 @@ namespace KSPWheel
 
         /// <summary>
         /// The raycast mask to use for the wheel-collider suspension sweep. <para/>
-        /// By default ignore layers 26 and 10 (wheelCollidersIgnore & scaledScenery & kerbals/IVAs)
+        /// By default ignore layers 26, 10, and 16 (wheelCollidersIgnore & scaledScenery & kerbals/IVAs)
         /// </summary>
         [KSPField]
         public int raycastMask = ~(1 << 26 | 1 << 10 | 1 << 16);
@@ -84,19 +85,15 @@ namespace KSPWheel
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
         public float guiCompression = 0.0f;
 
-        [KSPField(guiName = "Auto-Tune Suspension", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
-        public bool autoTuneSuspension = false;
-
-        [KSPField(guiName = "Auto-Tune Load %", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 1f, suppressEditorShipModified = true)]
-        public float autoLoadShare = 25f;
-
         [KSPField]
         public string boundsColliderName = String.Empty;
 
         [KSPField]
         public float groundHeightOffset = 0f;
+
+        [KSPField(guiName = "Show Wheel Controls", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_Toggle(affectSymCounterparts = UI_Scene.All, controlEnabled = true, disabledText = "Hidden", enabledText = "Shown", requireFullControl = false, suppressEditorShipModified = true, scene = UI_Scene.All)]
+        public bool showControls = true;
 
         #endregion
 
@@ -108,19 +105,25 @@ namespace KSPWheel
         [KSPField(isPersistant = true)]
         public bool grounded = false;
 
+        [Persistent]
+        public string configNodeData = string.Empty;
+
         #endregion
 
         #region REGION - Private working/cached variables
+
+        public KSPWheelData[] wheelData;
 
         public float tweakScaleCorrector = 1f;
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
-        [Persistent]
-        public string configNodeData = string.Empty;
         private bool initializedWheels = false;
-        public KSPWheelData[] wheelData;
+
+        private bool advancedMode = false;
+
         private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
+
         #endregion
 
         #region REGION - GUI Handling methods
@@ -147,6 +150,11 @@ namespace KSPWheel
                     wheelData[i].loadTarget = loadRating;
                 }
             }
+        }
+
+        public void onShowUIUpdated(BaseField field, object obj)
+        {
+
         }
 
         #endregion
@@ -179,6 +187,7 @@ namespace KSPWheel
         {
             base.OnStart(state);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
+            advancedMode = !HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode;
 
             ConfigNode node = ConfigNode.Parse(configNodeData).nodes[0];
 
@@ -223,6 +232,7 @@ namespace KSPWheel
                 rng.stepIncrement = 0.1f;
             }
             if (loadRating > maxLoadRating * tweakScaleCorrector) { loadRating = maxLoadRating * tweakScaleCorrector; }
+            field.guiActive = field.guiActiveEditor = advancedMode;
 
             field = Fields[nameof(dampRatio)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
@@ -243,6 +253,10 @@ namespace KSPWheel
 
             field = Fields[nameof(suspensionTarget)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
+            field.guiActive = field.guiActiveEditor = advancedMode;
+
+            field = Fields[nameof(showControls)];
+            field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onShowUIUpdated;
 
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
@@ -268,6 +282,7 @@ namespace KSPWheel
                     GameObject.Destroy(boundsCollider.gameObject);
                 }
             }
+            
         }
 
         /// <summary>
@@ -275,8 +290,14 @@ namespace KSPWheel
         /// </summary>
         public void FixedUpdate()
         {
-            if (HighLogic.LoadedSceneIsEditor && autoTuneSuspension && wheelData!=null) { updateSuspension(); }
-            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch) { return; }
+            if (HighLogic.LoadedSceneIsEditor && !advancedMode && wheelData!=null)
+            {
+                updateSuspension();
+            }
+            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch)
+            {
+                return;
+            }
             if (!initializedWheels)
             {
                 Rigidbody rb = part.GetComponent<Rigidbody>();
@@ -299,13 +320,20 @@ namespace KSPWheel
                 }
             }
 
-            if (part.collisionEnhancer != null) { part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING; }
+            //TODO -- should only need to set this once on part init
+            if (part.collisionEnhancer != null)
+            {
+                part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
+            }
 
+            //TODO -- better handling of bump-stop collider state, should NOT need to reset it every tick
             int len = wheelData.Length;
             for (int i = 0; i < len; i++)
             {
                 wheelData[i].bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED;
             }
+
+            //TODO -- subscribe to vessel modified events and update rigidbody assignment whenever parts/etc are modified
             if (useParentRigidbody && part.parent == null)
             {
                 useParentRigidbody = false;
@@ -315,9 +343,10 @@ namespace KSPWheel
                     wheelData[i].wheel.rigidbody = rb;
                 }
             }
+
             if (wheelState == KSPWheelState.DEPLOYED)
             {
-                if (autoTuneSuspension)
+                if (!advancedMode)
                 {
                     updateSuspension();
                 }
@@ -343,6 +372,7 @@ namespace KSPWheel
             }
 
             updateLandedState();
+
         }
 
         /// <summary>
@@ -365,10 +395,8 @@ namespace KSPWheel
         public void OnPutToGround(PartHeightQuery phq)
         {
             float pos = part.transform.position.y - groundHeightOffset * (tweakScaleCorrector * part.rescaleFactor);
-            MonoBehaviour.print("put on ground: " + pos+"  current: "+phq.lowestOnParts[part]+" tot: "+phq.lowestPoint);
             phq.lowestOnParts[part] = Mathf.Min(phq.lowestOnParts[part], pos);
             phq.lowestPoint = Mathf.Min(phq.lowestPoint, phq.lowestOnParts[part]);
-            MonoBehaviour.print("post put on ground: "+ phq.lowestOnParts[part] + " tot: " + phq.lowestPoint);
         }
 
         #endregion
@@ -382,36 +410,39 @@ namespace KSPWheel
         /// </summary>
         private void updateSuspension()
         {
-            float massShare;
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                massShare = EditorLogic.fetch.ship.GetTotalMass() * autoLoadShare * 0.01f;
-            }
-            else if (HighLogic.LoadedSceneIsFlight)
-            {
-                massShare = (float)vessel.totalMass * autoLoadShare * 0.01f * (float)vessel.gravityForPos.magnitude * 0.1f;
-            }
-            else { return; }
-            massShare = Mathf.Clamp(massShare, minLoadRating, maxLoadRating);
+            KSPWheelData data;
+            KSPWheelCollider wheel;            
+            float vesselMass = (float)vessel.totalMass;
+            float suspensionSpring, suspensionDamper;
+            float comp, compPercent;
+            float min = 0.2f;
+            float max = 0.8f;
             int len = wheelData.Length;
-            bool finished = true;
             for (int i = 0; i < len; i++)
             {
-                KSPWheelCollider wheel = wheelData[i].wheel;
-                wheelData[i].loadTarget = massShare * wheelData[i].loadShare;
-                wheelData[i].loadRating = Mathf.MoveTowards(wheelData[i].loadRating, wheelData[i].loadTarget, maxLoadRating * Time.fixedDeltaTime);
-                if (wheelData[i].loadRating != wheelData[i].loadTarget) { finished = false; }
-                float suspensionSpring, suspensionDamper;
-                calcSuspension(wheelData[i].loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-                if (wheel != null)
+                data = wheelData[i];
+                if ((wheel = data.wheel) == null)//assign and null-test
                 {
+                    continue;
+                }
+                if (wheel.isGrounded)
+                {
+                    comp = wheel.compressionDistance;
+                    compPercent = comp / wheel.length;
+                    if (compPercent < min)//decrease spring
+                    {
+                        data.suspBoost -= vesselMass * 0.01f;
+                    }
+                    else if (compPercent > max)//increase spring
+                    {
+                        data.suspBoost += vesselMass * 0.01f;
+                    }
+                    data.loadRating = (data.loadShare * vesselMass) + data.suspBoost;
+                    calcSuspension(data.loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
                     wheel.spring = suspensionSpring;
                     wheel.damper = suspensionDamper;
                 }
             }
-            //update displayed/stored load rating
-            loadRating = massShare;
-            autoTuneSuspension = !finished;
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)
@@ -501,6 +532,7 @@ namespace KSPWheel
             public MeshCollider bumpStopCollider;
             public float loadRating;
             public float loadTarget;
+            public float suspBoost;
 
             public KSPWheelData(ConfigNode node)
             {
@@ -559,6 +591,7 @@ namespace KSPWheel
             }
 
         }
+
     }
 
 }
