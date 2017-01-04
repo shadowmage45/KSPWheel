@@ -46,6 +46,7 @@ namespace KSPWheel
             }
             controller.addSubmodule(this);
             postControllerSetup();
+            onUIControlsUpdated(controller.showControls);
         }
 
         public virtual void OnDestroy()
@@ -102,6 +103,11 @@ namespace KSPWheel
         /// Called during controlling modules Update() method, only if there is a valid wheel object
         /// </summary>
         internal virtual void preWheelFrameUpdate()
+        {
+
+        }
+
+        internal virtual void onUIControlsUpdated(bool show)
         {
 
         }

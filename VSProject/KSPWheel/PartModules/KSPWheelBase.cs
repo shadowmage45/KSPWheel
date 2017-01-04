@@ -154,7 +154,11 @@ namespace KSPWheel
 
         public void onShowUIUpdated(BaseField field, object obj)
         {
-
+            int len = subModules.Count;
+            for (int i = 0; i < len; i++)
+            {
+                subModules[i].onUIControlsUpdated(showControls);
+            }
         }
 
         #endregion
@@ -290,7 +294,7 @@ namespace KSPWheel
         /// </summary>
         public void FixedUpdate()
         {
-            if (HighLogic.LoadedSceneIsEditor && !advancedMode && wheelData!=null)
+            if (HighLogic.LoadedSceneIsEditor && !advancedMode && wheelData != null)
             {
                 updateSuspension();
             }
@@ -411,10 +415,27 @@ namespace KSPWheel
         private void updateSuspension()
         {
             KSPWheelData data;
-            KSPWheelCollider wheel;            
-            float vesselMass = (float)vessel.totalMass;
+            KSPWheelCollider wheel;
+            float vesselMass = 1;
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                if (vessel.ctrlState.wheelSteer != 0 || vessel.ctrlState.wheelThrottle != 0 || vessel.ActionGroups[KSPActionGroup.Brakes])
+                {
+                    return;
+                }                
+                vesselMass = (vessel == null) ? 1 : (float)vessel.totalMass;
+            }
+            else if (HighLogic.LoadedSceneIsEditor)
+            {
+                vesselMass = EditorLogic.fetch.ship.GetTotalMass();
+            }
+            if (vesselMass <= 0 || float.IsNaN(vesselMass))
+            {
+                MonoBehaviour.print("ERROR: Vessel mass is invalid: " + vesselMass);
+                return;
+            }
             float suspensionSpring, suspensionDamper;
-            float comp, compPercent;
+            float comp, prevComp, compPercent;
             float min = 0.2f;
             float max = 0.8f;
             int len = wheelData.Length;
@@ -428,19 +449,21 @@ namespace KSPWheel
                 if (wheel.isGrounded)
                 {
                     comp = wheel.compressionDistance;
+                    prevComp = data.prevComp;
                     compPercent = comp / wheel.length;
-                    if (compPercent < min)//decrease spring
+                    if (compPercent < min && comp < prevComp)//not compressed far enough -and- getting less compressed already
                     {
                         data.suspBoost -= vesselMass * 0.01f;
                     }
-                    else if (compPercent > max)//increase spring
+                    else if (compPercent > max && comp > prevComp)//too far compressed -and- getting more compressed already
                     {
                         data.suspBoost += vesselMass * 0.01f;
-                    }
+                    }                    
                     data.loadRating = (data.loadShare * vesselMass) + data.suspBoost;
                     calcSuspension(data.loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
                     wheel.spring = suspensionSpring;
                     wheel.damper = suspensionDamper;
+                    data.prevComp = comp;
                 }
             }
         }
@@ -533,6 +556,7 @@ namespace KSPWheel
             public float loadRating;
             public float loadTarget;
             public float suspBoost;
+            public float prevComp;
 
             public KSPWheelData(ConfigNode node)
             {
