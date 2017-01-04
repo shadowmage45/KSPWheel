@@ -21,5 +21,11 @@ namespace KSPWheel
 
         }
 
+        internal override void onUIControlsUpdated(bool show)
+        {
+            base.onUIControlsUpdated(show);
+            Fields[nameof(repulsorHeight)].guiActive = Fields[nameof(repulsorHeight)].guiActiveEditor = show;
+        }
+
     }
 }

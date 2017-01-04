@@ -57,6 +57,15 @@ namespace KSPWheel
         private Quaternion defaultRotation;
         private float rotInput;
 
+        internal override void onUIControlsUpdated(bool show)
+        {
+            base.onUIControlsUpdated(show);
+            Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = show;
+            Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = show;
+            Fields[nameof(steeringLimit)].guiActive = Fields[nameof(steeringLimit)].guiActiveEditor = show;
+            Fields[nameof(steeringBias)].guiActive = Fields[nameof(steeringBias)].guiActiveEditor = show;
+        }
+
         internal override void postControllerSetup()
         {
             base.postControllerSetup();

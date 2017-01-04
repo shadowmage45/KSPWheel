@@ -84,10 +84,6 @@ namespace KSPWheel
         {
             base.OnStart(state);
             Fields[nameof(invertMotor)].uiControlEditor.onFieldChanged = onMotorInvert;
-            Fields[nameof(invertSteering)].guiActive = tankSteering;
-            Fields[nameof(invertSteering)].guiActiveEditor = tankSteering;
-            Fields[nameof(steeringLocked)].guiActive = tankSteering;
-            Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering;
             if (torqueCurve.Curve.length == 0)
             {
                 torqueCurve.Add(0, 1, 0, 0);
@@ -98,6 +94,18 @@ namespace KSPWheel
                 invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
             }
             //TODO how to determine if is 'original' part or a symmetry part?
+        }
+
+        internal override void onUIControlsUpdated(bool show)
+        {
+            base.onUIControlsUpdated(show);
+
+            Fields[nameof(motorOutput)].guiActive = Fields[nameof(motorOutput)].guiActiveEditor = show;
+            Fields[nameof(invertMotor)].guiActive = Fields[nameof(invertMotor)].guiActiveEditor = show;
+            Fields[nameof(motorLocked)].guiActive = Fields[nameof(motorLocked)].guiActiveEditor = show;
+
+            Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = tankSteering && show;
+            Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering && show;            
         }
 
         internal override void preWheelPhysicsUpdate()
