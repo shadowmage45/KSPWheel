@@ -99,6 +99,10 @@ namespace KSPWheel
          UI_Toggle(affectSymCounterparts = UI_Scene.All, controlEnabled = true, disabledText = "Disabled", enabledText = "Enabled", requireFullControl = false, suppressEditorShipModified = true, scene = UI_Scene.All)]
         public bool symmetrySuspensionUpdates = true;
 
+        [KSPField(guiName = "StockSuspensionCode", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_Toggle(affectSymCounterparts = UI_Scene.All, controlEnabled = true, disabledText = "Disabled", enabledText = "Enabled", requireFullControl = false, suppressEditorShipModified = true, scene = UI_Scene.All)]
+        public bool stockSuspensionCode = true;
+
         #endregion
 
         #region REGION - Persistent data
@@ -480,6 +484,11 @@ namespace KSPWheel
             {
                 return;
             }
+            if (stockSuspensionCode)
+            {
+                updateSuspensionStock();
+                return;
+            }
             if (part.isClone && symmetrySuspensionUpdates)
             {
                 return;
@@ -551,6 +560,39 @@ namespace KSPWheel
                     baseData.wheel.damper = suspensionDamper;
                 }
             }
+        }
+        
+        private void updateSuspensionStock()
+        {
+            float vesselMass = (float)vessel.totalMass;
+            float boost;
+            float spring, damper;
+            float compression = 0;
+            int len = wheelData.Length;
+            KSPWheelData data;
+            for (int i = 0; i < len; i++)
+            {
+                data = wheelData[i];
+                compression = data.wheel.compressionDistance / data.wheel.length;
+                if (compression > 0.8f)
+                {
+                    data.suspBoost = Mathf.Min(0.85f, data.suspBoost + 0.5f * Time.fixedDeltaTime);
+                }
+                else if (data.wheel.isGrounded && compression < 0.4f)
+                {
+                    data.suspBoost = Mathf.Max(0.0f, data.suspBoost - 0.2f * Time.fixedDeltaTime);
+                }
+                boost = 1.0f + Mathf.Clamp(compression * 2f, -1f, 1f);
+                spring = Mathf.Clamp(vesselMass * evaluateCurve(boost, data.suspBoost), 0.01f, 5000f) * 10;
+                damper = Mathf.Sqrt(spring * dampRatio);
+                data.wheel.spring = spring;
+                data.wheel.damper = damper;
+            }
+        }
+
+        private float evaluateCurve(float a, float b)
+        {
+            return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(Mathf.Clamp(a, 0f, 2f), Mathf.Clamp(b, 0.01f, 1f))), 0.01f, 1E+07f);
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)
