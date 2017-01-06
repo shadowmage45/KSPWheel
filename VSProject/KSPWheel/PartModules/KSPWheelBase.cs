@@ -309,10 +309,6 @@ namespace KSPWheel
         /// </summary>
         public void FixedUpdate()
         {
-            if (HighLogic.LoadedSceneIsEditor && !advancedMode && wheelData != null)
-            {
-                updateSuspension();
-            }
             if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch)
             {
                 return;
@@ -430,7 +426,7 @@ namespace KSPWheel
                 return;
             }
             float compressionBoostFactor;
-            float spring, damper;
+            float spring, damper, springLoad, natFreq, criticalDamping;
             float compression = 0;
             int len = wheelData.Length;
             KSPWheelData data;
@@ -440,15 +436,21 @@ namespace KSPWheel
                 compression = data.wheel.compressionDistance / data.wheel.length;
                 if (compression > 0.8f)
                 {
-                    data.timeBoostFactor = Mathf.Min(0.85f, data.timeBoostFactor + 0.5f * Time.fixedDeltaTime);
+                    data.timeBoostFactor = data.timeBoostFactor + 0.5f * Time.fixedDeltaTime;
                 }
                 else if (data.wheel.isGrounded && compression < 0.4f)
                 {
-                    data.timeBoostFactor = Mathf.Max(0.0f, data.timeBoostFactor - 0.2f * Time.fixedDeltaTime);
+                    data.timeBoostFactor = data.timeBoostFactor - 0.2f * Time.fixedDeltaTime;
                 }
+                data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
                 compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, -1f, 1f);
                 spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
-                damper = Mathf.Sqrt(spring * dampRatio);
+
+                springLoad = spring * data.wheel.length * 0.5f;
+                natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
+                criticalDamping = 2 * springLoad * natFreq;//critical damping
+                damper = criticalDamping * dampRatio;
+
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
             }
@@ -456,9 +458,9 @@ namespace KSPWheel
 
         //TODO derive cleaner curves / alternate curves / alternate spring-setting methods for over and under compression
         // can use a curve that starts at y=1 when x=comp limit
-        private float evaluateCurve(float a, float b)
+        private float evaluateCurve(float comp, float time)
         {
-            return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(Mathf.Clamp(a, 0f, 2f), Mathf.Clamp(b, 0.01f, 1f))), 0.01f, 10000000f);
+            return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(comp, time)), 0.01f, 10000000f);
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)
