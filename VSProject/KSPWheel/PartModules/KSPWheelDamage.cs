@@ -4,13 +4,7 @@ using UnityEngine;
 
 namespace KSPWheel
 {
-    /// <summary>
-    /// Replacement for stock wheel motor module.<para/>
-    /// Manages wheel motor input and resource use.
-    /// TODO:
-    /// Traction control / anti-slip.
-    /// Torque curve vs rpm.
-    /// </summary>
+
     public class KSPWheelDamage : KSPWheelSubmodule
     {
                 
@@ -56,6 +50,37 @@ namespace KSPWheel
         {
             base.postWheelCreated();
             wheel.setImpactCallback(onWheelImpact);
+        }
+
+        internal override void postWheelPhysicsUpdate()
+        {
+            base.postWheelPhysicsUpdate();
+            KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
+            switch (wearType)
+            {
+                case KSPWheelWearType.NONE:
+                    //NOOP
+                    break;
+                case KSPWheelWearType.SIMPLE:
+                    wearUpdateSimple();
+                    break;
+                case KSPWheelWearType.ADVANCED:
+                    wearUpdateAdvanced();
+                    break;
+                default:
+                    //NOOP
+                    break;
+            }
+        }
+
+        private void wearUpdateSimple()
+        {
+
+        }
+
+        private void wearUpdateAdvanced()
+        {
+
         }
 
         /// <summary>
