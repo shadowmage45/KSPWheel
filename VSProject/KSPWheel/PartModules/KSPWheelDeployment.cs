@@ -42,6 +42,12 @@ namespace KSPWheel
         [KSPField]
         public bool updateDragCubes = true;
 
+        [KSPField]
+        public bool oneShotAnimation = false;
+
+        [KSPField(isPersistant = true)]
+        public bool oneShotTriggered = false;
+
         [Persistent]
         public string configNodeData = String.Empty;
 
@@ -90,6 +96,7 @@ namespace KSPWheel
                 MonoBehaviour.print("Animation control is null!");
                 return;
             }
+            if (oneShotAnimation && oneShotTriggered) { return; }
             if (controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING)
             {
                 controller.wheelState = KSPWheelState.RETRACTING;
@@ -105,6 +112,7 @@ namespace KSPWheel
                 if (!string.IsNullOrEmpty(retractedEffect)) { part.Effect(retractedEffect, 0f); }
                 if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 0f); }
                 if (!string.IsNullOrEmpty(deployedEffect)) { part.Effect(deployedEffect, 0f); }
+                oneShotTriggered = oneShotTriggered || HighLogic.LoadedSceneIsFlight;
             }
             else if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING)
             {
@@ -121,6 +129,7 @@ namespace KSPWheel
                 if (!string.IsNullOrEmpty(retractedEffect)) { part.Effect(retractedEffect, 0f); }
                 if (!string.IsNullOrEmpty(deployEffect)) { part.Effect(deployEffect, 1f); }
                 if (!string.IsNullOrEmpty(deployedEffect)) { part.Effect(deployedEffect, 0f); }
+                oneShotTriggered = oneShotTriggered || HighLogic.LoadedSceneIsFlight;
             }
         }
 
