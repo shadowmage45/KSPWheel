@@ -6,8 +6,8 @@
         [GameParameters.CustomParameterUI("Advanced Mode?", toolTip = "If true wheels use advanced user GUI and must be configured on a per-vehicle/per-use basis.  Disables all suspension auto-tuning when enabled.")]
         public bool advancedMode = true;
 
-        [GameParameters.CustomFloatParameterUI("Loading Mult", asPercentage = true, minValue = 0, maxValue = 10, toolTip = "Determines how fast wheels react to loading and stresses causing damage or destruction of the part. 0=disable, 1=normal, <1=explode faster, >1=explode slower")]
-        public float loadingMultiplier = 1f;
+        [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "None = No wheel wear or breakage.  Simple = Stock equivalent (break on load/impact/stress), Advanced = time/speed/load based wheel wear + breakage.")]
+        public KSPWheelWearType wearType = KSPWheelWearType.SIMPLE;
 
         public override string Section { get { return "KSPWheel"; } }
 
@@ -19,5 +19,12 @@
 
         public override bool HasPresets { get { return false; } }
 
+    }
+
+    public enum KSPWheelWearType
+    {
+        NONE,
+        SIMPLE,
+        ADVANCED
     }
 }
