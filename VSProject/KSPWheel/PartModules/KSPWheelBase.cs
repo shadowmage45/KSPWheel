@@ -75,6 +75,10 @@ namespace KSPWheel
         [KSPField]
         public float maxLoadRating = 5f;
 
+        [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0.05f, maxValue = 1, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        public float springRating = 0.65f;
+
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
         UI_FloatRange(minValue = 0.05f, maxValue = 2, stepIncrement = 0.025f, suppressEditorShipModified = true)]
         public float dampRatio = 0.65f;
@@ -94,14 +98,6 @@ namespace KSPWheel
 
         [KSPField]
         public float groundHeightOffset = 0f;
-
-        [KSPField(guiName = "SymmetrySuspensionUpdates", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(affectSymCounterparts = UI_Scene.All, controlEnabled = true, disabledText = "Disabled", enabledText = "Enabled", requireFullControl = false, suppressEditorShipModified = true, scene = UI_Scene.All)]
-        public bool symmetrySuspensionUpdates = true;
-
-        [KSPField(guiName = "StockSuspensionCode", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(affectSymCounterparts = UI_Scene.All, controlEnabled = true, disabledText = "Disabled", enabledText = "Enabled", requireFullControl = false, suppressEditorShipModified = true, scene = UI_Scene.All)]
-        public bool stockSuspensionCode = true;
 
         #endregion
 
@@ -169,10 +165,10 @@ namespace KSPWheel
             }
 
             Fields[nameof(suspensionTarget)].guiActive = Fields[nameof(suspensionTarget)].guiActiveEditor = showControls;
-            Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls;
+            Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls && advancedMode;
+            Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode;
             Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls;
             Fields[nameof(guiCompression)].guiActive = Fields[nameof(guiCompression)].guiActiveEditor = showControls;
-
         }
 
         #endregion
@@ -303,6 +299,11 @@ namespace KSPWheel
             
         }
 
+        public void Start()
+        {
+            this.onShowUIUpdated(null, null);
+        }
+
         /// <summary>
         /// Updates the wheel collider component physics if it is not broken or retracted
         /// </summary>
@@ -421,62 +422,6 @@ namespace KSPWheel
 
         #region REGION - Custom update methods
 
-        private void updateSuspensionOld()
-        {
-            KSPWheelData data;
-            KSPWheelCollider wheel;
-            float vesselMass = 1;
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                if (vessel.ctrlState.wheelSteer != 0 || vessel.ctrlState.wheelThrottle != 0 || vessel.ActionGroups[KSPActionGroup.Brakes])
-                {
-                    return;
-                }                
-                vesselMass = (vessel == null) ? 1 : (float)vessel.totalMass;
-            }
-            else if (HighLogic.LoadedSceneIsEditor)
-            {
-                vesselMass = EditorLogic.fetch.ship.GetTotalMass();
-            }
-            if (vesselMass <= 0 || float.IsNaN(vesselMass))
-            {
-                MonoBehaviour.print("ERROR: Vessel mass is invalid: " + vesselMass);
-                return;
-            }
-            float suspensionSpring, suspensionDamper;
-            float comp, prevComp, compPercent;
-            float min = 0.2f;
-            float max = 0.8f;
-            int len = wheelData.Length;
-            for (int i = 0; i < len; i++)
-            {
-                data = wheelData[i];
-                if ((wheel = data.wheel) == null)//assign and null-test
-                {
-                    continue;
-                }
-                if (wheel.isGrounded)
-                {
-                    comp = wheel.compressionDistance;
-                    prevComp = data.prevComp;
-                    compPercent = comp / wheel.length;
-                    if (compPercent < min && comp < prevComp)//not compressed far enough -and- getting less compressed already
-                    {
-                        data.suspBoost -= vesselMass * 0.01f;
-                    }
-                    else if (compPercent > max && comp > prevComp)//too far compressed -and- getting more compressed already
-                    {
-                        data.suspBoost += vesselMass * 0.01f;
-                    }                    
-                    data.loadRating = (data.loadShare * vesselMass) + data.suspBoost;
-                    calcSuspension(data.loadRating, suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-                    wheel.spring = suspensionSpring;
-                    wheel.damper = suspensionDamper;
-                    data.prevComp = comp;
-                }
-            }
-        }
-
         private void updateSuspension()
         {
             float vesselMass = 0;
@@ -484,88 +429,7 @@ namespace KSPWheel
             {
                 return;
             }
-            if (stockSuspensionCode)
-            {
-                updateSuspensionStock();
-                return;
-            }
-            if (part.isClone && symmetrySuspensionUpdates)
-            {
-                return;
-            }
-            int len = wheelData.Length;
-            for (int i = 0; i < len; i++)
-            {
-                updateSuspensionData(vesselMass, wheelData[i], i, symmetrySuspensionUpdates);
-            }
-        }
-
-        private void updateSuspensionData(float vesselMass, KSPWheelData baseData, int index, bool symmetry)
-        {
-            float suspensionSpring, suspensionDamper;
-            float min = 0.2f;
-            float max = 0.8f;
-            float move = 0f;
-            float perc = 0;
-            float inc = 0.01f * vesselMass;
-            if (baseData.wheel.isGrounded)
-            {
-                perc = baseData.wheel.length / baseData.wheel.compressionDistance;
-                if (perc < min)
-                {
-                    move -= inc;
-                }
-                else if (perc > max)
-                {
-                    move += inc;
-                }
-            }
-            if (symmetry)
-            {
-                KSPWheelData symData;
-                int len = part.symmetryCounterparts.Count;
-                for (int i = 0; i < len; i++)
-                {
-                    symData = part.symmetryCounterparts[i].GetComponent<KSPWheelBase>().wheelData[index];
-                    if (!symData.wheel.isGrounded) { continue; }
-                    perc = symData.wheel.length / symData.wheel.compressionDistance;
-                    if (perc < min)
-                    {
-                        move -= inc;
-                    }
-                    else if (perc > max)
-                    {
-                        move += inc;
-                    }
-                }
-            }
-
-            move = Mathf.Clamp(move, -inc, inc);
-            baseData.suspBoost += move;
-            baseData.loadRating = (baseData.loadShare * vesselMass) + baseData.suspBoost;
-            calcSuspension(baseData.loadRating, baseData.suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-            baseData.wheel.spring = suspensionSpring;
-            baseData.wheel.damper = suspensionDamper;
-
-            if (symmetry)
-            {
-                KSPWheelData symData;
-                int len = part.symmetryCounterparts.Count;
-                for (int i = 0; i < len; i++)
-                {
-                    symData = part.symmetryCounterparts[i].GetComponent<KSPWheelBase>().wheelData[index];
-                    symData.suspBoost += move;
-                    symData.loadRating = baseData.loadRating;
-                    baseData.wheel.spring = suspensionSpring;
-                    baseData.wheel.damper = suspensionDamper;
-                }
-            }
-        }
-        
-        private void updateSuspensionStock()
-        {
-            float vesselMass = (float)vessel.totalMass;
-            float boost;
+            float compressionBoostFactor;
             float spring, damper;
             float compression = 0;
             int len = wheelData.Length;
@@ -576,23 +440,25 @@ namespace KSPWheel
                 compression = data.wheel.compressionDistance / data.wheel.length;
                 if (compression > 0.8f)
                 {
-                    data.suspBoost = Mathf.Min(0.85f, data.suspBoost + 0.5f * Time.fixedDeltaTime);
+                    data.timeBoostFactor = Mathf.Min(0.85f, data.timeBoostFactor + 0.5f * Time.fixedDeltaTime);
                 }
                 else if (data.wheel.isGrounded && compression < 0.4f)
                 {
-                    data.suspBoost = Mathf.Max(0.0f, data.suspBoost - 0.2f * Time.fixedDeltaTime);
+                    data.timeBoostFactor = Mathf.Max(0.0f, data.timeBoostFactor - 0.2f * Time.fixedDeltaTime);
                 }
-                boost = 1.0f + Mathf.Clamp(compression * 2f, -1f, 1f);
-                spring = Mathf.Clamp(vesselMass * evaluateCurve(boost, data.suspBoost), 0.01f, 5000f) * 10;
+                compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, -1f, 1f);
+                spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
                 damper = Mathf.Sqrt(spring * dampRatio);
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
             }
         }
 
+        //TODO derive cleaner curves / alternate curves / alternate spring-setting methods for over and under compression
+        // can use a curve that starts at y=1 when x=comp limit
         private float evaluateCurve(float a, float b)
         {
-            return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(Mathf.Clamp(a, 0f, 2f), Mathf.Clamp(b, 0.01f, 1f))), 0.01f, 1E+07f);
+            return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(Mathf.Clamp(a, 0f, 2f), Mathf.Clamp(b, 0.01f, 1f))), 0.01f, 10000000f);
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)
@@ -617,7 +483,7 @@ namespace KSPWheel
             }
         }
 
-        //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow
+        //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow (or they are handled by regular Part methods?)
         private void updateLandedState()
         {
             grounded = false;
@@ -682,7 +548,7 @@ namespace KSPWheel
             public MeshCollider bumpStopCollider;
             public float loadRating;
             public float loadTarget;
-            public float suspBoost;
+            public float timeBoostFactor;
             public float prevComp;
 
             public KSPWheelData(ConfigNode node)
