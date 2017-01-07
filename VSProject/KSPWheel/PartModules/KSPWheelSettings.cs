@@ -3,10 +3,16 @@
     public class KSPWheelSettings : GameParameters.CustomParameterNode
     {
 
-        [GameParameters.CustomParameterUI("Advanced Mode?", toolTip = "If true wheels use advanced user GUI and must be configured on a per-vehicle/per-use basis.  Disables all suspension auto-tuning when enabled.")]
+        [GameParameters.CustomParameterUI("Manual Suspension Configuration", toolTip = "If enabled wheels use manual setup for suspension tuning and must be configured on a per-wheel basis.")]
         public bool advancedMode = false;
 
-        [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "None = No wheel wear or breakage.  Simple = Stock equivalent (break on load/impact/stress), Advanced = time/speed/load based wheel wear + breakage.")]
+        [GameParameters.CustomParameterUI("Manual Gear Selection", toolTip = "If enabled motors will have multiple gear ratios available (configurable).")]
+        public bool manualGearing = false;
+
+        [GameParameters.CustomParameterUI("Wheel Dust Effects", toolTip = "If enabled wheels will kick up dust when traversing terrain.")]
+        public bool wheelDustEffects = true;
+
+        [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "Wear and damage model.\nNone = No wheel wear or breakage.\nSimple = Stock equivalent, break on impact/over-stress.\nAdvanced = Time, speed, load, heat, and impact based wheel wear + breakage.")]
         public KSPWheelWearType wearType = KSPWheelWearType.SIMPLE;
 
         public override string Section { get { return "KSPWheel"; } }

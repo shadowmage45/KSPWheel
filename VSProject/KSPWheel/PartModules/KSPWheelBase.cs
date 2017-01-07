@@ -72,7 +72,7 @@ namespace KSPWheel
         [KSPField]
         public float minLoadRating = 0.05f;
 
-        [KSPField]
+        [KSPField(guiName = "Max Load", guiActive = false, guiActiveEditor = false)]
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -164,7 +164,7 @@ namespace KSPWheel
                 subModules[i].onUIControlsUpdated(showControls);
             }
 
-            Fields[nameof(suspensionTarget)].guiActive = Fields[nameof(suspensionTarget)].guiActiveEditor = showControls;
+            Fields[nameof(suspensionTarget)].guiActive = Fields[nameof(suspensionTarget)].guiActiveEditor = showControls && advancedMode;
             Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls && advancedMode;
             Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode;
             Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls;
@@ -270,6 +270,9 @@ namespace KSPWheel
             field = Fields[nameof(showControls)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onShowUIUpdated;
 
+            field = Fields[nameof(maxLoadRating)];
+            field.guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
+
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -327,9 +330,17 @@ namespace KSPWheel
                     {
                         wheelData[i].setupWheel(rb, raycastMask, tweakScaleCorrector * part.rescaleFactor);
                         wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
+                    }
+                    //run wheel init on a second pass so that all wheels are available
+                    //some modules may use more than a single wheel (damage, tracks, dust, debug)
+                    for (int i = 0; i < count; i++)
+                    {
                         onWheelCreated(i, wheelData[i]);
                     }
-                    onLoadUpdated(null, null);
+                    if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode)
+                    {
+                        onLoadUpdated(null, null);
+                    }
                 }
             }
 
