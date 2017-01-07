@@ -446,7 +446,7 @@ namespace KSPWheel
                 compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, -1f, 1f);
                 spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
 
-                springLoad = spring * data.wheel.length * 0.5f;
+                springLoad = spring * data.wheel.length * 0.5f * 0.1f;
                 natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
                 criticalDamping = 2 * springLoad * natFreq;//critical damping
                 damper = criticalDamping * dampRatio;
