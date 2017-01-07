@@ -4,7 +4,7 @@
     {
 
         [GameParameters.CustomParameterUI("Advanced Mode?", toolTip = "If true wheels use advanced user GUI and must be configured on a per-vehicle/per-use basis.  Disables all suspension auto-tuning when enabled.")]
-        public bool advancedMode = true;
+        public bool advancedMode = false;
 
         [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "None = No wheel wear or breakage.  Simple = Stock equivalent (break on load/impact/stress), Advanced = time/speed/load based wheel wear + breakage.")]
         public KSPWheelWearType wearType = KSPWheelWearType.SIMPLE;

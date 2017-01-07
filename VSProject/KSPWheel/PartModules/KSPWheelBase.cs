@@ -201,7 +201,7 @@ namespace KSPWheel
         {
             base.OnStart(state);
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-            advancedMode = !HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode;
+            advancedMode = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode;
 
             ConfigNode node = ConfigNode.Parse(configNodeData).nodes[0];
 
@@ -255,14 +255,12 @@ namespace KSPWheel
             {
                 rng.minValue = minDampRatio;
                 rng.maxValue = maxDampRatio;
-                rng.stepIncrement = 0.1f;
             }
             rng = (UI_FloatRange)field.uiControlEditor;
             if (rng != null)
             {
                 rng.minValue = minDampRatio;
                 rng.maxValue = maxDampRatio;
-                rng.stepIncrement = 0.1f;
             }
 
             field = Fields[nameof(suspensionTarget)];
