@@ -167,9 +167,10 @@ namespace KSPWheel
         {
             KSPWheelState wheelState = controller.wheelState;
             KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
-            Events["repairWheel"].guiActive = wheelState == KSPWheelState.BROKEN;
+            Events[nameof(repairWheel)].guiActive = wheelState == KSPWheelState.BROKEN;
             Fields[nameof(loadStress)].guiActive = wearType != KSPWheelWearType.NONE;
             Fields[nameof(persistentWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
+            Fields[nameof(displayStatus)].guiActive = wearType != KSPWheelWearType.NONE;
             switch (wheelState)
             {
                 case KSPWheelState.RETRACTED:

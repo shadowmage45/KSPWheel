@@ -109,6 +109,9 @@ namespace KSPWheel
         [KSPField(isPersistant = true)]
         public bool grounded = false;
 
+        [KSPField(isPersistant = true)]
+        public bool initializedEditor = false;
+
         [Persistent]
         public string configNodeData = string.Empty;
 
@@ -303,6 +306,7 @@ namespace KSPWheel
         public void Start()
         {
             this.onShowUIUpdated(null, null);
+            initializedEditor = true;
         }
 
         /// <summary>
@@ -452,10 +456,10 @@ namespace KSPWheel
                     data.timeBoostFactor = data.timeBoostFactor - 0.2f * Time.fixedDeltaTime;
                 }
                 data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
-                compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, -1f, 1f);
+                compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
                 spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
 
-                springLoad = spring * data.wheel.length * 0.5f * 0.1f;
+                springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
                 natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
                 criticalDamping = 2 * springLoad * natFreq;//critical damping
                 damper = criticalDamping * dampRatio;

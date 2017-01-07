@@ -78,6 +78,17 @@ namespace KSPWheel
                 steeringCurve.Add(10, 1, 0, 0);
                 steeringCurve.Add(30, 0.5f, 0, 0);
             }
+
+            //this actually needs to be in an 'onPartAdded' editor event callback
+            if (!controller.initializedEditor && HighLogic.LoadedSceneIsEditor)
+            {
+                //find location relative to vessel or craft COM
+                //set steering invert dependant on if in front or behind com as viewed from control reference
+                //how to handle instances of misaligned control, e.g. VAB craft with wheels?
+                Vector3 pos = Vector3.zero;
+                Vector3 com = Vector3.zero;
+                Vector3 ctrl = Vector3.fwd;
+            }
         }
 
         internal override void preWheelPhysicsUpdate()
