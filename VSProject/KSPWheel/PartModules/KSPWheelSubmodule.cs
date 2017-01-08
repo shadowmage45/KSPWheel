@@ -21,13 +21,14 @@ namespace KSPWheel
 
         protected KSPWheelBase controller;
         protected Transform wheelTransform;
+        protected KSPWheelBase.KSPWheelData wheelData;
         protected KSPWheelCollider wheel;
 
-        public override void OnLoad(ConfigNode node)
-        {
-            base.OnLoad(node);
-            initializeController();
-        }
+        //public override void OnLoad(ConfigNode node)
+        //{
+        //    base.OnLoad(node);
+        //    initializeController();
+        //}
 
         public override void OnStart(StartState state)
         {
@@ -45,6 +46,7 @@ namespace KSPWheel
                 throw new NullReferenceException("ERROR: Could not locate KSPWheelBase controller module for wheel system.");
             }
             controller.addSubmodule(this);
+            wheelData = controller.wheelData[wheelIndex];
             postControllerSetup();
             onUIControlsUpdated(controller.showControls);
         }

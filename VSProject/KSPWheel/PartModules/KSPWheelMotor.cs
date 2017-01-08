@@ -7,36 +7,31 @@ namespace KSPWheel
     /// <summary>
     /// Replacement for stock wheel motor module.<para/>
     /// Manages wheel motor input and resource use.
-    /// TODO:
-    /// Traction control / anti-slip.
-    /// Torque curve vs rpm.
     /// </summary>
     public class KSPWheelMotor : KSPWheelSubmodule
     {
         
+        /// <summary>
+        /// Peak Motor power, in kw (e.g. kn).  Used to determine EC/s
+        /// </summary>
         [KSPField]
-        public float maxMotorTorque = 0f;
+        public float motorPower = 1f;
 
-        [KSPField(guiName = "Motor Torque", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        /// <summary>
+        /// Motor stall torque; e.g. motor torque output at zero rpm
+        /// </summary>
+        [KSPField]
+        public float maxMotorTorque = 10f;
+
+        /// <summary>
+        /// Max rpm of the motor at shaft.  Used with motor stall torque to determine output curve and power use.
+        /// </summary>
+        [KSPField]
+        public float maxRPM = 2500f;
+
+        [KSPField(guiName = "Motor Output", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f)]
         public float motorOutput = 100f;
-
-        [KSPField]
-        public float resourceAmount = 0f;
-
-        [KSPField]
-        public float maxRPM = 600f;
-
-        [KSPField]
-        public bool tankSteering = false;
-
-        [KSPField(guiName = "Tank Steer Invert", guiActive = false, guiActiveEditor = false, isPersistant = true),
-         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
-        public bool invertSteering = false;
-
-        [KSPField(guiName = "Tank Steer Lock", guiActive = false, guiActiveEditor = false, isPersistant = true),
-         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
-        public bool steeringLocked = false;
 
         /// <summary>
         /// If true, motor response will be inverted for this wheel.  Toggleable in editor and flight.  Persistent.
@@ -52,6 +47,27 @@ namespace KSPWheel
          UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public bool motorLocked;
 
+        [KSPField]
+        public bool tankSteering = false;
+
+        [KSPField(guiName = "Tank Steer Invert", guiActive = false, guiActiveEditor = false, isPersistant = true),
+         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+        public bool invertSteering = false;
+
+        [KSPField(guiName = "Tank Steer Lock", guiActive = false, guiActiveEditor = false, isPersistant = true),
+         UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+        public bool steeringLocked = false;
+
+        [KSPField(guiName = "Gear Ratio (x:1)", guiActive = true, guiActiveEditor = true),
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.25f, maxValue = 20f, incrementSlide = 0.05f, incrementLarge = 1f, incrementSmall = 0.25f)]
+        public float gearRatio = 4f;
+
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Max Drive Speed", guiUnits = "m/s")]
+        public float maxDrivenSpeed = 0f;
+
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Max Power Output", guiUnits = "n")]
+        public float maxPowerOutput = 0f;
+
         [KSPField(guiActive = true, guiName = "Motor EC Use", guiUnits = "ec/s")]
         public float guiResourceUse = 0f;
 
@@ -60,14 +76,6 @@ namespace KSPWheel
 
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
-
-        //[KSPField(guiName = "Traction Control", guiActive = true, guiActiveEditor = true, isPersistant = true),
-        // UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
-        public bool useTractionControl = false;
-
-        //[KSPField(guiName = "Traction Val", guiActive = true, guiActiveEditor = true),
-        // UI_FloatRange(minValue = 0.05f, maxValue = 0.5f, stepIncrement = 0.01f)]
-        public float tractionControl = 0.25f;
 
         private float fwdInput;
         public float torqueOutput;
@@ -80,10 +88,27 @@ namespace KSPWheel
             }
         }
 
+        public void onGearUpdated(BaseField field, System.Object ob)
+        {
+            float scale = controller.tweakScaleCorrector;
+            float mass = wheelData.scaledMass(scale);
+            float radius = wheelData.scaledRadius(scale);
+            float torque = Mathf.Pow(scale, 3) * maxMotorTorque;
+            float force = torque / radius;
+            maxPowerOutput = force;
+
+            float rpm = maxRPM / gearRatio;
+            float rps = rpm / 60;
+            float circ = radius * 2 * Mathf.PI;
+            float ms = rps * circ;
+            maxDrivenSpeed = ms;
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             Fields[nameof(invertMotor)].uiControlEditor.onFieldChanged = onMotorInvert;
+            Fields[nameof(gearRatio)].uiControlEditor.onFieldChanged = Fields[nameof(gearRatio)].uiControlFlight.onFieldChanged = onGearUpdated;
             if (torqueCurve.Curve.length == 0)
             {
                 torqueCurve.Add(0, 1, 0, 0);
@@ -93,7 +118,6 @@ namespace KSPWheel
             {
                 invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
             }
-            //TODO how to determine if is 'original' part or a symmetry part?
         }
 
         internal override void onUIControlsUpdated(bool show)
@@ -105,34 +129,28 @@ namespace KSPWheel
             Fields[nameof(motorLocked)].guiActive = Fields[nameof(motorLocked)].guiActiveEditor = show;
 
             Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = tankSteering && show;
-            Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering && show;            
+            Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering && show;
+
+            onGearUpdated(null, null);
         }
 
         internal override void preWheelPhysicsUpdate()
         {
             base.preWheelPhysicsUpdate();
+            if (true)
+            {
+                updateMotor();
+                return;
+            }
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             if (motorLocked) { fI = 0; }
             if (invertMotor) { fI = -fI; }
 
             fI *= (motorOutput * 0.01f);
 
-            if (useTractionControl)
-            {
-                if (wheel.longitudinalSlip > tractionControl)
-                {
-                    fI = Mathf.Lerp(fwdInput, 0, Time.deltaTime);
-                }
-                else if (fI!=0)
-                {
-                    fI = Mathf.Lerp(fwdInput, fI, Time.deltaTime);
-                }
-            }
-
             float rpm = wheel.rpm;
             if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
             else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
-
 
             float mult = useTorqueCurve && maxRPM > 0 ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
             fI *= mult;
@@ -149,22 +167,50 @@ namespace KSPWheel
             fI *= updateResourceDrain(Mathf.Abs(fI));
             
             fwdInput = fI;
-            torqueOutput = wheel.motorTorque = maxMotorTorque * fwdInput * mult * controller.tweakScaleCorrector;
+            torqueOutput = wheel.motorTorque = motorPower * fwdInput * mult * controller.tweakScaleCorrector;
         }
 
-        //TODO fix resource drain, it was causing the world to explode...
-        private float updateResourceDrain(float input)
+        protected virtual void updateMotor()
+        {
+            float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
+            if (motorLocked) { fI = 0; }
+            if (invertMotor) { fI = -fI; }
+            float rawOutput = calcRawTorque(fI);
+            float powerUse = calcPower(rawOutput);
+            rawOutput *= updateResourceDrain(powerUse);
+            float gearedOutput = rawOutput * gearRatio;
+            wheel.motorTorque = gearedOutput;
+        }
+
+        protected float calcRawTorque(float fI)
+        {
+            float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
+            if (motorRPM > maxRPM) { motorRPM = maxRPM; }
+            float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
+            float outputTorque = curveOut * maxMotorTorque * fI;
+            return outputTorque;
+        }
+
+        protected float calcPower(float rawTorque)
+        {
+            float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
+            return Mathf.Abs(rawTorque) * motorRPM / 9.5488f;
+            //float percent = rawTorque / maxMotorTorque;
+            //return motorPower * Mathf.Abs(percent - 0.5f) * 2;
+        }
+
+        protected float updateResourceDrain(float ecs)
         {
             float percent = 1f;
             guiResourceUse = 0f;
-            if (input > 0)
+            if (ecs > 0)
             {
-                float drain = input * resourceAmount * Time.fixedDeltaTime;
+                float drain = ecs * Time.fixedDeltaTime;
                 if (drain > 0)
                 {
                     float used = part.RequestResource("ElectricCharge", drain);
                     percent = used / drain;
-                    guiResourceUse = used / Time.fixedDeltaTime;
+                    guiResourceUse = percent * ecs;
                 }
             }
             return percent;

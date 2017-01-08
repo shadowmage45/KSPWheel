@@ -589,9 +589,9 @@ namespace KSPWheel
                 wheelTransform.position += wheelTransform.up * offset * scaleFactor;
                 wheel = wheelTransform.gameObject.AddComponent<KSPWheelCollider>();
                 wheel.rigidbody = rb;
-                wheel.radius = wheelRadius * scaleFactor;
-                wheel.mass = wheelMass * scaleFactor;
-                wheel.length = suspensionTravel * scaleFactor;
+                wheel.radius = scaledRadius(scaleFactor);
+                wheel.mass = scaledMass(scaleFactor);
+                wheel.length = scaledLength(scaleFactor);
                 wheel.raycastMask = raycastMask;
 
                 //calculate the size/scale of the bump-stop collider
@@ -620,6 +620,26 @@ namespace KSPWheel
                 bumpStopCollider.material = mat;
                 bumpStopGameObject.transform.NestToParent(wheelTransform);
                 bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
+            }
+
+            public float scaledMass(float scaleFactor)
+            {
+                return Mathf.Pow(scaleFactor, 3) * wheelMass;
+            }
+
+            public float scaledRadius(float scaleFactor)
+            {
+                return wheelRadius * scaleFactor;
+            }
+
+            public float scaledLength(float scaleFactor)
+            {
+                return suspensionTravel * scaleFactor;
+            }
+
+            public float scaledWidth(float scaleFactor)
+            {
+                return wheelWidth * scaleFactor;
             }
 
         }
