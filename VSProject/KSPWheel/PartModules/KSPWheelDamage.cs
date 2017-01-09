@@ -119,7 +119,7 @@ namespace KSPWheel
                 load += controller.wheelData[i].wheel.springForce / 10f;
             }
             //TODO what power does load scale with?
-            float maxLoad = controller.maxLoadRating * controller.tweakScaleCorrector;
+            float maxLoad = controller.maxLoadRating;
             if (load > maxLoad)
             {
                 overloadTime += Time.fixedDeltaTime * (load - maxLoad) * 4;

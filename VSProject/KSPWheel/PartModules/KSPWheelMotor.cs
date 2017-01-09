@@ -90,7 +90,7 @@ namespace KSPWheel
 
         public void onGearUpdated(BaseField field, System.Object ob)
         {
-            float scale = controller.tweakScaleCorrector;
+            float scale = 1f;
             float mass = wheelData.scaledMass(scale);
             float radius = wheelData.scaledRadius(scale);
             float torque = Mathf.Pow(scale, 3) * maxMotorTorque;

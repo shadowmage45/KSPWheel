@@ -121,8 +121,6 @@ namespace KSPWheel
 
         public KSPWheelData[] wheelData;
 
-        public float tweakScaleCorrector = 1f;
-
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
         private bool initializedWheels = false;
@@ -237,18 +235,18 @@ namespace KSPWheel
             UI_FloatRange rng = (UI_FloatRange)field.uiControlFlight;
             if (rng != null)
             {
-                rng.minValue = minLoadRating * tweakScaleCorrector;
-                rng.maxValue = maxLoadRating * tweakScaleCorrector;
+                rng.minValue = minLoadRating;
+                rng.maxValue = maxLoadRating;
                 rng.stepIncrement = 0.1f;
             }
             rng = (UI_FloatRange)field.uiControlEditor;
             if (rng != null)
             {
-                rng.minValue = minLoadRating * tweakScaleCorrector;
-                rng.maxValue = maxLoadRating * tweakScaleCorrector;
+                rng.minValue = minLoadRating;
+                rng.maxValue = maxLoadRating;
                 rng.stepIncrement = 0.1f;
             }
-            if (loadRating > maxLoadRating * tweakScaleCorrector) { loadRating = maxLoadRating * tweakScaleCorrector; }
+            if (loadRating > maxLoadRating) { loadRating = maxLoadRating; }
             field.guiActive = field.guiActiveEditor = advancedMode;
 
             field = Fields[nameof(dampRatio)];
@@ -332,7 +330,7 @@ namespace KSPWheel
                     int count = wheelData.Length;
                     for (int i = 0; i < count; i++)
                     {
-                        wheelData[i].setupWheel(rb, raycastMask, tweakScaleCorrector * part.rescaleFactor);
+                        wheelData[i].setupWheel(rb, raycastMask, part.rescaleFactor);
                         wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
                     }
                     //run wheel init on a second pass so that all wheels are available
@@ -422,7 +420,7 @@ namespace KSPWheel
         /// <param name="phq"></param>
         public void OnPutToGround(PartHeightQuery phq)
         {
-            float pos = part.transform.position.y - groundHeightOffset * (tweakScaleCorrector * part.rescaleFactor);
+            float pos = part.transform.position.y - groundHeightOffset * (part.rescaleFactor);
             phq.lowestOnParts[part] = Mathf.Min(phq.lowestOnParts[part], pos);
             phq.lowestPoint = Mathf.Min(phq.lowestPoint, phq.lowestOnParts[part]);
         }
