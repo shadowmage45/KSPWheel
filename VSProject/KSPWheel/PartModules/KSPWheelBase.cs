@@ -486,6 +486,15 @@ namespace KSPWheel
             subModules.Remove(module);
         }
 
+        internal void onScaleUpdated(KSPWheelScaling scaling)
+        {
+            int len = subModules.Count;
+            for (int i = 0; i < len; i++)
+            {
+                subModules[i].onScaleUpdated(scaling);
+            }
+        }
+
         private void onWheelCreated(int index, KSPWheelData wheelData)
         {
             int len = subModules.Count;

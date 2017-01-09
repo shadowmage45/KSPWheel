@@ -137,37 +137,7 @@ namespace KSPWheel
         internal override void preWheelPhysicsUpdate()
         {
             base.preWheelPhysicsUpdate();
-            if (true)
-            {
-                updateMotor();
-                return;
-            }
-            float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
-            if (motorLocked) { fI = 0; }
-            if (invertMotor) { fI = -fI; }
-
-            fI *= (motorOutput * 0.01f);
-
-            float rpm = wheel.rpm;
-            if (fI > 0 && wheel.rpm > maxRPM) { fI = 0; }
-            else if (fI < 0 && wheel.rpm < -maxRPM) { fI = 0; }
-
-            float mult = useTorqueCurve && maxRPM > 0 ? torqueCurve.Evaluate(Mathf.Abs(rpm) / maxRPM) : 1f;
-            fI *= mult;
-
-            if (tankSteering && !steeringLocked)
-            {
-                float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
-                if (invertSteering) { rI = -rI; }
-                fI = fI + rI;
-                if (fI > 1) { fI = 1; }
-                if (fI < -1) { fI = -1; }
-            }
-
-            fI *= updateResourceDrain(Mathf.Abs(fI));
-            
-            fwdInput = fI;
-            torqueOutput = wheel.motorTorque = motorPower * fwdInput * mult * controller.tweakScaleCorrector;
+            updateMotor();
         }
 
         protected virtual void updateMotor()
@@ -195,8 +165,6 @@ namespace KSPWheel
         {
             float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
             return Mathf.Abs(rawTorque) * motorRPM / 9.5488f;
-            //float percent = rawTorque / maxMotorTorque;
-            //return motorPower * Mathf.Abs(percent - 0.5f) * 2;
         }
 
         protected float updateResourceDrain(float ecs)

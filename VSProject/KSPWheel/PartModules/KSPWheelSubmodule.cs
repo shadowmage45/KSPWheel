@@ -114,5 +114,10 @@ namespace KSPWheel
 
         }
 
+        internal virtual void onScaleUpdated(KSPWheelScaling scaling)
+        {
+
+        }
+
     }
 }
