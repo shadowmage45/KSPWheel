@@ -9,7 +9,7 @@ namespace KSPWheel
     /// A replacement for the stock wheel system that uses the KSPWheelCollider class for phsyics handling.
     /// Intended to be a fully-functional (but possibly not fully-equivalent) replacement for the stock wheel modules and U5 WheelCollider component
     /// </summary>
-    public class KSPWheelBase : PartModule
+    public class KSPWheelBase : PartModule, IPartCostModifier, IPartMassModifier
     {
 
         #region REGION - Basic config parameters
@@ -99,6 +99,16 @@ namespace KSPWheel
         [KSPField]
         public float groundHeightOffset = 0f;
 
+        [KSPField]
+        public float minScale = 0.1f;
+
+        [KSPField]
+        public float maxScale = 40f;
+
+        [KSPField(guiName = "Scale", guiActive = false, guiActiveEditor = true, isPersistant = true, guiUnits = "x"),
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 40f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f)]
+        public float scale = 1f;
+
         #endregion
 
         #region REGION - Persistent data
@@ -126,6 +136,8 @@ namespace KSPWheel
         private bool initializedWheels = false;
 
         private bool advancedMode = false;
+
+        private bool initializedScaling = false;
 
         private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
 
@@ -172,6 +184,22 @@ namespace KSPWheel
             Fields[nameof(guiCompression)].guiActive = Fields[nameof(guiCompression)].guiActiveEditor = showControls;
         }
 
+        private void onScaleAdjusted(BaseField field, System.Object obj)
+        {
+            setScale(scale);
+        }
+
+        private void setScale(float newScale)
+        {
+            Vector3 scale = new Vector3(newScale, newScale, newScale);
+            Transform modelRoot = part.transform.FindRecursive("model");
+            foreach (Transform child in modelRoot)
+            {
+                child.localScale = scale;
+            }
+            onScaleUpdated();
+        }
+
         #endregion
 
         #region REGION - Standard KSP/Unity Overrides
@@ -184,7 +212,7 @@ namespace KSPWheel
                 configNodeData = node.ToString();
             }
             wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-
+            initializeScaling();
         }
 
         public override void OnSave(ConfigNode node)
@@ -274,6 +302,8 @@ namespace KSPWheel
             field = Fields[nameof(maxLoadRating)];
             field.guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
 
+            Fields[nameof(scale)].uiControlEditor.onFieldChanged = onScaleAdjusted;
+
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -298,7 +328,8 @@ namespace KSPWheel
                     GameObject.Destroy(boundsCollider.gameObject);
                 }
             }
-            
+
+            initializeScaling();
         }
 
         public void Start()
@@ -425,9 +456,36 @@ namespace KSPWheel
             phq.lowestPoint = Mathf.Min(phq.lowestPoint, phq.lowestOnParts[part]);
         }
 
+        public float GetModuleCost(float defaultCost, ModifierStagingSituation sit)
+        {
+            return -defaultCost + Mathf.Pow(defaultCost, 3);
+        }
+
+        public ModifierChangeWhen GetModuleCostChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
+        }
+
+        public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
+        {
+            return -defaultMass + Mathf.Pow(defaultMass, 3);
+        }
+
+        public ModifierChangeWhen GetModuleMassChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
+        }
+
         #endregion
 
         #region REGION - Custom update methods
+
+        private void initializeScaling()
+        {
+            if (initializedScaling) { return; }
+            initializedScaling = true;
+            setScale(scale);
+        }
 
         private void updateSuspension()
         {
@@ -484,12 +542,12 @@ namespace KSPWheel
             subModules.Remove(module);
         }
 
-        internal void onScaleUpdated(KSPWheelScaling scaling)
+        internal void onScaleUpdated()
         {
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
-                subModules[i].onScaleUpdated(scaling);
+                subModules[i].onScaleUpdated();
             }
         }
 
