@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace KSPWheel
 {
-    public class KSPWheelTracks : KSPWheelSubmodule
+    public class KSPWheelTracks : KSPWheelMotor
     {
 
         [KSPField]
@@ -15,27 +15,14 @@ namespace KSPWheel
         [KSPField]
         public int trackDir = 1;
 
-        [KSPField]
-        public bool manageMotor = true;
-
-        [KSPField]
-        public bool manageBrakes = true;
-
-        [KSPField]
-        public bool averageRPM = true;
-
-        private KSPWheelMotor motor;
-        private KSPWheelBrakes brakes;
-        private float averagedRPM = 0f;
         private SkinnedMeshRenderer smr;
         private Vector2 offset = Vector2.zero;
         private Material mat;
+        private float trackRPM = 0f;
 
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
-            motor = part.GetComponent<KSPWheelMotor>();
-            brakes = part.GetComponent<KSPWheelBrakes>();
             smr = part.GetComponentInChildren<SkinnedMeshRenderer>();
             if (smr != null)
             {
@@ -55,41 +42,43 @@ namespace KSPWheel
             base.preWheelFrameUpdate();
             if (mat != null)
             {
-                float offsetAmount = (((-averagedRPM * 2f * Mathf.PI) / 60f) * Time.deltaTime * trackDir) / trackLength;
+                float offsetAmount = (((-trackRPM * 2f * Mathf.PI) / 60f) * Time.deltaTime * trackDir) / trackLength;
                 offset.x += offsetAmount;
                 mat.SetTextureOffset("_MainTex", offset);
                 mat.SetTextureOffset("_BumpMap", offset);
             }
         }
 
-        internal override void preWheelPhysicsUpdate()
+        /// <summary>
+        /// This method sets each wheel torque to that which would be needed
+        /// exert the same linear velocity change on each wheel in the group.
+        /// The moment of inertia of each wheel determines a wheels share
+        /// of the torque.
+        /// </summary>
+        protected override void updateMotor()
         {
-            base.preWheelPhysicsUpdate();
+            base.updateMotor();
+            float totalBrakeTorque = wheel.brakeTorque;
+            float torqueInputDivisor = 0f;
+            float totalRadius = 0f;
+            float totalSystemTorque = 0f;
+            float totalTorque = torqueOutput;
             int len = controller.wheelData.Length;
-            float mt = manageMotor && motor==null? 0 : motor.torqueOutput / len;
-            float bt = manageBrakes && brakes==null? 0 : brakes.torqueOutput;
-            float rpmTotal = 0;
             for (int i = 0; i < len; i++)
             {
-                rpmTotal += controller.wheelData[i].wheel.rpm;// * controller.wheelData[i].wheel.radius;
-                if (manageMotor)
-                {
-                    controller.wheelData[i].wheel.motorTorque = mt;
-                }
-                if (manageBrakes)
-                {
-                    controller.wheelData[i].wheel.brakeTorque = bt;
-                }
-
+                torqueInputDivisor += controller.wheelData[i].wheel.momentOfInertia * controller.wheelData[i].wheel.radius;
+                totalRadius += controller.wheelData[i].wheel.radius;
+                totalSystemTorque += controller.wheelData[i].wheel.angularVelocity * controller.wheelData[i].wheel.momentOfInertia;
             }
-            if (averageRPM)
+            for (int i = 0; i < len; i++)
             {
-                averagedRPM = rpmTotal / len;
-                for (int i = 0; i < len; i++)
-                {
-                    controller.wheelData[i].wheel.rpm = averagedRPM;// / controller.wheelData[i].wheel.radius;
-                }
+                float torqueDiv = controller.wheelData[i].wheel.momentOfInertia / torqueInputDivisor / controller.wheelData[i].wheel.radius;
+                controller.wheelData[i].wheel.motorTorque = totalTorque * torqueDiv;
+                controller.wheelData[i].wheel.brakeTorque = totalBrakeTorque * torqueDiv;
+                controller.wheelData[i].wheel.angularVelocity = (controller.wheelData[i].wheel.radius / totalRadius) * totalSystemTorque;
             }
+            trackRPM = wheel.rpm;
         }
+
     }
 }
