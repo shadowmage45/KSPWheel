@@ -9,10 +9,17 @@ namespace KSPWheel
     public class KSPWheelDebug : KSPWheelSubmodule
     {
 
+        [KSPField(guiName = "Debug Rendering", guiActive = true, guiActiveEditor = false),
+         UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true)]
+        public bool showDebugRendering = false;
+
         private int id = 0;
         private Rect windowRect = new Rect(100, 100, 640, 480);
         private Vector2 scrollPos;
         private bool guiOpen = false;
+
+        //TODO -- add debug game objects to wheels
+        private GameObject[] debugHitObjects;
 
         [KSPEvent(guiName = "Open Debug GUI", guiActive = true, guiActiveEditor = true)]
         public void showGUI()
@@ -20,10 +27,22 @@ namespace KSPWheel
             guiOpen = true;
         }
 
+        private void onDebugRenderingUpdated(BaseField field, System.Object obj)
+        {
+            updateDebugRendering();
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             id = this.GetInstanceID();
+            updateDebugRendering();
+            Fields[nameof(showDebugRendering)].uiControlFlight.onFieldChanged = onDebugRenderingUpdated;
+        }
+
+        private void updateDebugRendering()
+        {
+
         }
 
         public void OnGUI()
@@ -102,6 +121,7 @@ namespace KSPWheel
             }
             GUILayout.EndVertical();
             GUILayout.EndScrollView();
+            //close button at the bottom of the window, below the scroll bar
             if (GUILayout.Button("Close"))
             {
                 guiOpen = false;
