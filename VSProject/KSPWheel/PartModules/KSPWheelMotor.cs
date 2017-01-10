@@ -58,6 +58,14 @@ namespace KSPWheel
          UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool steeringLocked = false;
 
+        [KSPField(guiName = "Half-Track", guiActive = false, guiActiveEditor = false, isPersistant = true),
+         UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+        public bool halfTrackSteering = false;
+
+        [KSPField(guiName = "Half-Track Steering", guiActive = false, guiActiveEditor = false, isPersistant = true),
+         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
+        public bool invertHalfTrackSteering = false;
+
         [KSPField(guiName = "Gear Ratio (x:1)", guiActive = true, guiActiveEditor = true),
          UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.25f, maxValue = 20f, incrementSlide = 0.05f, incrementLarge = 1f, incrementSmall = 0.25f)]
         public float gearRatio = 4f;
@@ -148,6 +156,8 @@ namespace KSPWheel
 
             Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = tankSteering && show;
             Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering && show;
+            Fields[nameof(halfTrackSteering)].guiActive = Fields[nameof(halfTrackSteering)].guiActiveEditor = tankSteering && show;
+            Fields[nameof(invertHalfTrackSteering)].guiActive = Fields[nameof(invertHalfTrackSteering)].guiActiveEditor = tankSteering && show;
 
             Fields[nameof(gearRatio)].guiActive = Fields[nameof(gearRatio)].guiActiveEditor = show && HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().manualGearing;
 
@@ -171,6 +181,10 @@ namespace KSPWheel
                 if (invertSteering) { rI = -rI; }
                 if (fI == 1 || fI == -1) { rI *= 2; }
                 fI += rI;
+                if (halfTrackSteering)
+                {
+                    //TODO...
+                }
             }
             fI = Mathf.Clamp(fI, -1, 1);
             float rawOutput = calcRawTorque(fI);
