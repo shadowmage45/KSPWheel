@@ -1,0 +1,21 @@
+KerbalFoundries - Continued
+
+This is the main development and release thread for the continuation of KerbalFoundries, originally created by Lo-Fi and Galidaas, continued under new development with explicit permissions from the original authors and under the terms of the original licensing.
+
+This mod adds a variety of new parts to KSP including wheels, tracks, and anti-gravity repulsors.
+
+For a list of features available to the wheels in this mod, please see the KSPWheels documentation ( link to KSPWheel wiki ).
+
+Tweakscale is not needed or supported.  Scaling of the parts is accomplished through the KSPWheel plugin, and includes
+
+
+Legal and Licensing:
+
+KerbalFoundries - Continued models and art assets are licensed, released, and distributed under CC-BY-NC-SA licensing as per the original license of KerbalFoundries.
+
+This mod uses the KSPWheel API for wheel-collider physics and PartModules, and redistributes it under the terms of its own license ( link to KSPWheel repository ) (GPL 3.0+).
+
+
+Credits and Acknowledgements
+Lo-Fi - for the creation and development of the KerbalFoundries mod, and for helping figure out some of the physics used in KSPWheel.
+Galidaas - for his contribution to the development of the original KerbalFoundries and adaptation of the DustFX code.

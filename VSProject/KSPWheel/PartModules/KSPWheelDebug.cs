@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace KSPWheel
@@ -7,150 +9,104 @@ namespace KSPWheel
     public class KSPWheelDebug : KSPWheelSubmodule
     {
 
-        [KSPField(guiName = "Hit", guiActive = true)]
-        public string colliderHit;
+        private int id = 0;
+        private Rect windowRect = new Rect(100, 100, 640, 480);
+        private Vector2 scrollPos;
+        private bool guiOpen = false;
 
-        [KSPField(guiName = "RPM", guiActive = true)]
-        public float rpm;
-
-        [KSPField(guiName = "fLong", guiActive = true)]
-        public float fLong;
-
-        [KSPField(guiName = "fLat", guiActive = true)]
-        public float fLat;
-
-        [KSPField(guiName = "fSpring", guiActive = true)]
-        public float fSpring;
-
-        [KSPField(guiName = "fSpringExt", guiActive = true)]
-        public float fSpringExt;
-
-        [KSPField(guiName = "comp", guiActive = true)]
-        public float comp;
-
-        [KSPField(guiName = "spr", guiActive = true)]
-        public float spr;
-
-        [KSPField(guiName = "dmp", guiActive = true)]
-        public float dmp;
-
-        [KSPField(guiName = "longFrict", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 3, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float longTractMult = 1f;
-
-        [KSPField(guiName = "latFrict", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 3, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float latTractMult = 1f;
-
-        [KSPField(guiName = "latSlip", guiActive = true, guiActiveEditor = false, isPersistant = false),
-         UI_ProgressBar(minValue = 0, maxValue = 1)]
-        public float latSlip = 0f;
-
-        [KSPField(guiName = "longSlip", guiActive = true, guiActiveEditor = false, isPersistant = false),
-         UI_ProgressBar(minValue = 0, maxValue = 1)]
-        public float longSlip = 0f;
-
-        /// <summary>
-        /// The visual offset to the suspension transform compared to its default location and the wheel-colliders location.
-        /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "off"),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = -5, maxValue = 5, incrementSmall = 0.25f, incrementLarge = 1f, incrementSlide = 0.0125f, sigFigs = 4)]
-        public float suspensionOffset = 0f;
-
-        [KSPField(guiActive = true, guiName = "Sweep Type", isPersistant = true),
-         UI_ChooseOption(display = new string[] { "RAY", "SPHERE", "CAPSULE" }, options = new string[] { "RAY", "SPHERE", "CAPSULE" }, suppressEditorShipModified = true )]
-        public string sweepType = KSPWheelSweepType.RAY.ToString();
-
-        private KSPWheelSuspension suspension;
-        private GameObject debugHitObject;
-
-        private void suspensionOffsetChanged(BaseField field, System.Object obj)
+        [KSPEvent(guiName = "Open Debug GUI", guiActive = true, guiActiveEditor = true)]
+        public void showGUI()
         {
-            if (suspension != null) { suspension.suspensionOffset = suspensionOffset; }
-        }
-
-        private void sweepTypeUpdated(BaseField field, System.Object obj)
-        {
-            int len = controller.wheelData.Length;
-            for (int i = 0; i < len; i++)
-            {
-                KSPWheelCollider wheel = controller.wheelData[i].wheel;
-                wheel.sweepType = (KSPWheelSweepType)Enum.Parse(typeof(KSPWheelSweepType), sweepType);
-            }
+            guiOpen = true;
         }
 
         public override void OnStart(StartState state)
         {
-            base.OnStart(state);            
+            base.OnStart(state);
+            id = this.GetInstanceID();
         }
 
-        public void Start()
+        public void OnGUI()
         {
-            suspension = part.GetComponent<KSPWheelSuspension>();
-            if (suspension == null)
+            if (guiOpen)
             {
-                Fields[nameof(suspensionOffset)].guiActive = false;
-                Fields[nameof(suspensionOffset)].guiActiveEditor = false;
+                drawDebugGUI();
             }
-            else
-            {
-                suspensionOffset = suspension.suspensionOffset;
-            }
-            Fields[nameof(suspensionOffset)].uiControlEditor.onFieldChanged = suspensionOffsetChanged;
-            Fields[nameof(suspensionOffset)].uiControlFlight.onFieldChanged = suspensionOffsetChanged;
-            Fields[nameof(sweepType)].uiControlFlight.onFieldChanged = sweepTypeUpdated;
         }
 
-        internal override void postControllerSetup()
+        private void drawDebugGUI()
         {
-            base.postControllerSetup();
-
+            windowRect = GUI.Window(id, windowRect, updateWindow, "Wheel Debug Display");
         }
 
-        internal override void postWheelCreated()
+        private void updateWindow(int id)
         {
-            base.postWheelCreated();
-            debugHitObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Collider c = debugHitObject.GetComponent<Collider>();
-            GameObject.Destroy(c);
-            debugHitObject.transform.NestToParent(part.transform);
-            debugHitObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-            wheel.sweepType = (KSPWheelSweepType)Enum.Parse(typeof(KSPWheelSweepType), sweepType);
-        }
+            GUILayout.BeginVertical();
 
-        internal override void preWheelPhysicsUpdate()
-        {
-            base.preWheelPhysicsUpdate();
+            //upper main data display row
+            GUILayout.BeginHorizontal();
+            GUILayout.EndHorizontal();
+
+            //data column header row
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("index", GUILayout.Width(30));
+            GUILayout.Label("rad", GUILayout.Width(30));//radius
+            GUILayout.Label("mass", GUILayout.Width(30));//mass
+            GUILayout.Label("len", GUILayout.Width(30));//length of travel
+            GUILayout.Label("spr", GUILayout.Width(30));//spring rate
+            GUILayout.Label("dmp", GUILayout.Width(30));//damper rate (n * m/s)
+            GUILayout.Label("ang", GUILayout.Width(30));//angular velocity
+            GUILayout.Label("vel", GUILayout.Width(30));//linear velocity
+            GUILayout.Label("trq", GUILayout.Width(30));//motor torque
+            GUILayout.Label("brk", GUILayout.Width(30));//brake torque
+            GUILayout.Label("comp", GUILayout.Width(30));//compression
+            GUILayout.Label("comp%", GUILayout.Width(30));//compression (percent of max)
+            GUILayout.Label("fY", GUILayout.Width(30));//springForce
+            GUILayout.Label("fZ", GUILayout.Width(30));//longForce
+            GUILayout.Label("fX", GUILayout.Width(30));//latForce
+            GUILayout.Label("sZ", GUILayout.Width(30));//longSlip
+            GUILayout.Label("sX", GUILayout.Width(30));//latSlip
+            GUILayout.Label("hit", GUILayout.Width(30));//collider hit
+            GUILayout.EndHorizontal();
+
+            //per-wheel instance data view
+            scrollPos = GUILayout.BeginScrollView(scrollPos);
+            GUILayout.BeginVertical();
             int len = controller.wheelData.Length;
+            KSPWheelCollider wheel;
             for (int i = 0; i < len; i++)
             {
-                KSPWheelCollider wheel = controller.wheelData[i].wheel;
-                wheel.forwardFrictionCoefficient = longTractMult;
-                wheel.sideFrictionCoefficient = latTractMult;
-            }
-        }
+                GUILayout.BeginHorizontal();
+                wheel = controller.wheelData[i].wheel;
 
-        internal override void postWheelPhysicsUpdate()
-        {
-            base.postWheelPhysicsUpdate();
-            //update gui debug values
-            spr = wheel.spring;
-            dmp = wheel.damper;
-            fLong = wheel.longitudinalForce;
-            fLat = wheel.lateralForce;
-            fSpring = wheel.springForce;
-            fSpringExt = 0;
-            int len = controller.wheelData.Length;
-            for (int i = 0; i < len; i++)
-            {
-                fSpringExt += controller.wheelData[i].wheel.externalSpringForce;
+                GUILayout.Label(i.ToString(), GUILayout.Width(30));
+                GUILayout.Label(wheel.radius.ToString(), GUILayout.Width(30));//radius
+                GUILayout.Label(wheel.mass.ToString(), GUILayout.Width(30));//mass
+                GUILayout.Label(wheel.length.ToString(), GUILayout.Width(30));//length of travel
+                GUILayout.Label(wheel.spring.ToString(), GUILayout.Width(30));//spring rate
+                GUILayout.Label(wheel.damper.ToString(), GUILayout.Width(30));//damper rate (n * m/s)
+                GUILayout.Label(wheel.angularVelocity.ToString(), GUILayout.Width(30));//angular velocity
+                GUILayout.Label(wheel.linearVelocity.ToString(), GUILayout.Width(30));//linear velocity
+                GUILayout.Label(wheel.motorTorque.ToString(), GUILayout.Width(30));//motor torque
+                GUILayout.Label(wheel.brakeTorque.ToString(), GUILayout.Width(30));//brake torque
+                GUILayout.Label(wheel.compressionDistance.ToString(), GUILayout.Width(30));//compression
+                GUILayout.Label((wheel.compressionDistance/wheel.length).ToString(), GUILayout.Width(30));//compression (percent of max)
+                GUILayout.Label(wheel.springForce.ToString(), GUILayout.Width(30));//springForce
+                GUILayout.Label(wheel.longitudinalForce.ToString(), GUILayout.Width(30));//longForce
+                GUILayout.Label(wheel.lateralForce.ToString(), GUILayout.Width(30));//latForce
+                GUILayout.Label(wheel.longitudinalSlip.ToString(), GUILayout.Width(30));//longSlip
+                GUILayout.Label(wheel.lateralSlip.ToString(), GUILayout.Width(30));//latSlip
+                GUILayout.Label(wheel.contactColliderHit==null? "none" : wheel.contactColliderHit.ToString(), GUILayout.Width(30));//collider hit
+
+                GUILayout.EndHorizontal();
             }
-            rpm = wheel.rpm;
-            comp = wheel.compressionDistance;
-            latSlip = wheel.lateralSlip;
-            longSlip = wheel.longitudinalSlip;            
-            colliderHit = wheel.isGrounded ? wheel.contactColliderHit.gameObject.name + " : " + wheel.contactColliderHit.gameObject.layer : "None";
-            debugHitObject.transform.position = wheelTransform.position - (wheelTransform.up * wheel.length) + (wheelTransform.up * wheel.compressionDistance) - (wheelTransform.up * wheel.radius);
+            GUILayout.EndVertical();
+            GUILayout.EndScrollView();
+            if (GUILayout.Button("Close"))
+            {
+                guiOpen = false;
+            }
+            GUILayout.EndVertical();
         }
 
     }
