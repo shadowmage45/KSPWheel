@@ -58,6 +58,7 @@
     <Compile Include="PartModules\KSPWheelBogey.cs" />
     <Compile Include="PartModules\KSPWheelBrakes.cs" />
     <Compile Include="PartModules\KSPWheelDamage.cs" />
+    <Compile Include="PartModules\KSPWheelDebugOld.cs" />
     <Compile Include="PartModules\KSPWheelDebug.cs" />
     <Compile Include="PartModules\KSPWheelDeployment.cs" />
     <Compile Include="PartModules\KSPWheelMotor.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="PartModules\KSPWheelSteering.cs" />
     <Compile Include="PartModules\KSPWheelSubmodule.cs" />
     <Compile Include="PartModules\KSPWheelSuspension.cs" />
+    <Compile Include="PartModules\KSPWheelTracksOld.cs" />
     <Compile Include="PartModules\KSPWheelTracks.cs" />
     <Compile Include="PartModules\KSPWheelTransformRemoval.cs" />
     <Compile Include="PartModules\Utils.cs" />
