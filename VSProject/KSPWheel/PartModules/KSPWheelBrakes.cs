@@ -23,19 +23,38 @@ namespace KSPWheel
         [KSPField]
         public bool brakesLocked = false;
 
+        [KSPField(guiName = "Brakes Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f)]
+        public float brakeLimit = 100f;
+
         public float torqueOutput;
 
         private float brakeInput;
         private ModuleStatusLight statusLightModule;
 
+        private float torqueScalar = 1f;
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
         }
 
         public void Start()
         {
             statusLightModule = part.GetComponent<ModuleStatusLight>();
+        }
+
+        internal override void onUIControlsUpdated(bool show)
+        {
+            base.onUIControlsUpdated(show);
+            Fields[nameof(brakeLimit)].guiActive = Fields[nameof(brakeLimit)].guiActiveEditor = show && !brakesLocked;
+        }
+
+        internal override void onScaleUpdated()
+        {
+            base.onScaleUpdated();
+            torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
         }
 
         internal override void preWheelPhysicsUpdate()
@@ -48,7 +67,7 @@ namespace KSPWheel
             }
 
             brakeInput = bI;
-            torqueOutput = wheel.brakeTorque = maxBrakeTorque * brakeInput;
+            torqueOutput = wheel.brakeTorque = maxBrakeTorque * brakeInput * torqueScalar * (brakeLimit * 0.01f);
         }
 
         internal override void preWheelFrameUpdate()

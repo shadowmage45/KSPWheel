@@ -15,7 +15,7 @@ namespace KSPWheel
         /// Peak Motor power, in kw (e.g. kn).  Used to determine EC/s
         /// </summary>
         [KSPField]
-        public float motorPower = 1f;
+        public float motorEfficiency = 1.0f;
 
         /// <summary>
         /// Motor stall torque; e.g. motor torque output at zero rpm
@@ -29,7 +29,7 @@ namespace KSPWheel
         [KSPField]
         public float maxRPM = 2500f;
 
-        [KSPField(guiName = "Motor Output", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Motor Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f)]
         public float motorOutput = 100f;
 
@@ -65,8 +65,14 @@ namespace KSPWheel
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Max Drive Speed", guiUnits = "m/s")]
         public float maxDrivenSpeed = 0f;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Max Power Output", guiUnits = "n")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Peak Power Output", guiUnits = "kN")]
         public float maxPowerOutput = 0f;
+
+        [KSPField(guiActive = false, guiActiveEditor = true, guiName = "Peak Power Use", guiUnits = "EC/s")]
+        public float maxPowerUse = 0f;
+
+        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Torque To Wheel", guiUnits = "kN/M")]
+        public float torqueOut = 0f;
 
         [KSPField(guiActive = true, guiName = "Motor EC Use", guiUnits = "ec/s")]
         public float guiResourceUse = 0f;
@@ -77,6 +83,8 @@ namespace KSPWheel
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
 
+        private float torqueScalar = 1f;
+        private float rpmScalar = 1f;
         private float fwdInput;
         public float torqueOutput;
 
@@ -90,12 +98,13 @@ namespace KSPWheel
 
         public void onGearUpdated(BaseField field, System.Object ob)
         {
-            float scale = 1f;
-            float mass = wheelData.scaledMass(scale);
+            float scale = part.rescaleFactor * controller.scale;
             float radius = wheelData.scaledRadius(scale);
-            float torque = Mathf.Pow(scale, 3) * maxMotorTorque;
-            float force = torque / radius;
+            float torque = torqueScalar * maxMotorTorque;
+            float force = torque * gearRatio / radius;
             maxPowerOutput = force;
+
+            maxPowerUse = (torque * 0.5f * maxRPM * 0.5f) / motorEfficiency / 9.5488f;
 
             float rpm = maxRPM / gearRatio;
             float rps = rpm / 60;
@@ -118,6 +127,15 @@ namespace KSPWheel
             {
                 invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
             }
+            torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
+            rpmScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorMaxRPMScalingPower);
+        }
+
+        internal override void onScaleUpdated()
+        {
+            base.onScaleUpdated();
+            torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
+            rpmScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorMaxRPMScalingPower);
         }
 
         internal override void onUIControlsUpdated(bool show)
@@ -130,6 +148,8 @@ namespace KSPWheel
 
             Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = tankSteering && show;
             Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering && show;
+
+            Fields[nameof(gearRatio)].guiActive = Fields[nameof(gearRatio)].guiActiveEditor = show && HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().manualGearing;
 
             onGearUpdated(null, null);
         }
@@ -145,26 +165,36 @@ namespace KSPWheel
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             if (motorLocked) { fI = 0; }
             if (invertMotor) { fI = -fI; }
+            if (tankSteering)
+            {
+                float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
+                if (invertSteering) { rI = -rI; }
+                if (fI == 1 || fI == -1) { rI *= 2; }
+                fI += rI;
+            }
+            fI = Mathf.Clamp(fI, -1, 1);
             float rawOutput = calcRawTorque(fI);
-            float powerUse = calcPower(rawOutput);
+            float powerUse = calcECUse(rawOutput);
             rawOutput *= updateResourceDrain(powerUse);
             float gearedOutput = rawOutput * gearRatio;
             wheel.motorTorque = gearedOutput;
+            torqueOutput = torqueOut = wheel.motorTorque;
         }
 
         protected float calcRawTorque(float fI)
         {
             float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
+            float maxRPM = this.maxRPM;
             if (motorRPM > maxRPM) { motorRPM = maxRPM; }
             float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
-            float outputTorque = curveOut * maxMotorTorque * fI;
+            float outputTorque = curveOut * maxMotorTorque * fI * torqueScalar;
             return outputTorque;
         }
 
-        protected float calcPower(float rawTorque)
+        protected float calcECUse(float rawTorque)
         {
             float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
-            return Mathf.Abs(rawTorque) * motorRPM / 9.5488f;
+            return Mathf.Abs(rawTorque) * motorRPM / 9.5488f / motorEfficiency;
         }
 
         protected float updateResourceDrain(float ecs)
@@ -177,7 +207,10 @@ namespace KSPWheel
                 if (drain > 0)
                 {
                     float used = part.RequestResource("ElectricCharge", drain);
-                    percent = used / drain;
+                    if (used != drain)
+                    {
+                        percent = used / drain;
+                    }
                     guiResourceUse = percent * ecs;
                 }
             }

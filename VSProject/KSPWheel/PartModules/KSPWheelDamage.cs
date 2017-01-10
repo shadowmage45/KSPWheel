@@ -119,7 +119,7 @@ namespace KSPWheel
                 load += controller.wheelData[i].wheel.springForce / 10f;
             }
             //TODO what power does load scale with?
-            float maxLoad = controller.maxLoadRating;
+            float maxLoad = controller.maxLoadRating * Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxLoadScalingPower);
             if (load > maxLoad)
             {
                 overloadTime += Time.fixedDeltaTime * (load - maxLoad) * 4;
@@ -132,6 +132,7 @@ namespace KSPWheel
             }
             if (overloadTime > maxOverloadTime)
             {
+                MonoBehaviour.print("Wheel broke from overloading! load: "+load + " max: "+maxLoad);
                 ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from overloading.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
                 controller.wheelState = KSPWheelState.BROKEN;
                 overloadTime = 0f;
@@ -219,6 +220,7 @@ namespace KSPWheel
                     if (localImpactVelocity.sqrMagnitude > impactTolerance * impactTolerance)
                     {
                         ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from impact.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
+                        MonoBehaviour.print("Wheel broke from impact, velocity: " + localImpactVelocity);
                         controller.wheelState = KSPWheelState.BROKEN;
                         updateDisplayState();
                         updateWheelMeshes();
@@ -229,6 +231,7 @@ namespace KSPWheel
                     if (localImpactVelocity.sqrMagnitude > impactTolerance * impactTolerance)
                     {
                         ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from impact.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
+                        MonoBehaviour.print("Wheel broke from impact, velocity: " + localImpactVelocity);
                         controller.wheelState = KSPWheelState.BROKEN;
                         updateDisplayState();
                         updateWheelMeshes();

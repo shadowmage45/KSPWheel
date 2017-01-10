@@ -106,7 +106,7 @@ namespace KSPWheel
         public float maxScale = 40f;
 
         [KSPField(guiName = "Scale", guiActive = false, guiActiveEditor = true, isPersistant = true, guiUnits = "x"),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 40f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f)]
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 40f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
         public float scale = 1f;
 
         #endregion
@@ -133,9 +133,9 @@ namespace KSPWheel
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
-        private bool initializedWheels = false;
-
         private bool advancedMode = false;
+
+        private bool initializedWheels = false;
 
         private bool initializedScaling = false;
 
@@ -361,7 +361,7 @@ namespace KSPWheel
                     int count = wheelData.Length;
                     for (int i = 0; i < count; i++)
                     {
-                        wheelData[i].setupWheel(rb, raycastMask, part.rescaleFactor);
+                        wheelData[i].setupWheel(rb, raycastMask, part.rescaleFactor * scale);
                         wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
                     }
                     //run wheel init on a second pass so that all wheels are available
@@ -429,7 +429,6 @@ namespace KSPWheel
             }
 
             updateLandedState();
-
         }
 
         /// <summary>
@@ -458,7 +457,7 @@ namespace KSPWheel
 
         public float GetModuleCost(float defaultCost, ModifierStagingSituation sit)
         {
-            return -defaultCost + Mathf.Pow(defaultCost, 3);
+            return -defaultCost + Mathf.Pow(scale, 3) * defaultCost;
         }
 
         public ModifierChangeWhen GetModuleCostChangeWhen()
@@ -468,7 +467,7 @@ namespace KSPWheel
 
         public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
         {
-            return -defaultMass + Mathf.Pow(defaultMass, 3);
+            return -defaultMass + Mathf.Pow(scale, 3) * defaultMass;
         }
 
         public ModifierChangeWhen GetModuleMassChangeWhen()
@@ -689,7 +688,7 @@ namespace KSPWheel
 
             public float scaledMass(float scaleFactor)
             {
-                return Mathf.Pow(scaleFactor, 3) * wheelMass;
+                return Mathf.Pow(scaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMassScalingPower) * wheelMass;
             }
 
             public float scaledRadius(float scaleFactor)

@@ -66,7 +66,7 @@ namespace KSPWheel
         {
             base.preWheelPhysicsUpdate();
             int len = controller.wheelData.Length;
-            float mt = manageMotor && motor==null? 0 : motor.torqueOutput;
+            float mt = manageMotor && motor==null? 0 : motor.torqueOutput / len;
             float bt = manageBrakes && brakes==null? 0 : brakes.torqueOutput;
             float rpmTotal = 0;
             for (int i = 0; i < len; i++)

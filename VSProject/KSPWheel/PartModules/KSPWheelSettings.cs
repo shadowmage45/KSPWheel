@@ -7,7 +7,7 @@
         public bool advancedMode = false;
 
         [GameParameters.CustomParameterUI("Manual Gear Selection", toolTip = "If enabled motors will have multiple gear ratios available (configurable).")]
-        public bool manualGearing = false;
+        public bool manualGearing = true;
 
         [GameParameters.CustomParameterUI("Wheel Dust Effects", toolTip = "If enabled wheels will kick up dust when traversing terrain.")]
         public bool wheelDustEffects = true;
