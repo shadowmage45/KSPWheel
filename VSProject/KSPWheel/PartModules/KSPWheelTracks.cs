@@ -15,6 +15,9 @@ namespace KSPWheel
         [KSPField]
         public int trackDir = 1;
 
+        [KSPField]
+        public float trackSpeedMult = 1.0f;
+
         private SkinnedMeshRenderer smr;
         private Vector2 offset = Vector2.zero;
         private Material mat;
@@ -58,26 +61,31 @@ namespace KSPWheel
         protected override void updateMotor()
         {
             base.updateMotor();
-            float totalBrakeTorque = wheel.brakeTorque;
-            float torqueInputDivisor = 0f;
-            float totalRadius = 0f;
+            //TODO remove ALL allocations, assign permanent calc variables??
+            float factorSum = 0f;
             float totalSystemTorque = 0f;
-            float totalTorque = torqueOutput;
+            float totalBrakeTorque = this.wheel.brakeTorque;
+            float totalMotorTorque = torqueOutput;
+            float[] factors = new float[controller.wheelData.Length];//TODO remove this allocation, can be moved to an initialized-once on wheel-creation scenario
+            float[] shares = new float[controller.wheelData.Length];
+            KSPWheelCollider wheel;
             int len = controller.wheelData.Length;
             for (int i = 0; i < len; i++)
             {
-                torqueInputDivisor += controller.wheelData[i].wheel.momentOfInertia * controller.wheelData[i].wheel.radius;
-                totalRadius += controller.wheelData[i].wheel.radius;
+                wheel = controller.wheelData[i].wheel;
+                factors[i] = wheel.momentOfInertia / wheel.radius;
+                factorSum += factors[i];
                 totalSystemTorque += controller.wheelData[i].wheel.angularVelocity * controller.wheelData[i].wheel.momentOfInertia;
             }
             for (int i = 0; i < len; i++)
             {
-                float torqueDiv = controller.wheelData[i].wheel.momentOfInertia / torqueInputDivisor / controller.wheelData[i].wheel.radius;
-                controller.wheelData[i].wheel.motorTorque = totalTorque * torqueDiv;
-                controller.wheelData[i].wheel.brakeTorque = totalBrakeTorque * torqueDiv;
-                controller.wheelData[i].wheel.angularVelocity = (controller.wheelData[i].wheel.radius / totalRadius) * totalSystemTorque;
+                wheel = controller.wheelData[i].wheel;
+                shares[i] = factors[i] / factorSum;
+                wheel.motorTorque = shares[i] * totalMotorTorque;
+                wheel.brakeTorque = shares[i] * totalBrakeTorque;
+                wheel.angularVelocity = shares[i] * totalSystemTorque / wheel.momentOfInertia;
             }
-            trackRPM = wheel.rpm;
+            trackRPM = this.wheel.rpm * trackSpeedMult;
         }
 
     }
