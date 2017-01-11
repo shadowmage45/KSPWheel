@@ -341,6 +341,11 @@ namespace KSPWheel
             set { currentAngularVelocity = value; }
         }
 
+        public float linearVelocity
+        {
+            get { return currentAngularVelocity * wheelRadius; }
+        }
+
         /// <summary>
         /// compression distance of the suspension system; 0 = max droop, max = max suspension length
         /// </summary>
@@ -378,6 +383,11 @@ namespace KSPWheel
         {
             get { return extSpringForce; }
             set { extSpringForce = value; }
+        }
+
+        public float momentOfInertia
+        {
+            get { return currentMomentOfInertia; }
         }
 
         /// <summary>
