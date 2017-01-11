@@ -18,6 +18,10 @@ namespace KSPWheel
         private Vector2 scrollPos;
         private bool guiOpen = false;
 
+        private float longFriction = 1f;
+        private float latFriction = 1f;
+        private KSPWheelSweepType sweepType = KSPWheelSweepType.RAY;
+
         //TODO -- add debug game objects to wheels
         private GameObject[] debugHitObjects;
 
@@ -61,6 +65,39 @@ namespace KSPWheel
         private void updateWindow(int id)
         {
             GUILayout.BeginVertical();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Long Friction", GUILayout.Width(100));
+            float val = longFriction;
+            longFriction = GUILayout.HorizontalSlider(1.0f, 0.0f, 4.0f);
+            if (val != longFriction)
+            {
+                //TODO update wheel friction values
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Lat Friction", GUILayout.Width(100));
+            val = latFriction;
+            latFriction = GUILayout.HorizontalSlider(1.0f, 0.0f, 4.0f);
+            if (val != latFriction)
+            {
+                //TODO update wheel friction values
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Sweep Type", GUILayout.Width(100));
+            if (GUILayout.Button("Prev"))
+            {
+                //TODO change sweep type, update wheels with new sweep type
+            }
+            if (GUILayout.Button("Next"))
+            {
+                //TODO change sweep type, update wheels with new sweep type
+            }
+            GUILayout.Label(sweepType.ToString());
+            GUILayout.EndHorizontal();
 
             //per-wheel instance data view
             scrollPos = GUILayout.BeginScrollView(scrollPos);
