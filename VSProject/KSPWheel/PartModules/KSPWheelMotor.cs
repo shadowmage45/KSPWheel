@@ -132,15 +132,13 @@ namespace KSPWheel
             {
                 invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
             }
-            torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
-            rpmScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorMaxRPMScalingPower);
+            updateScaleValues();
         }
 
         internal override void onScaleUpdated()
         {
             base.onScaleUpdated();
-            torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
-            rpmScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorMaxRPMScalingPower);
+            updateScaleValues();
         }
 
         internal override void onUIControlsUpdated(bool show)
@@ -164,6 +162,12 @@ namespace KSPWheel
         {
             base.preWheelPhysicsUpdate();
             updateMotor();
+        }
+
+        protected virtual void updateScaleValues()
+        {
+            torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
+            rpmScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorMaxRPMScalingPower);
         }
 
         protected virtual void updateMotor()

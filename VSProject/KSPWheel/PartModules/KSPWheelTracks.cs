@@ -18,6 +18,9 @@ namespace KSPWheel
         [KSPField]
         public float trackSpeedMult = 1.0f;
 
+        private float factorSum;
+        private float[] factors;
+        private float[] shares;
         private SkinnedMeshRenderer smr;
         private Vector2 offset = Vector2.zero;
         private Material mat;
@@ -52,17 +55,39 @@ namespace KSPWheel
             }
         }
 
+        protected override void updateScaleValues()
+        {
+            base.updateScaleValues();
+            if (this.wheel == null) { return; }
+
+            KSPWheelCollider wheel;
+            int len = controller.wheelData.Length;
+            factorSum = 0;
+            factors = new float[len];
+            shares = new float[len];
+            for (int i = 0; i < len; i++)
+            {
+                wheel = controller.wheelData[i].wheel;
+                factors[i] = wheel.momentOfInertia / wheel.radius;
+                factorSum += factors[i];
+            }
+            for (int i = 0; i < len; i++)
+            {
+                wheel = controller.wheelData[i].wheel;
+                shares[i] = factors[i] / factorSum;
+            }
+        }
+
         /// <summary>
         /// This method sets each wheel torque to that which would be needed
         /// exert the same linear velocity change on each wheel in the group.
-        /// The moment of inertia of each wheel determines a wheels share
+        /// The moment of inertia and radius of each wheel determines a wheels share
         /// of the torque.
         /// </summary>
         protected override void updateMotor()
         {
             base.updateMotor();
             //TODO remove ALL allocations, assign permanent calc variables??
-            float factorSum = 0f;
             float totalSystemTorque = 0f;
             float totalBrakeTorque = this.wheel.brakeTorque;
             float totalMotorTorque = torqueOutput;
@@ -73,14 +98,11 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 wheel = controller.wheelData[i].wheel;
-                factors[i] = wheel.momentOfInertia / wheel.radius;
-                factorSum += factors[i];
-                totalSystemTorque += controller.wheelData[i].wheel.angularVelocity * controller.wheelData[i].wheel.momentOfInertia;
+                totalSystemTorque += wheel.angularVelocity * wheel.momentOfInertia;
             }
             for (int i = 0; i < len; i++)
             {
                 wheel = controller.wheelData[i].wheel;
-                shares[i] = factors[i] / factorSum;
                 wheel.motorTorque = shares[i] * totalMotorTorque;
                 wheel.brakeTorque = shares[i] * totalBrakeTorque;
                 wheel.angularVelocity = shares[i] * totalSystemTorque / wheel.momentOfInertia;
