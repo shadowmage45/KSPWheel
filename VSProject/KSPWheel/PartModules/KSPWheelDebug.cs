@@ -62,11 +62,6 @@ namespace KSPWheel
         {
             GUILayout.BeginVertical();
 
-            //upper main data display row
-            GUILayout.BeginHorizontal();
-            GUILayout.EndHorizontal();
-
-
             //per-wheel instance data view
             scrollPos = GUILayout.BeginScrollView(scrollPos);
 
@@ -121,7 +116,8 @@ namespace KSPWheel
                 GUILayout.Label(wheel.lateralForce.ToString("0.##"), GUILayout.Width(w2));//latForce
                 GUILayout.Label(wheel.longitudinalSlip.ToString("0.##"), GUILayout.Width(w2));//longSlip
                 GUILayout.Label(wheel.lateralSlip.ToString("0.##"), GUILayout.Width(w2));//latSlip
-                GUILayout.Label(wheel.contactColliderHit==null? "none" : wheel.contactColliderHit.ToString());//collider hit
+                //using a button as for some retarted reason auto-word-wrap is enabled for labels...
+                GUILayout.Button(wheel.contactColliderHit==null? "none" : wheel.contactColliderHit.ToString());//collider hit
 
                 GUILayout.EndHorizontal();
             }
