@@ -45,7 +45,7 @@ namespace KSPWheel
             base.preWheelFrameUpdate();
             if (mat != null)
             {
-                float offsetAmount = (((-trackRPM * 2f * Mathf.PI) / 60f) * Time.deltaTime * trackDir) / trackLength;
+                float offsetAmount = (((-trackRPM * 2f * Mathf.PI) / 60f) * Time.deltaTime * trackDir) / (trackLength * part.rescaleFactor * controller.scale);
                 offset.x += offsetAmount;
                 mat.SetTextureOffset("_MainTex", offset);
                 mat.SetTextureOffset("_BumpMap", offset);

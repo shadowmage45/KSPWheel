@@ -62,11 +62,7 @@ namespace KSPWheel
          UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool halfTrackSteering = false;
 
-        [KSPField(guiName = "Half-Track Steering", guiActive = false, guiActiveEditor = false, isPersistant = true),
-         UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
-        public bool invertHalfTrackSteering = false;
-
-        [KSPField(guiName = "Gear Ratio (x:1)", guiActive = true, guiActiveEditor = true),
+        [KSPField(guiName = "Gear Ratio (x:1)", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.25f, maxValue = 20f, incrementSlide = 0.05f, incrementLarge = 1f, incrementSmall = 0.25f)]
         public float gearRatio = 4f;
 
@@ -106,13 +102,14 @@ namespace KSPWheel
 
         public void onGearUpdated(BaseField field, System.Object ob)
         {
+            float maxRPM = this.maxRPM * rpmScalar;
             float scale = part.rescaleFactor * controller.scale;
             float radius = wheelData.scaledRadius(scale);
             float torque = torqueScalar * maxMotorTorque;
             float force = torque * gearRatio / radius;
             maxPowerOutput = force;
 
-            maxPowerUse = (torque * 0.5f * maxRPM * 0.5f) / motorEfficiency / 9.5488f;
+            maxPowerUse = (torque * 0.5f * maxRPM * 0.5f ) / motorEfficiency / 9.5488f;
 
             float rpm = maxRPM / gearRatio;
             float rps = rpm / 60;
@@ -157,7 +154,6 @@ namespace KSPWheel
             Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = tankSteering && show;
             Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering && show;
             Fields[nameof(halfTrackSteering)].guiActive = Fields[nameof(halfTrackSteering)].guiActiveEditor = tankSteering && show;
-            Fields[nameof(invertHalfTrackSteering)].guiActive = Fields[nameof(invertHalfTrackSteering)].guiActiveEditor = tankSteering && show;
 
             Fields[nameof(gearRatio)].guiActive = Fields[nameof(gearRatio)].guiActiveEditor = show && HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().manualGearing;
 
@@ -179,12 +175,15 @@ namespace KSPWheel
             {
                 float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
                 if (invertSteering) { rI = -rI; }
-                if (fI == 1 || fI == -1) { rI *= 2; }
-                fI += rI;
                 if (halfTrackSteering)
                 {
-                    //TODO...
+                    bool spinningBackwards = false;
+                    if ((fI < 0 && !invertMotor) || (fI > 0 && invertMotor) || spinningBackwards)
+                    {
+                        rI = -rI;
+                    }
                 }
+                fI += rI;
             }
             fI = Mathf.Clamp(fI, -1, 1);
             float rawOutput = calcRawTorque(fI);
@@ -198,7 +197,7 @@ namespace KSPWheel
         protected float calcRawTorque(float fI)
         {
             float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
-            float maxRPM = this.maxRPM;
+            float maxRPM = this.maxRPM * rpmScalar;
             if (motorRPM > maxRPM) { motorRPM = maxRPM; }
             float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
             float outputTorque = curveOut * maxMotorTorque * fI * torqueScalar;
@@ -209,6 +208,10 @@ namespace KSPWheel
         {
             float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
             return Mathf.Abs(rawTorque) * motorRPM / 9.5488f / motorEfficiency;
+            //float maxRPM = this.maxRPM * rpmScalar;
+            //if (motorRPM > maxRPM) { motorRPM = maxRPM; }
+            //float percent = 1 - ( motorRPM / maxRPM );
+            //float kw = percent * maxMotorTorque * torqueScalar * 
         }
 
         protected float updateResourceDrain(float ecs)

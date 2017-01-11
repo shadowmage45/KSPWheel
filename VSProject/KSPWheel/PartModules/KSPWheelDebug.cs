@@ -21,7 +21,7 @@ namespace KSPWheel
         //TODO -- add debug game objects to wheels
         private GameObject[] debugHitObjects;
 
-        [KSPEvent(guiName = "Open Debug GUI", guiActive = true, guiActiveEditor = true)]
+        [KSPEvent(guiName = "Open Debug GUI", guiActive = true, guiActiveEditor = false)]
         public void showGUI()
         {
             guiOpen = true;
@@ -66,30 +66,36 @@ namespace KSPWheel
             GUILayout.BeginHorizontal();
             GUILayout.EndHorizontal();
 
-            //data column header row
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("index", GUILayout.Width(30));
-            GUILayout.Label("rad", GUILayout.Width(30));//radius
-            GUILayout.Label("mass", GUILayout.Width(30));//mass
-            GUILayout.Label("len", GUILayout.Width(30));//length of travel
-            GUILayout.Label("spr", GUILayout.Width(30));//spring rate
-            GUILayout.Label("dmp", GUILayout.Width(30));//damper rate (n * m/s)
-            GUILayout.Label("ang", GUILayout.Width(30));//angular velocity
-            GUILayout.Label("vel", GUILayout.Width(30));//linear velocity
-            GUILayout.Label("trq", GUILayout.Width(30));//motor torque
-            GUILayout.Label("brk", GUILayout.Width(30));//brake torque
-            GUILayout.Label("comp", GUILayout.Width(30));//compression
-            GUILayout.Label("comp%", GUILayout.Width(30));//compression (percent of max)
-            GUILayout.Label("fY", GUILayout.Width(30));//springForce
-            GUILayout.Label("fZ", GUILayout.Width(30));//longForce
-            GUILayout.Label("fX", GUILayout.Width(30));//latForce
-            GUILayout.Label("sZ", GUILayout.Width(30));//longSlip
-            GUILayout.Label("sX", GUILayout.Width(30));//latSlip
-            GUILayout.Label("hit", GUILayout.Width(30));//collider hit
-            GUILayout.EndHorizontal();
 
             //per-wheel instance data view
             scrollPos = GUILayout.BeginScrollView(scrollPos);
+
+            float w1 = 30;
+            float w2 = 50;
+            float w3 = 200;
+
+            //data column header row
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("idx", GUILayout.Width(w1));
+            GUILayout.Label("rad", GUILayout.Width(w2));//radius
+            GUILayout.Label("mass", GUILayout.Width(w2));//mass
+            GUILayout.Label("len", GUILayout.Width(w2));//length of travel
+            GUILayout.Label("spr", GUILayout.Width(w2));//spring rate
+            GUILayout.Label("dmp", GUILayout.Width(w2));//damper rate (n * m/s)
+            GUILayout.Label("ang", GUILayout.Width(w2));//angular velocity
+            GUILayout.Label("vel", GUILayout.Width(w2));//linear velocity
+            GUILayout.Label("trq", GUILayout.Width(w2));//motor torque
+            GUILayout.Label("brk", GUILayout.Width(w2));//brake torque
+            GUILayout.Label("comp", GUILayout.Width(w2));//compression
+            GUILayout.Label("comp%", GUILayout.Width(w2));//compression (percent of max)
+            GUILayout.Label("fY", GUILayout.Width(w2));//springForce
+            GUILayout.Label("fZ", GUILayout.Width(w2));//longForce
+            GUILayout.Label("fX", GUILayout.Width(w2));//latForce
+            GUILayout.Label("sZ", GUILayout.Width(w2));//longSlip
+            GUILayout.Label("sX", GUILayout.Width(w2));//latSlip
+            GUILayout.Label("hit", GUILayout.Width(w3));//collider hit
+            GUILayout.EndHorizontal();
+
             GUILayout.BeginVertical();
             int len = controller.wheelData.Length;
             KSPWheelCollider wheel;
@@ -98,24 +104,24 @@ namespace KSPWheel
                 GUILayout.BeginHorizontal();
                 wheel = controller.wheelData[i].wheel;
 
-                GUILayout.Label(i.ToString(), GUILayout.Width(30));
-                GUILayout.Label(wheel.radius.ToString(), GUILayout.Width(30));//radius
-                GUILayout.Label(wheel.mass.ToString(), GUILayout.Width(30));//mass
-                GUILayout.Label(wheel.length.ToString(), GUILayout.Width(30));//length of travel
-                GUILayout.Label(wheel.spring.ToString(), GUILayout.Width(30));//spring rate
-                GUILayout.Label(wheel.damper.ToString(), GUILayout.Width(30));//damper rate (n * m/s)
-                GUILayout.Label(wheel.angularVelocity.ToString(), GUILayout.Width(30));//angular velocity
-                GUILayout.Label(wheel.linearVelocity.ToString(), GUILayout.Width(30));//linear velocity
-                GUILayout.Label(wheel.motorTorque.ToString(), GUILayout.Width(30));//motor torque
-                GUILayout.Label(wheel.brakeTorque.ToString(), GUILayout.Width(30));//brake torque
-                GUILayout.Label(wheel.compressionDistance.ToString(), GUILayout.Width(30));//compression
-                GUILayout.Label((wheel.compressionDistance/wheel.length).ToString(), GUILayout.Width(30));//compression (percent of max)
-                GUILayout.Label(wheel.springForce.ToString(), GUILayout.Width(30));//springForce
-                GUILayout.Label(wheel.longitudinalForce.ToString(), GUILayout.Width(30));//longForce
-                GUILayout.Label(wheel.lateralForce.ToString(), GUILayout.Width(30));//latForce
-                GUILayout.Label(wheel.longitudinalSlip.ToString(), GUILayout.Width(30));//longSlip
-                GUILayout.Label(wheel.lateralSlip.ToString(), GUILayout.Width(30));//latSlip
-                GUILayout.Label(wheel.contactColliderHit==null? "none" : wheel.contactColliderHit.ToString(), GUILayout.Width(30));//collider hit
+                GUILayout.Label(i.ToString(), GUILayout.Width(w1));
+                GUILayout.Label(wheel.radius.ToString("0.##"), GUILayout.Width(w2));//radius
+                GUILayout.Label(wheel.mass.ToString("0.##"), GUILayout.Width(w2));//mass
+                GUILayout.Label(wheel.length.ToString("0.##"), GUILayout.Width(w2));//length of travel
+                GUILayout.Label(wheel.spring.ToString("0.##"), GUILayout.Width(w2));//spring rate
+                GUILayout.Label(wheel.damper.ToString("0.##"), GUILayout.Width(w2));//damper rate (n * m/s)
+                GUILayout.Label(wheel.angularVelocity.ToString("0.##"), GUILayout.Width(w2));//angular velocity
+                GUILayout.Label(wheel.linearVelocity.ToString("0.##"), GUILayout.Width(w2));//linear velocity
+                GUILayout.Label(wheel.motorTorque.ToString("0.##"), GUILayout.Width(w2));//motor torque
+                GUILayout.Label(wheel.brakeTorque.ToString("0.##"), GUILayout.Width(w2));//brake torque
+                GUILayout.Label(wheel.compressionDistance.ToString("0.##"), GUILayout.Width(w2));//compression
+                GUILayout.Label((wheel.compressionDistance/wheel.length).ToString("0.##"), GUILayout.Width(w2));//compression (percent of max)
+                GUILayout.Label(wheel.springForce.ToString("0.##"), GUILayout.Width(w2));//springForce
+                GUILayout.Label(wheel.longitudinalForce.ToString("0.##"), GUILayout.Width(w2));//longForce
+                GUILayout.Label(wheel.lateralForce.ToString("0.##"), GUILayout.Width(w2));//latForce
+                GUILayout.Label(wheel.longitudinalSlip.ToString("0.##"), GUILayout.Width(w2));//longSlip
+                GUILayout.Label(wheel.lateralSlip.ToString("0.##"), GUILayout.Width(w2));//latSlip
+                GUILayout.Label(wheel.contactColliderHit==null? "none" : wheel.contactColliderHit.ToString());//collider hit
 
                 GUILayout.EndHorizontal();
             }
@@ -127,6 +133,7 @@ namespace KSPWheel
                 guiOpen = false;
             }
             GUILayout.EndVertical();
+            GUI.DragWindow();
         }
 
     }
