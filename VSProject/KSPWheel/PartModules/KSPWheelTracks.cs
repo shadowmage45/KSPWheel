@@ -15,9 +15,6 @@ namespace KSPWheel
         [KSPField]
         public int trackDir = 1;
 
-        [KSPField]
-        public float trackSpeedMult = 1.0f;
-
         private float factorSum;
         private float[] shares;
         private SkinnedMeshRenderer smr;
@@ -103,7 +100,7 @@ namespace KSPWheel
                 wheel.brakeTorque = shares[i] * totalBrakeTorque;
                 wheel.angularVelocity = shares[i] * totalSystemTorque / wheel.momentOfInertia;
             }
-            trackRPM = this.wheel.rpm * trackSpeedMult;
+            trackRPM = this.wheel.rpm;
         }
 
     }
