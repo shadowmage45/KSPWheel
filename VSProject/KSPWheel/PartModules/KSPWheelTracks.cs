@@ -19,7 +19,6 @@ namespace KSPWheel
         public float trackSpeedMult = 1.0f;
 
         private float factorSum;
-        private float[] factors;
         private float[] shares;
         private SkinnedMeshRenderer smr;
         private Vector2 offset = Vector2.zero;
@@ -58,12 +57,12 @@ namespace KSPWheel
         protected override void updateScaleValues()
         {
             base.updateScaleValues();
-            if (this.wheel == null) { return; }
+            if (this.wheel == null) { return; }//wheel not initialized
 
             KSPWheelCollider wheel;
             int len = controller.wheelData.Length;
             factorSum = 0;
-            factors = new float[len];
+            float[] factors = new float[len];
             shares = new float[len];
             for (int i = 0; i < len; i++)
             {
@@ -87,12 +86,9 @@ namespace KSPWheel
         protected override void updateMotor()
         {
             base.updateMotor();
-            //TODO remove ALL allocations, assign permanent calc variables??
             float totalSystemTorque = 0f;
             float totalBrakeTorque = this.wheel.brakeTorque;
             float totalMotorTorque = torqueOutput;
-            float[] factors = new float[controller.wheelData.Length];//TODO remove this allocation, can be moved to an initialized-once on wheel-creation scenario
-            float[] shares = new float[controller.wheelData.Length];
             KSPWheelCollider wheel;
             int len = controller.wheelData.Length;
             for (int i = 0; i < len; i++)
