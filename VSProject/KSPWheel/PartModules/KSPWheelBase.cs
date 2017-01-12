@@ -16,10 +16,10 @@ namespace KSPWheel
 
         /// <summary>
         /// The raycast mask to use for the wheel-collider suspension sweep. <para/>
-        /// By default ignore layers 26, 10, and 16 (wheelCollidersIgnore & scaledScenery & kerbals/IVAs)
+        /// By default ignore layers 26, 10, and 16 (wheelCollidersIgnore & scaledScenery & kerbals/IVAs & transparentFX)
         /// </summary>
         [KSPField]
-        public int raycastMask = ~(1 << 26 | 1 << 10 | 1 << 16);
+        public int raycastMask = ~(1 << 26 | 1 << 10 | 1 << 16 | 1 << 1);
 
         /// <summary>
         /// If true, will use the rigidbody of the parent part rather than this.part.  Aides in jitter reduction and joint flex by (hopefully) applying forces to a part with higher mass.
