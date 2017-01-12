@@ -40,13 +40,49 @@ namespace KSPWheel
         {
             base.OnStart(state);
             id = this.GetInstanceID();
-            updateDebugRendering();
             Fields[nameof(showDebugRendering)].uiControlFlight.onFieldChanged = onDebugRenderingUpdated;
+        }
+
+        internal override void postWheelPhysicsUpdate()
+        {
+            base.postWheelPhysicsUpdate();
+            if (debugHitObjects != null)
+            {
+                int len = debugHitObjects.Length;
+                KSPWheelCollider wheel;
+                for (int i = 0; i < len; i++)
+                {
+                    wheel = controller.wheelData[i].wheel;
+                    debugHitObjects[i].transform.position = wheel.transform.position - (wheel.transform.up * wheel.length) + (wheel.transform.up * wheel.compressionDistance) - (wheel.transform.up * wheel.radius);
+                }
+            }
         }
 
         private void updateDebugRendering()
         {
-
+            if (debugHitObjects == null)
+            {
+                int len = controller.wheelData.Length;
+                debugHitObjects = new GameObject[len];
+                GameObject debugHitObject;
+                for (int i = 0; i < len; i++)
+                {
+                    debugHitObject = debugHitObjects[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    Collider c = debugHitObject.GetComponent<Collider>();
+                    GameObject.Destroy(c);
+                    debugHitObject.transform.NestToParent(part.transform.FindRecursive("model"));
+                    debugHitObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                }
+            }
+            else
+            {
+                int len = debugHitObjects.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    if (debugHitObjects[i] != null) { GameObject.Destroy(debugHitObjects[i]); }
+                }
+                debugHitObjects = null;
+            }
         }
 
         public void OnGUI()
@@ -69,35 +105,64 @@ namespace KSPWheel
             GUILayout.BeginHorizontal();
             GUILayout.Label("Long Friction", GUILayout.Width(100));
             float val = longFriction;
-            longFriction = GUILayout.HorizontalSlider(1.0f, 0.0f, 4.0f);
+            longFriction = GUILayout.HorizontalSlider(longFriction, 0.0f, 4.0f, GUILayout.Width(200));
             if (val != longFriction)
             {
-                //TODO update wheel friction values
+                int wlen = controller.wheelData.Length;
+                for (int i = 0; i < wlen; i++)
+                {
+                    controller.wheelData[i].wheel.forwardFrictionCoefficient = longFriction;
+                }
             }
+            GUILayout.Label(longFriction.ToString());
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Lat Friction", GUILayout.Width(100));
             val = latFriction;
-            latFriction = GUILayout.HorizontalSlider(1.0f, 0.0f, 4.0f);
+            latFriction = GUILayout.HorizontalSlider(latFriction, 0.0f, 4.0f, GUILayout.Width(200));
             if (val != latFriction)
             {
-                //TODO update wheel friction values
+                int wlen = controller.wheelData.Length;
+                for (int i = 0; i < wlen; i++)
+                {
+                    controller.wheelData[i].wheel.sideFrictionCoefficient = latFriction;
+                }
             }
+            GUILayout.Label(latFriction.ToString());
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Sweep Type", GUILayout.Width(100));
             if (GUILayout.Button("Prev"))
             {
-                //TODO change sweep type, update wheels with new sweep type
+                if (sweepType == KSPWheelSweepType.CAPSULE) { sweepType = KSPWheelSweepType.SPHERE; }
+                else if (sweepType == KSPWheelSweepType.RAY) { sweepType = KSPWheelSweepType.CAPSULE; }
+                else { sweepType = KSPWheelSweepType.RAY; }
+                int wlen = controller.wheelData.Length;
+                for (int i = 0; i < wlen; i++)
+                {
+                    controller.wheelData[i].wheel.sweepType = sweepType;
+                }
             }
             if (GUILayout.Button("Next"))
             {
-                //TODO change sweep type, update wheels with new sweep type
+                if (sweepType == KSPWheelSweepType.CAPSULE) { sweepType = KSPWheelSweepType.RAY; }
+                else if (sweepType == KSPWheelSweepType.RAY) { sweepType = KSPWheelSweepType.SPHERE; }
+                else { sweepType = KSPWheelSweepType.CAPSULE; }
+                int wlen = controller.wheelData.Length;
+                for (int i = 0; i < wlen; i++)
+                {
+                    controller.wheelData[i].wheel.sweepType = sweepType;
+                }
             }
             GUILayout.Label(sweepType.ToString());
             GUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Toggle Debug Rendering"))
+            {
+                updateDebugRendering();
+            }
 
             //per-wheel instance data view
             scrollPos = GUILayout.BeginScrollView(scrollPos);
