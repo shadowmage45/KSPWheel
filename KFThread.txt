@@ -4,7 +4,7 @@ KerbalFoundries - Continued
 
 This is the main development and release thread for the continuation of KerbalFoundries, originally created by Lo-Fi and Galidaas, continued under new development with explicit permissions from the original authors and under the terms of the original licensing.
 
-This mod adds a variety of new parts to KSP that include wheels, tracks, and anti-gravity repulsors.  In the works for the future are landing gear, landing legs, propellers, rotors, and ducted fans.
+This mod adds a variety of new parts to KSP that include wheels, tracks, and anti-gravity repulsors.
 
 For a list of features available to the wheels in this mod, please see the KSPWheels documentation ( link to KSPWheel wiki ).
 
@@ -43,12 +43,18 @@ Known Issues:
 
 
 Future Plans:
+* Add support for Adjustable Landing Gear models; will need recompiles of the models as well as additional PartModules to handle the customization of the parts and drive the manual animations.
+* Add a selection of landing legs for standard landers.
+* Add a selection of helicopter style rotors.
+* Add a selection of airplane style propellers
+* Add a selection of VTOL / airship / hovercraft style ducted fans.
+* Add alternate and optional 'ICE' engine handling -- uses lfo/ox/intake air, with torque curves and gearing more suitable to an ICE engine.
+(WIP) Adjustable Landing Gear models and art assets are modified from the original versions (created by BahamutoD) and redistributed under permission of license (CC-BY-SA).
 
 
 Legal and Licensing:
 KerbalFoundries - Continued models and art assets from the original Kerbal Foundries are licensed, released, and distributed under CC-BY-NC-SA licensing as per the original license of KerbalFoundries.
-(WIP) Adjustable Landing Gear models and art assets are modified from the original versions (created by BahamutoD) and redistributed under permission of license (CC-BY-SA).
-This mod uses the KSPWheel API for wheel-collider physics and PartModules, and redistributes it under the terms of its own license ( link to KSPWheel repository ) (GPL 3.0+).
+This mod uses the KSPWheel API for wheel-collider physics and PartModules, and redistributes it under the terms of its own license (GPL 3.0+).  Source code and license details may be found at: ( link to KSPWheel repository ) | (link to KSPWheel thread).
 This mod includes and redistributes ModuleManager under the terms of its own license (link to MM thread) (link to MM repository) (link to MM license).
 
 
