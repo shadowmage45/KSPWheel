@@ -133,6 +133,8 @@ namespace KSPWheel
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
+        public float repairSpringFudge = 1f;
+
         private bool advancedMode = false;
 
         private bool initializedWheels = false;
@@ -387,7 +389,7 @@ namespace KSPWheel
             int len = wheelData.Length;
             for (int i = 0; i < len; i++)
             {
-                wheelData[i].bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED;
+                wheelData[i].bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED||wheelState==KSPWheelState.BROKEN;
             }
 
             //TODO -- subscribe to vessel modified events and update rigidbody assignment whenever parts/etc are modified
@@ -493,6 +495,7 @@ namespace KSPWheel
             {
                 return;
             }
+            vesselMass *= repairSpringFudge;
             float compressionBoostFactor;
             float spring, damper, springLoad, natFreq, criticalDamping;
             float compression = 0;
@@ -502,7 +505,11 @@ namespace KSPWheel
             {
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
-                if (compression > 0.8f)
+                if (repairSpringFudge < 1)
+                {
+                    data.timeBoostFactor = 0f;
+                }
+                else if (compression > 0.8f)
                 {
                     data.timeBoostFactor = data.timeBoostFactor + 0.5f * Time.fixedDeltaTime;
                 }
@@ -511,16 +518,24 @@ namespace KSPWheel
                     data.timeBoostFactor = data.timeBoostFactor - 0.2f * Time.fixedDeltaTime;
                 }
                 data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
-                compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
-                spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
-
+                compressionBoostFactor = repairSpringFudge < 1? 1.0f : 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
+                spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f) * repairSpringFudge * repairSpringFudge;
+                if (repairSpringFudge < 1)
+                {
+                    MonoBehaviour.print("set spring to: " + spring);
+                }
                 springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
                 natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
                 criticalDamping = 2 * springLoad * natFreq;//critical damping
                 damper = criticalDamping * dampRatio;
 
                 data.wheel.spring = spring;
-                data.wheel.damper = damper;
+                data.wheel.damper = repairSpringFudge<1? 0 : damper;
+            }
+            if (repairSpringFudge < 1)
+            {
+                repairSpringFudge = Mathf.MoveTowards(repairSpringFudge, 1, 0.2f * Time.fixedDeltaTime);
+                MonoBehaviour.print("Set fudge factor to: " + repairSpringFudge);
             }
         }
 

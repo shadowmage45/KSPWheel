@@ -37,9 +37,10 @@ namespace KSPWheel
         private Transform wheelMesh;
         private Transform bustedWheelMesh;
         
-        [KSPEvent(guiName = "Repair Wheel/Gear", guiActive = false, guiActiveEditor = false, externalToEVAOnly = true, guiActiveUnfocused = true, guiActiveUncommand = true)]
+        [KSPEvent(guiName = "Repair Wheel/Gear", guiActive = true, guiActiveEditor = false, guiActiveUnfocused = false, externalToEVAOnly = true, unfocusedRange = 8f)]
         public void repairWheel()
         {
+            MonoBehaviour.print("Repairing wheel!");
             //TODO check for engineer?
             KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
             switch (wearType)
@@ -48,11 +49,13 @@ namespace KSPWheel
                     break;
                 case KSPWheelWearType.SIMPLE:
                     controller.wheelState = KSPWheelState.DEPLOYED;
-                    invulnerableTime += 2f;
+                    invulnerableTime += 10f;
+                    controller.repairSpringFudge = 0.0001f;
                     break;
                 case KSPWheelWearType.ADVANCED:
                     controller.wheelState = KSPWheelState.DEPLOYED;
-                    invulnerableTime += 2f;
+                    invulnerableTime += 10f;
+                    controller.repairSpringFudge = 0.0001f;
                     //TODO resource use, check for engineer, ??
                     break;
                 default:
@@ -149,26 +152,26 @@ namespace KSPWheel
         private void updateWheelMeshes()
         {
             KSPWheelState wheelState = controller.wheelState;
-            if (wheelState == KSPWheelState.BROKEN)
-            {
-                if (bustedWheelMesh != null)
-                {
-                    if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
-                    bustedWheelMesh.gameObject.SetActive(true);
-                }
-            }
-            else
-            {
-                if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
-                if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
-            }
+            //if (wheelState == KSPWheelState.BROKEN)
+            //{
+            //    if (bustedWheelMesh != null)
+            //    {
+            //        if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
+            //        bustedWheelMesh.gameObject.SetActive(true);
+            //    }
+            //}
+            //else
+            //{
+            //    if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
+            //    if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
+            //}
         }
 
         private void updateDisplayState()
         {
             KSPWheelState wheelState = controller.wheelState;
             KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
-            Events[nameof(repairWheel)].guiActive = wheelState == KSPWheelState.BROKEN;
+            Events[nameof(repairWheel)].guiActiveUnfocused = wheelState == KSPWheelState.BROKEN;
             Fields[nameof(loadStress)].guiActive = wearType != KSPWheelWearType.NONE;
             Fields[nameof(persistentWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
             Fields[nameof(displayStatus)].guiActive = wearType != KSPWheelWearType.NONE;
