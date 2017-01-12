@@ -90,6 +90,9 @@ namespace KSPWheel
         public float maxDampRatio = 2f;
 
         [KSPField]
+        public float maxSpeed = 0f;
+
+        [KSPField]
         public string boundsColliderName = String.Empty;
 
         [KSPField]
@@ -242,6 +245,17 @@ namespace KSPWheel
                 newWheelNode.AddValue("colliderName", wheelColliderName);
                 newWheelNode.AddValue("offset", wheelColliderOffset);
                 wheelDatas.Add(new KSPWheelData(newWheelNode));
+            }
+
+            if (maxSpeed <= 0)
+            {
+                int len = wheelData.Length;
+                float maxRad = 0f;
+                for (int i = 0; i < len; i++)
+                {
+                    if (wheelData[i].wheelRadius > maxRad) { maxRad = wheelData[i].wheelRadius; }
+                }
+                maxSpeed = maxRad * 400f * Mathf.PI * 2 * 0.01666666f;
             }
 
             ConfigNode[] wheelnodes = node.GetNodes("WHEEL");
