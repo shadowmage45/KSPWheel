@@ -66,7 +66,7 @@ namespace KSPWheel
         public bool halfTrackSteering = false;
 
         [KSPField(guiName = "Gear Ratio (x:1)", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.25f, maxValue = 20f, incrementSlide = 0.05f, incrementLarge = 1f, incrementSmall = 0.25f)]
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.25f, maxValue = 20f, incrementSlide = 0.05f, incrementLarge = 1f, incrementSmall = 0.25f, sigFigs = 2)]
         public float gearRatio = 4f;
 
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Max Drive Speed", guiUnits = "m/s")]
@@ -75,11 +75,11 @@ namespace KSPWheel
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Peak Power Output", guiUnits = "kN")]
         public float maxPowerOutput = 0f;
 
-        [KSPField(guiActive = false, guiActiveEditor = true, guiName = "Peak Power Use", guiUnits = "EC/s")]
-        public float maxPowerUse = 0f;
-
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Torque To Wheel", guiUnits = "kN/M")]
         public float torqueOut = 0f;
+
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Pre-Slip Power", guiUnits = "kN")]
+        public float powerOut = 0f;
 
         [KSPField(guiActive = true, guiName = "Motor EC Use", guiUnits = "ec/s")]
         public float guiResourceUse = 0f;
@@ -112,8 +112,6 @@ namespace KSPWheel
             float torque = torqueScalar * maxMotorTorque;
             float force = torque * gearRatio / radius;
             maxPowerOutput = force;
-
-            maxPowerUse = motorPower * powerScalar;
 
             float rpm = maxRPM / gearRatio;
             float rps = rpm / 60;
@@ -166,6 +164,7 @@ namespace KSPWheel
         {
             base.preWheelPhysicsUpdate();
             updateMotor();
+            powerOut = Mathf.Abs(wheel.motorTorque) / wheel.radius;
         }
 
         protected virtual void updateScaleValues()
