@@ -87,7 +87,7 @@ namespace KSPWheel
                 //how to handle instances of misaligned control, e.g. VAB craft with wheels?
                 Vector3 pos = Vector3.zero;
                 Vector3 com = Vector3.zero;
-                Vector3 ctrl = Vector3.fwd;
+                Vector3 ctrl = Vector3.forward;
             }
         }
 
