@@ -48,7 +48,7 @@ namespace KSPWheel
         public Vector3 steeringAxis = Vector3.up;
 
         [KSPField]
-        public bool useSteeringCurve = false;
+        public bool useSteeringCurve = true;
 
         [KSPField]
         public FloatCurve steeringCurve = new FloatCurve();
@@ -74,9 +74,8 @@ namespace KSPWheel
             if (steeringCurve == null || steeringCurve.Curve.length == 0)
             {
                 steeringCurve = new FloatCurve();
-                steeringCurve.Add(0, 1, 0, 0);
-                steeringCurve.Add(10, 1, 0, 0);
-                steeringCurve.Add(30, 0.5f, 0, 0);
+                steeringCurve.Add(0, 1f, 0, 0);
+                steeringCurve.Add(1, 0.1f, 0, 0);
             }
 
             //this actually needs to be in an 'onPartAdded' editor event callback
@@ -110,9 +109,9 @@ namespace KSPWheel
             if (rI < -1) { rI = -1; }
             if (useSteeringCurve)
             {
-                float speed = wheel.wheelLocalVelocity.magnitude;
-                float mult = steeringCurve.Evaluate(speed);
-                rI *= mult;
+                float scalar = Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxSpeedScalingPower);
+                float perc = wheel.linearVelocity / (controller.maxSpeed * scalar);
+                rI *= steeringCurve.Evaluate(perc);
             }
             rotInput = rI;
             wheel.steeringAngle = maxSteeringAngle * rotInput * steeringLimit;
