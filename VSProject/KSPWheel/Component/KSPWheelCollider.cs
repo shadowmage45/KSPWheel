@@ -596,7 +596,7 @@ namespace KSPWheel
             // and pray that all the rhs/lhs coordinates are correct...
             float slopeLatDot = Vector3.Dot(upDown, wR);
             agFix = agForce * slopeLatDot * wR;
-            if (brakeTorque > 0) //&& Mathf.Abs(localVelocity.z) > 1f)
+            if (brakeTorque > 0 && Mathf.Abs(motorTorque) < brakeTorque)
             {
                 float slopeLongDot = Vector3.Dot(upDown, wF);
                 agFix += agForce * slopeLongDot * wF;
