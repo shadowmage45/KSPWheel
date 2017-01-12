@@ -89,10 +89,6 @@ namespace KSPWheel
         [KSPField]
         public float maxDampRatio = 2f;
 
-        [KSPField(guiName = "Compression", guiActive = true, guiActiveEditor = false, isPersistant = false),
-         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
-        public float guiCompression = 0.0f;
-
         [KSPField]
         public string boundsColliderName = String.Empty;
 
@@ -183,7 +179,6 @@ namespace KSPWheel
             Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls && advancedMode;
             Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode;
             Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls;
-            Fields[nameof(guiCompression)].guiActive = Fields[nameof(guiCompression)].guiActiveEditor = showControls;
         }
 
         private void onScaleAdjusted(BaseField field, System.Object obj)
@@ -415,14 +410,11 @@ namespace KSPWheel
                 {
                     subModules[i].preWheelPhysicsUpdate();
                 }
-                guiCompression = 0f;
                 for (int i = 0; i < len; i++)
                 {
                     wheel = wheelData[i].wheel;
                     wheel.gravityVector = vessel.gravityForPos;
                     wheel.updateWheel();
-                    float p = wheel.compressionDistance / wheel.length;
-                    if (p > guiCompression) { guiCompression = p; }
                 }
                 for (int i = 0; i < subLen; i++)
                 {
