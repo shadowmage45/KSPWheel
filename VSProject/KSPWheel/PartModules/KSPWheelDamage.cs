@@ -27,6 +27,10 @@ namespace KSPWheel
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
         public float loadStress = 0f;
 
+        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Stress Time"),
+         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
+        public float stressTime = 0f;
+
         [KSPField]
         public float maxOverloadTime = 2f;
 
@@ -131,17 +135,24 @@ namespace KSPWheel
             else
             {
                 loadStress = load / maxLoad;
-                overloadTime = Mathf.Max(0, overloadTime - Time.fixedDeltaTime);
+            }
+            float maxSpeed = controller.maxSpeed * Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxSpeedScalingPower);
+            float speed = Mathf.Abs( wheel.linearVelocity );
+            if (speed > maxSpeed )
+            {
+                float percent = speed / maxSpeed;
+                overloadTime += Time.fixedDeltaTime * (percent - 1) * 4;
             }
             if (overloadTime > maxOverloadTime)
             {
-                MonoBehaviour.print("Wheel broke from overloading! load: "+load + " max: "+maxLoad);
+                MonoBehaviour.print("Wheel broke from overloading! load: " + load + " max: " + maxLoad);
                 ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from overloading.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
                 controller.wheelState = KSPWheelState.BROKEN;
                 overloadTime = 0f;
                 updateWheelMeshes();
                 updateDisplayState();
             }
+            overloadTime = Mathf.Max(0, overloadTime - Time.fixedDeltaTime);
         }
 
         private void wearUpdateAdvanced()
