@@ -29,6 +29,9 @@ namespace KSPWheel
         [KSPField]
         public float maxRPM = 2500f;
 
+        [KSPField]
+        public float motorPower = 1f;
+
         [KSPField(guiName = "Motor Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f)]
         public float motorOutput = 100f;
@@ -87,6 +90,7 @@ namespace KSPWheel
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
 
+        private float powerScalar = 1f;
         private float torqueScalar = 1f;
         private float rpmScalar = 1f;
         private float fwdInput;
@@ -109,7 +113,7 @@ namespace KSPWheel
             float force = torque * gearRatio / radius;
             maxPowerOutput = force;
 
-            maxPowerUse = (torque * 0.5f * maxRPM * 0.5f ) / motorEfficiency / 9.5488f;
+            maxPowerUse = motorPower * powerScalar;
 
             float rpm = maxRPM / gearRatio;
             float rps = rpm / 60;
@@ -168,6 +172,7 @@ namespace KSPWheel
         {
             torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
             rpmScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorMaxRPMScalingPower);
+            powerScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorPowerScalingPower);
         }
 
         protected virtual void updateMotor()
@@ -191,7 +196,7 @@ namespace KSPWheel
             }
             fI = Mathf.Clamp(fI, -1, 1);
             float rawOutput = calcRawTorque(fI);
-            float powerUse = calcECUse(rawOutput);
+            float powerUse = calcECUse(Mathf.Abs(fI));
             rawOutput *= updateResourceDrain(powerUse);
             float gearedOutput = rawOutput * gearRatio;
             wheel.motorTorque = gearedOutput;
@@ -208,14 +213,16 @@ namespace KSPWheel
             return outputTorque;
         }
 
-        protected float calcECUse(float rawTorque)
+        protected float calcECUse(float fI)
         {
             float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
-            return Mathf.Abs(rawTorque) * motorRPM / 9.5488f / motorEfficiency;
-            //float maxRPM = this.maxRPM * rpmScalar;
-            //if (motorRPM > maxRPM) { motorRPM = maxRPM; }
-            //float percent = 1 - ( motorRPM / maxRPM );
-            //float kw = percent * maxMotorTorque * torqueScalar * 
+            float maxRPM = this.maxRPM * rpmScalar;
+            if (motorRPM > maxRPM) { motorRPM = maxRPM; }
+            float percent = 1 - ( motorRPM / maxRPM );
+            float totalPower = motorPower * powerScalar * fI;
+            float minPower = 0.05f * totalPower;
+            float diff = totalPower - minPower;
+            return minPower + percent * diff;
         }
 
         protected float updateResourceDrain(float ecs)
