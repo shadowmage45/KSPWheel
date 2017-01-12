@@ -152,19 +152,27 @@ namespace KSPWheel
         private void updateWheelMeshes()
         {
             KSPWheelState wheelState = controller.wheelState;
-            //if (wheelState == KSPWheelState.BROKEN)
-            //{
-            //    if (bustedWheelMesh != null)
-            //    {
-            //        if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
-            //        bustedWheelMesh.gameObject.SetActive(true);
-            //    }
-            //}
-            //else
-            //{
-            //    if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
-            //    if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
-            //}
+            if (wheelState == KSPWheelState.BROKEN)
+            {
+                if (bustedWheelMesh != null)
+                {
+                    if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
+                    bustedWheelMesh.gameObject.SetActive(true);
+                }
+                if (wheel != null)
+                {
+                    int len = controller.wheelData.Length;
+                    for (int i = 0; i < len; i++)
+                    {
+                        controller.wheelData[i].wheel.angularVelocity = 0f;
+                    }
+                }
+            }
+            else
+            {
+                if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
+                if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
+            }
         }
 
         private void updateDisplayState()
