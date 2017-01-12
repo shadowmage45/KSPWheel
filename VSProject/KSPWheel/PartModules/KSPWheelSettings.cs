@@ -40,13 +40,13 @@
         public float wheelMassScalingPower = 3f;
 
         [GameParameters.CustomFloatParameterUI("Wheel Max Speed Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which wheel max safe speed is scaled when scaling up or down")]
-        public float wheelMaxSpeedScalingPower = 3f;
+        public float wheelMaxSpeedScalingPower = 1f;
 
         [GameParameters.CustomFloatParameterUI("Wheel Max Load Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which wheel min/max load are scaled when scaling up or down")]
         public float wheelMaxLoadScalingPower = 3f;
 
         [GameParameters.CustomFloatParameterUI("Wheel Rolling Resistance Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which rolling resistance is scaled when scaling up or down")]
-        public float rollingResistanceScalingPower = 3f;
+        public float rollingResistanceScalingPower = 1f;
 
         [GameParameters.CustomFloatParameterUI("Motor Torque Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which motor torque is scaled when scaling up or down")]
         public float motorTorqueScalingPower = 3f;
@@ -55,7 +55,7 @@
         public float motorPowerScalingPower = 3f;
 
         [GameParameters.CustomFloatParameterUI("Motor RPM Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which motor max rpm is scaled when scaling up or down")]
-        public float motorMaxRPMScalingPower = 3f;
+        public float motorMaxRPMScalingPower = 1f;
 
         public override string Section { get { return "KSPWheel"; } }
 
