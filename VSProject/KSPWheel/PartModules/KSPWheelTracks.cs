@@ -20,7 +20,7 @@ namespace KSPWheel
         private SkinnedMeshRenderer smr;
         private Vector2 offset = Vector2.zero;
         private Material mat;
-        private float trackRPM = 0f;
+        private float trackVelocity = 0f;//velocity of the track surface, in m/s
 
         internal override void postWheelCreated()
         {
@@ -37,6 +37,7 @@ namespace KSPWheel
                     mat.SetTextureScale("_BumpMap", scaling);
                 }
             }
+            updateScaleValues();
         }
 
         internal override void preWheelFrameUpdate()
@@ -44,8 +45,7 @@ namespace KSPWheel
             base.preWheelFrameUpdate();
             if (mat != null)
             {
-                float offsetAmount = (((-trackRPM * 2f * Mathf.PI) / 60f) * Time.deltaTime * trackDir) / (trackLength * part.rescaleFactor * controller.scale);
-                offset.x += offsetAmount;
+                offset.x += (-trackVelocity * Time.deltaTime * trackDir) / (trackLength * part.rescaleFactor * controller.scale); ;
                 mat.SetTextureOffset("_MainTex", offset);
                 mat.SetTextureOffset("_BumpMap", offset);
             }
@@ -69,7 +69,6 @@ namespace KSPWheel
             }
             for (int i = 0; i < len; i++)
             {
-                wheel = controller.wheelData[i].wheel;
                 shares[i] = factors[i] / factorSum;
             }
         }
@@ -83,6 +82,7 @@ namespace KSPWheel
         protected override void updateMotor()
         {
             base.updateMotor();
+            if (shares == null) { updateScaleValues(); }
             float totalSystemTorque = 0f;
             float totalBrakeTorque = this.wheel.brakeTorque;
             float totalMotorTorque = torqueOutput;
@@ -100,7 +100,7 @@ namespace KSPWheel
                 wheel.brakeTorque = shares[i] * totalBrakeTorque;
                 wheel.angularVelocity = shares[i] * totalSystemTorque / wheel.momentOfInertia;
             }
-            trackRPM = this.wheel.rpm;
+            trackVelocity = this.wheel.linearVelocity;
         }
 
     }
