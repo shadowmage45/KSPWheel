@@ -131,8 +131,8 @@ namespace KSPWheel
             float speed = Mathf.Abs( wheel.linearVelocity );
             if (speed > maxSpeed )
             {
-                float percent = (speed / maxSpeed) - 1f;
-                stressTime += Time.fixedDeltaTime * (percent - 1) * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().speedDamageMultiplier;
+                float overSpeedPercent = (speed / maxSpeed) - 1f;
+                stressTime += Time.fixedDeltaTime * overSpeedPercent * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().speedDamageMultiplier;
             }
 
             if (stressTime >= 1.0f)
