@@ -110,8 +110,9 @@ namespace KSPWheel
             if (useSteeringCurve)
             {
                 float scalar = Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxSpeedScalingPower);
-                float perc = wheel.linearVelocity / (controller.maxSpeed * scalar);
-                rI *= steeringCurve.Evaluate(perc);
+                float perc = Mathf.Abs(wheel.linearVelocity) / (controller.maxSpeed * scalar);
+                float mult = steeringCurve.Evaluate(perc);
+                rI *= mult;
             }
             rotInput = rI;
             wheel.steeringAngle = maxSteeringAngle * rotInput * steeringLimit;
