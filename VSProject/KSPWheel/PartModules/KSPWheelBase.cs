@@ -247,6 +247,13 @@ namespace KSPWheel
                 wheelDatas.Add(new KSPWheelData(newWheelNode));
             }
 
+            ConfigNode[] wheelnodes = node.GetNodes("WHEEL");
+            foreach (ConfigNode wn in wheelnodes)
+            {
+                wheelDatas.Add(new KSPWheelData(wn));
+            }
+            wheelData = wheelDatas.ToArray();
+
             if (maxSpeed <= 0)
             {
                 int len = wheelData.Length;
@@ -257,15 +264,8 @@ namespace KSPWheel
                 }
                 maxSpeed = maxRad * 400f * Mathf.PI * 2 * 0.01666666f;
             }
-
-            ConfigNode[] wheelnodes = node.GetNodes("WHEEL");
-            foreach (ConfigNode wn in wheelnodes)
-            {
-                wheelDatas.Add(new KSPWheelData(wn));
-            }
-            wheelData = wheelDatas.ToArray();
             foreach (KSPWheelData wheel in wheelDatas)
-            {                
+            {
                 wheel.locateTransform(part.transform);
             }
             
