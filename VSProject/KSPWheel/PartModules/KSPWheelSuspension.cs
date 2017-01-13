@@ -78,9 +78,17 @@ namespace KSPWheel
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            if (controller.wheelState == KSPWheelState.DEPLOYED && suspensionTransform != null)
+            if (suspensionTransform != null)
             {
-                float offset = (wheel.length - wheel.compressionDistance + (suspensionOffset * part.rescaleFactor));
+                float offset = 0;
+                if (controller.wheelState == KSPWheelState.DEPLOYED)
+                {
+                    offset = (wheel.length - wheel.compressionDistance + (suspensionOffset * part.rescaleFactor * controller.scale));
+                }
+                else if (controller.wheelState == KSPWheelState.BROKEN)
+                {
+                    offset = suspensionOffset * part.rescaleFactor * controller.scale;
+                }
                 Vector3 o = suspensionTransform.TransformDirection(suspensionAxis);
                 suspensionTransform.localPosition = defaultPos;
                 suspensionTransform.position -= o * offset;
