@@ -187,10 +187,15 @@ namespace KSPWheel
         private void onScaleAdjusted(BaseField field, System.Object obj)
         {
             setScale(scale);
+            foreach (Part p in part.symmetryCounterparts)
+            {
+                p.GetComponent<KSPWheelBase>().setScale(scale);
+            }
         }
 
         private void setScale(float newScale)
         {
+            this.scale = newScale;
             Vector3 scale = new Vector3(newScale, newScale, newScale);
             Transform modelRoot = part.transform.FindRecursive("model");
             foreach (Transform child in modelRoot)
