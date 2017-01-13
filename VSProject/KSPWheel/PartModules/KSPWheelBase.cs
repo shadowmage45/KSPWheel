@@ -132,7 +132,7 @@ namespace KSPWheel
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
-        public float repairSpringFudge = 1f;
+        public float wheelRepairTimer = 1f;
 
         private bool advancedMode = false;
 
@@ -501,7 +501,6 @@ namespace KSPWheel
             {
                 return;
             }
-            vesselMass *= repairSpringFudge;
             float compressionBoostFactor;
             float spring, damper, springLoad, natFreq, criticalDamping;
             float compression = 0;
@@ -511,37 +510,39 @@ namespace KSPWheel
             {
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
-                if (repairSpringFudge < 1)
+                if (wheelRepairTimer < 1)
                 {
                     data.timeBoostFactor = 0f;
+                    spring = vesselMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
+                    springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
+                    natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
+                    criticalDamping = 2 * springLoad * natFreq;//critical damping
+                    damper = criticalDamping * dampRatio * wheelRepairTimer;//add an -additiona- reduction to damper based on repair timer, ensure it is essentially nil for the first tick after repaired
                 }
-                else if (compression > 0.8f)
+                else
                 {
-                    data.timeBoostFactor = data.timeBoostFactor + 0.5f * Time.fixedDeltaTime;
+                    if (compression > 0.8f)
+                    {
+                        data.timeBoostFactor = data.timeBoostFactor + 0.5f * Time.fixedDeltaTime;
+                    }
+                    else if (data.wheel.isGrounded && compression < 0.4f)
+                    {
+                        data.timeBoostFactor = data.timeBoostFactor - 0.2f * Time.fixedDeltaTime;
+                    }
+                    data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
+                    compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
+                    spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
+                    springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
+                    natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
+                    criticalDamping = 2 * springLoad * natFreq;//critical damping
+                    damper = criticalDamping * dampRatio;
                 }
-                else if (data.wheel.isGrounded && compression < 0.4f)
-                {
-                    data.timeBoostFactor = data.timeBoostFactor - 0.2f * Time.fixedDeltaTime;
-                }
-                data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
-                compressionBoostFactor = repairSpringFudge < 1? 1.0f : 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
-                spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f) * repairSpringFudge * repairSpringFudge;
-                if (repairSpringFudge < 1)
-                {
-                    MonoBehaviour.print("set spring to: " + spring);
-                }
-                springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
-                natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
-                criticalDamping = 2 * springLoad * natFreq;//critical damping
-                damper = criticalDamping * dampRatio;
-
                 data.wheel.spring = spring;
-                data.wheel.damper = repairSpringFudge<1? 0 : damper;
+                data.wheel.damper = damper;
             }
-            if (repairSpringFudge < 1)
+            if (wheelRepairTimer < 1)
             {
-                repairSpringFudge = Mathf.MoveTowards(repairSpringFudge, 1, 0.2f * Time.fixedDeltaTime);
-                MonoBehaviour.print("Set fudge factor to: " + repairSpringFudge);
+                wheelRepairTimer = Mathf.MoveTowards(wheelRepairTimer, 1, Time.fixedDeltaTime);
             }
         }
 

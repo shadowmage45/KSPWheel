@@ -23,18 +23,13 @@ namespace KSPWheel
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Wheel Status: ")]
         public string displayStatus = "Operational";
 
-        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Load Stress"),
-         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
+        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Wheel Stress"),
+         UI_ProgressBar(minValue = 0, maxValue = 1.5f, suppressEditorShipModified = true)]
         public float loadStress = 0f;
 
-        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Stress Time"),
+        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Failure Time"),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
         public float stressTime = 0f;
-
-        [KSPField]
-        public float maxOverloadTime = 2f;
-
-        private float overloadTime = 0f;
 
         private float invulnerableTime = 0f;
         
@@ -53,13 +48,13 @@ namespace KSPWheel
                     break;
                 case KSPWheelWearType.SIMPLE:
                     controller.wheelState = KSPWheelState.DEPLOYED;
-                    invulnerableTime += 10f;
-                    controller.repairSpringFudge = 0.0001f;
+                    invulnerableTime += 5f;
+                    controller.wheelRepairTimer = 0.0001f;
                     break;
                 case KSPWheelWearType.ADVANCED:
                     controller.wheelState = KSPWheelState.DEPLOYED;
-                    invulnerableTime += 10f;
-                    controller.repairSpringFudge = 0.0001f;
+                    invulnerableTime += 5f;
+                    controller.wheelRepairTimer = 0.0001f;
                     //TODO resource use, check for engineer, ??
                     break;
                 default:
@@ -125,34 +120,34 @@ namespace KSPWheel
             {
                 load += controller.wheelData[i].wheel.springForce / 10f;
             }
-            //TODO what power does load scale with?
             float maxLoad = controller.maxLoadRating * Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxLoadScalingPower);
+            loadStress = load / maxLoad;
             if (load > maxLoad)
             {
-                overloadTime += Time.fixedDeltaTime * (load - maxLoad) * 4;
-                loadStress = 1f;
+                stressTime += Time.fixedDeltaTime * (load - maxLoad) * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().stressDamageMultiplier;
             }
-            else
-            {
-                loadStress = load / maxLoad;
-            }
+
             float maxSpeed = controller.maxSpeed * Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxSpeedScalingPower);
             float speed = Mathf.Abs( wheel.linearVelocity );
             if (speed > maxSpeed )
             {
-                float percent = speed / maxSpeed;
-                overloadTime += Time.fixedDeltaTime * (percent - 1) * 4;
+                float percent = (speed / maxSpeed) - 1f;
+                stressTime += Time.fixedDeltaTime * (percent - 1) * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().speedDamageMultiplier;
             }
-            if (overloadTime > maxOverloadTime)
+
+            if (stressTime >= 1.0f)
             {
-                MonoBehaviour.print("Wheel broke from overloading! load: " + load + " max: " + maxLoad);
-                ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from overloading.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
+                MonoBehaviour.print("Wheel broke from overstressing! load: " + load + " max: " + maxLoad+" speed: "+speed+" maxSpeed: "+maxSpeed);
+                ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from overstressing.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
                 controller.wheelState = KSPWheelState.BROKEN;
-                overloadTime = 0f;
+                stressTime = 0f;
                 updateWheelMeshes();
                 updateDisplayState();
             }
-            overloadTime = Mathf.Max(0, overloadTime - Time.fixedDeltaTime);
+            if (speed < maxSpeed && load < maxLoad)
+            {
+                stressTime = Mathf.Max(0, stressTime - Time.fixedDeltaTime);
+            }
         }
 
         private void wearUpdateAdvanced()
@@ -192,6 +187,7 @@ namespace KSPWheel
             KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
             Events[nameof(repairWheel)].guiActiveUnfocused = wheelState == KSPWheelState.BROKEN;
             Fields[nameof(loadStress)].guiActive = wearType != KSPWheelWearType.NONE;
+            Fields[nameof(stressTime)].guiActive = wearType != KSPWheelWearType.NONE;
             Fields[nameof(persistentWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
             Fields[nameof(displayStatus)].guiActive = wearType != KSPWheelWearType.NONE;
             switch (wheelState)
