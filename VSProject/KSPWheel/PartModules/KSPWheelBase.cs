@@ -134,6 +134,8 @@ namespace KSPWheel
 
         public float wheelRepairTimer = 1f;
 
+        private float prevScale = 1f;
+
         private bool advancedMode = false;
 
         private bool initializedWheels = false;
@@ -186,14 +188,14 @@ namespace KSPWheel
 
         private void onScaleAdjusted(BaseField field, System.Object obj)
         {
-            setScale(scale);
+            setScale(scale, true);
             foreach (Part p in part.symmetryCounterparts)
             {
-                p.GetComponent<KSPWheelBase>().setScale(scale);
+                p.GetComponent<KSPWheelBase>().setScale(scale, true);
             }
         }
 
-        private void setScale(float newScale)
+        private void setScale(float newScale, bool userInput)
         {
             this.scale = newScale;
             Vector3 scale = new Vector3(newScale, newScale, newScale);
@@ -203,6 +205,8 @@ namespace KSPWheel
                 child.localScale = scale;
             }
             onScaleUpdated();
+            Utils.updateAttachNodes(part, prevScale, newScale, userInput);
+            prevScale = newScale;
         }
 
         #endregion
@@ -496,7 +500,7 @@ namespace KSPWheel
         {
             if (initializedScaling) { return; }
             initializedScaling = true;
-            setScale(scale);
+            setScale(scale, false);
         }
 
         private void updateSuspension()

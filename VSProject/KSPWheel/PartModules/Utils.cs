@@ -284,5 +284,47 @@ namespace KSPWheel
             }
         }
 
+        public static void updateAttachNodes(Part part, float prevScale, float newScale, bool userInput)
+        {
+            if (part.srfAttachNode != null)
+            {
+                updateAttachNode(part, part.srfAttachNode, prevScale, newScale, userInput);
+            }
+            int len = part.attachNodes.Count;
+            for (int i = 0; i < len; i++)
+            {
+                updateAttachNode(part, part.attachNodes[i], prevScale, newScale, userInput);
+            }
+        }
+
+        public static void updateAttachNode(Part part, AttachNode node, float prevScale, float newScale, bool userInput)
+        {
+            Vector3 basePosition = node.position / prevScale;
+            Vector3 newPosition = basePosition * newScale;
+            Vector3 diff = newPosition - node.position;
+            node.position = node.originalPosition = newPosition;
+            if (userInput && node.attachedPart != null)
+            {
+                Vector3 globalDiff = part.transform.TransformPoint(diff);
+                globalDiff -= part.transform.position;
+                if (node.attachedPart.parent == part)//is a child of this part, move it the entire offset distance
+                {
+                    node.attachedPart.attPos0 += diff;
+                    node.attachedPart.transform.position += globalDiff;
+                }
+                else//is a parent of this part, do not move it, instead move this part the full amount
+                {
+                    part.attPos0 -= diff;
+                    part.transform.position -= globalDiff;
+                    //and then, if this is not the root part, offset the root part in the negative of the difference to maintain relative part position
+                    Part p = part.localRoot;
+                    if (p != null && p != part)
+                    {
+                        p.transform.position += globalDiff;
+                    }
+                }
+            }
+        }
+
     }
 }
