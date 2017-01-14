@@ -57,6 +57,12 @@ namespace KSPWheel
         [KSPField]
         public float frictionMult = 1f;
 
+        [KSPField]
+        public float rollingResistance = 0.005f;
+
+        [KSPField]
+        public float rotationalResistance = 0f;
+
         [KSPField(guiName = "Show Wheel Controls", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_Toggle(affectSymCounterparts = UI_Scene.All, controlEnabled = true, disabledText = "Hidden", enabledText = "Shown", requireFullControl = false, suppressEditorShipModified = true, scene = UI_Scene.All)]
         public bool showControls = true;
@@ -397,6 +403,8 @@ namespace KSPWheel
                     {
                         wheelData[i].setupWheel(rb, raycastMask, part.rescaleFactor * scale);
                         wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
+                        wheelData[i].wheel.rollingResistance = rollingResistance;
+                        wheelData[i].wheel.rotationalResistance = rotationalResistance;
                         if (!string.IsNullOrEmpty(persistentData))
                         {
                             wheelData[i].loadData(wheelPersistentDatas[i]);
