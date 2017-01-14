@@ -130,7 +130,7 @@ namespace KSPWheel
                 torqueCurve.Add(0, 1, 0, 0);
                 torqueCurve.Add(1, 0, 0, 0);
             }
-            if (HighLogic.LoadedSceneIsEditor && part.isClone)
+            if (HighLogic.LoadedSceneIsEditor && part.isClone && part.symmetryCounterparts!=null && part.symmetryCounterparts.Count>0)
             {
                 invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
             }
