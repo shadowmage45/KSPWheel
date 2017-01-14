@@ -15,7 +15,7 @@ namespace KSPWheel
         /// Peak Motor power, in kw (e.g. kn).  Used to determine EC/s
         /// </summary>
         [KSPField]
-        public float motorEfficiency = 1.0f;
+        public float motorEfficiency = 0.85f;
 
         /// <summary>
         /// Motor stall torque; e.g. motor torque output at zero rpm
@@ -135,6 +135,15 @@ namespace KSPWheel
                 invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
             }
             updateScaleValues();
+        }
+
+        public override string GetInfo()
+        {
+            String val = "Motor\n";
+            val = val + "Max RPM: " + maxRPM + "\n";
+            val = val + "Torque : " + maxMotorTorque + "\n";
+            val = val + "Max EC : " + motorPower + "\n";
+            return val;
         }
 
         internal override void onScaleUpdated()

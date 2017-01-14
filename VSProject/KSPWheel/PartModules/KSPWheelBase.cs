@@ -520,6 +520,14 @@ namespace KSPWheel
             return ModifierChangeWhen.FIXED;
         }
 
+        public override string GetInfo()
+        {
+            String val = "Wheel\n";
+            val = val + "Max Speed: " + maxSpeed + "\n";
+            val = val + "Max Load : " + maxLoadRating + "\n";
+            return val;
+        }
+
         #endregion
 
         #region REGION - Custom update methods

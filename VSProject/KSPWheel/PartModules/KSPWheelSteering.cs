@@ -57,6 +57,13 @@ namespace KSPWheel
         private Quaternion defaultRotation;
         private float rotInput;
 
+        public override string GetInfo()
+        {
+            String val = "Steering\n";
+            val = val + "Max Deflection: " + maxSteeringAngle + "'\n";
+            return val;
+        }
+
         internal override void onUIControlsUpdated(bool show)
         {
             base.onUIControlsUpdated(show);
