@@ -194,17 +194,51 @@ namespace KSPWheel
                 fI += rI;
             }
             fI = Mathf.Clamp(fI, -1, 1);
-            float rawOutput = calcRawTorque(fI);
-            float powerUse = calcECUse(Mathf.Abs(fI));
+            float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
+            //integrateMotorEuler(fI, motorRPM);
+            integrateMotorEulerSub(fI, motorRPM, 5);
+        }
+
+        protected void integrateMotorEuler(float fI, float motorRPM)
+        {
+            float rawOutput = calcRawTorque(fI, motorRPM);
+            float powerUse = calcECUse(Mathf.Abs(fI), motorRPM);
             rawOutput *= updateResourceDrain(powerUse);
             float gearedOutput = rawOutput * gearRatio;
             wheel.motorTorque = gearedOutput;
             torqueOutput = torqueOut = wheel.motorTorque;
         }
 
-        protected float calcRawTorque(float fI)
+        /// <summary>
+        /// Quick and semi-hacky sub-step integration for motor rpm/acceleration.
+        /// Simulates accelerating the wheel with the motor torque (which is what happens in the wheel code currently)
+        /// This -helps- to limit single-tick torques driving wheels past safe RPM values
+        /// TODO -- unknown if the EC/s integration works properly....
+        /// </summary>
+        /// <param name="fI"></param>
+        /// <param name="motorRPM"></param>
+        /// <param name="substeps"></param>
+        protected void integrateMotorEulerSub(float fI, float motorRPM, int substeps)
         {
-            float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
+            float p = 1.0f / substeps;
+            float dt = Time.fixedDeltaTime * p;
+            float ecs = 0f;
+            float t = 0f;
+            float rpm = motorRPM;
+            for (int i = 0; i < substeps; i++)
+            {
+                t += p * calcRawTorque(fI, rpm);
+                ecs += p * calcECUse(fI, rpm);
+                rpm = wheelRPMIntegration(rpm, wheel.mass, t, dt);
+            }
+            t *= updateResourceDrain(ecs);
+            t *= gearRatio;
+            wheel.motorTorque = t;
+            torqueOutput = torqueOut = t;
+        }
+
+        protected float calcRawTorque(float fI, float motorRPM)
+        {
             float maxRPM = this.maxRPM * rpmScalar;
             if (motorRPM > maxRPM) { motorRPM = maxRPM; }
             float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
@@ -212,9 +246,8 @@ namespace KSPWheel
             return outputTorque;
         }
 
-        protected float calcECUse(float fI)
+        protected float calcECUse(float fI, float motorRPM)
         {
-            float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
             float maxRPM = this.maxRPM * rpmScalar;
             if (motorRPM > maxRPM) { motorRPM = maxRPM; }
             float percent = 1 - ( motorRPM / maxRPM );
@@ -222,6 +255,19 @@ namespace KSPWheel
             float minPower = 0.05f * totalPower;
             float diff = totalPower - minPower;
             return minPower + percent * diff;
+        }
+
+        private static float rpmToRad = 0.104719755f;
+        private static float radToRPM = 1 / 0.104719755f;
+
+        protected float wheelRPMIntegration(float rpm, float wm, float t, float dt)
+        {
+            float outRPM = rpm;
+            float wheelRPM = rpm / gearRatio;
+            float wWheel = rpm * rpmToRad;
+            float wAccel = t / wm * dt;
+            wWheel += wAccel;
+            return outRPM = wWheel * radToRPM * gearRatio;
         }
 
         protected float updateResourceDrain(float ecs)
@@ -243,5 +289,46 @@ namespace KSPWheel
             }
             return percent;
         }
+
+        ///// <summary>
+        ///// RK4 integration for motor torque, to prevent wheel from spinning excessively
+        ///// </summary>
+        ///// <param name="fI"></param>
+        ///// <param name="torque"></param>
+        ///// <param name="ec"></param>
+        //protected void integrateMotor(float fI, float rpm, float wm, out float torque, out float ec)
+        //{
+        //    //initial state input
+        //    float dt = 0f;
+        //    float t = 0f;
+        //    //derivative outputs
+        //    float ec1, ec2, ec3, ec4;
+        //    float rpm1, rpm2, rpm3, rpm4;
+        //    float t1, t2, t3, t4;
+        //    //final outputs
+        //    float ot;
+        //    //float or;//not needed
+        //    float oe;
+        //    //derivative calcs
+        //    motorDerivative(fI, rpm, wm, t, 0f, 0, 0, out t1, out rpm1, out ec1);
+        //    motorDerivative(fI, rpm, wm, t, dt * 0.5f, rpm1, t1, out t2, out rpm2, out ec2);
+        //    motorDerivative(fI, rpm, wm, t, dt * 0.5f, rpm2, t2, out t3, out rpm3, out ec3);
+        //    motorDerivative(fI, rpm, wm, t, dt, rpm3, t3, out t4, out rpm4, out ec4);
+        //    //derivative integration
+        //    ot = 1.0f / 6.0f * (t1 + 2.0f * (t2 + t3) + t4);
+        //    //or = 1.0f / 6.0f * (rpm1 + 2.0f * (rpm2 + rpm3) + rpm4);
+        //    oe = 1.0f / 6.0f * (ec1 + 2.0f * (ec2 + ec3) + ec4);
+        //    torque = ot;
+        //    ec = oe;
+        //}
+
+        //protected void motorDerivative(float fI, float rpm, float wm, float t, float time, float dRpm, float dt, out float outTorque, out float outRpm, out float outECUse)
+        //{
+        //    outECUse = calcECUse(fI, dRpm);
+        //    outTorque = 0f;            
+        //    outRpm = 0f;
+        //    //TODO
+        //}
+
     }
 }
