@@ -116,6 +116,9 @@ namespace KSPWheel
         public string persistentState = KSPWheelState.DEPLOYED.ToString();
 
         [KSPField(isPersistant = true)]
+        public string persistentData = String.Empty;
+
+        [KSPField(isPersistant = true)]
         public bool grounded = false;
 
         [KSPField(isPersistant = true)]
@@ -229,6 +232,16 @@ namespace KSPWheel
             base.OnSave(node);
             persistentState = wheelState.ToString();
             node.SetValue("persistentState", persistentState, true);
+            if (wheelData != null)
+            {
+                persistentData = string.Empty;
+                int len = wheelData.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    if (i > 0) { persistentData = persistentData + ";"; }
+                    persistentData = persistentData + wheelData[i].saveData();
+                }
+            }
         }
         
         /// <summary>
@@ -379,10 +392,15 @@ namespace KSPWheel
                 {
                     initializedWheels = true;
                     int count = wheelData.Length;
+                    string[] wheelPersistentDatas = persistentData.Split(';');
                     for (int i = 0; i < count; i++)
                     {
                         wheelData[i].setupWheel(rb, raycastMask, part.rescaleFactor * scale);
                         wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
+                        if (!string.IsNullOrEmpty(persistentData))
+                        {
+                            wheelData[i].loadData(wheelPersistentDatas[i]);
+                        }
                     }
                     //run wheel init on a second pass so that all wheels are available
                     //some modules may use more than a single wheel (damage, tracks, dust, debug)
@@ -737,6 +755,29 @@ namespace KSPWheel
                 return wheelWidth * scaleFactor;
             }
 
+            internal string saveData()
+            {
+                string data = timeBoostFactor+",";
+                if (wheel != null)
+                {
+                    data = data + wheel.rpm;
+                }
+                else
+                {
+                    data = data + "0";
+                }
+                return data;
+            }
+
+            internal void loadData(string data)
+            {
+                string[] vals = data.Split(',');
+                timeBoostFactor = float.Parse(vals[0]);
+                if (wheel != null)
+                {
+                    wheel.rpm = float.Parse(vals[1]);
+                }
+            }
         }
 
     }
