@@ -141,6 +141,8 @@ namespace KSPWheel
 
         public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
 
+        public float springEaseMult = 1f;
+
         public float wheelRepairTimer = 1f;
 
         private float prevScale = 1f;
@@ -536,6 +538,7 @@ namespace KSPWheel
             {
                 return;
             }
+            vesselMass *= springEaseMult;
             float compressionBoostFactor;
             float spring, damper, springLoad, natFreq, criticalDamping;
             float compression = 0;
