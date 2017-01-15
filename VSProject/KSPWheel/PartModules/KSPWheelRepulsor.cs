@@ -21,7 +21,7 @@ namespace KSPWheel
         public float guiEnergyUse = 0f;
 
         [KSPField]
-        public float easeTimeMult = 1f;
+        public float easeTimeMult = 0.5f;
 
         /// <summary>
         /// EC/s * tons of weight supported
@@ -31,21 +31,34 @@ namespace KSPWheel
 
         private void repulsorToggled(BaseField field, System.Object obj)
         {
-            if (repulsorEnabled)
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m => 
             {
-                controller.wheelState = KSPWheelState.DEPLOYED;
-                controller.springEaseMult = 0f;
-            }
-            else
+                m.repulsorEnabled = repulsorEnabled;
+                if (m.repulsorEnabled)
+                {
+                    m.controller.wheelState = KSPWheelState.DEPLOYED;
+                    m.controller.springEaseMult = 0f;
+                }
+                else
+                {
+                    //handled by per-tick updating
+                }
+            });
+        }
+
+        private void repulsorHeightUpdated(BaseField field, System.Object ob)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
-                //handled by per-tick updating
-            }
+                m.repulsorHeight = repulsorHeight;
+            });
         }
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
+            Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
         }
 
         internal override void preWheelPhysicsUpdate()

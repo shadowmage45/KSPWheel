@@ -57,6 +57,49 @@ namespace KSPWheel
         private Quaternion defaultRotation;
         private float rotInput;
 
+        private void onSteeringLocked(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.steeringLocked = steeringLocked;
+            });
+        }
+
+        private void onSteeringInverted(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.invertSteering = invertSteering;
+            });
+        }
+
+        private void onSteeringLimitUpdated(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.steeringLimit = steeringLimit;
+                m.updateUIFloatEditControl(nameof(m.steeringLimit), m.steeringLimit);
+            });
+        }
+
+        private void onSteeringBiasUpdated(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.steeringBias = steeringBias;
+                m.updateUIFloatEditControl(nameof(m.steeringBias), m.steeringBias);
+            });
+        }
+
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+            Fields[nameof(steeringLocked)].uiControlFlight.onFieldChanged = onSteeringLocked;
+            Fields[nameof(invertSteering)].uiControlFlight.onFieldChanged = onSteeringInverted;
+            Fields[nameof(steeringLimit)].uiControlFlight.onFieldChanged = onSteeringLimitUpdated;
+            Fields[nameof(steeringBias)].uiControlFlight.onFieldChanged = onSteeringBiasUpdated;
+        }
+
         public override string GetInfo()
         {
             String val = "Steering\n";

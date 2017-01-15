@@ -89,6 +89,10 @@ namespace KSPWheel
         UI_FloatRange(minValue = 0.05f, maxValue = 2, stepIncrement = 0.025f, suppressEditorShipModified = true)]
         public float dampRatio = 0.65f;
 
+        [KSPField(guiName = "Wheel Group", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_ChooseOption(options =new string[] { "0","1","2","3","4","5","6","7","8","9","10"}, display = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, suppressEditorShipModified = true)]
+        public string wheelGroup = "0";
+
         [KSPField]
         public float minDampRatio = 0.05f;
 
@@ -161,26 +165,33 @@ namespace KSPWheel
 
         public void onLoadUpdated(BaseField field, object obj)
         {
-            if (wheelData != null)
+            this.wheelGroupUpdateBase(int.Parse(wheelGroup), m =>
             {
-                KSPWheelData wheel;
-                float suspensionSpring, suspensionDamper;
-                float rating;
-                int len = wheelData.Length;
-                for (int i = 0; i < len; i++)
+                m.loadRating = loadRating;
+                m.springRating = springRating;
+                m.suspensionTarget = suspensionTarget;
+                m.dampRatio = dampRatio;
+                if (m.wheelData != null)
                 {
-                    wheel = wheelData[i];
-                    rating = loadRating * wheel.loadShare;
-                    calcSuspension(rating, wheel.suspensionTravel, suspensionTarget, dampRatio, out suspensionSpring, out suspensionDamper);
-                    if (wheel.wheel != null)
+                    KSPWheelData wheel;
+                    float suspensionSpring, suspensionDamper;
+                    float rating;
+                    int len = m.wheelData.Length;
+                    for (int i = 0; i < len; i++)
                     {
-                        wheel.wheel.spring = suspensionSpring;
-                        wheel.wheel.damper = suspensionDamper;
+                        wheel = m.wheelData[i];
+                        rating = m.loadRating * wheel.loadShare;
+                        calcSuspension(rating, wheel.suspensionTravel, m.suspensionTarget, m.dampRatio, out suspensionSpring, out suspensionDamper);
+                        if (wheel.wheel != null)
+                        {
+                            wheel.wheel.spring = suspensionSpring;
+                            wheel.wheel.damper = suspensionDamper;
+                        }
+                        m.wheelData[i].loadRating = loadRating;
+                        m.wheelData[i].loadTarget = loadRating;
                     }
-                    wheelData[i].loadRating = loadRating;
-                    wheelData[i].loadTarget = loadRating;
                 }
-            }
+            });
         }
 
         public void onShowUIUpdated(BaseField field, object obj)
@@ -195,6 +206,7 @@ namespace KSPWheel
             Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls && advancedMode;
             Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode;
             Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls;
+            Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls;
         }
 
         private void onScaleAdjusted(BaseField field, System.Object obj)

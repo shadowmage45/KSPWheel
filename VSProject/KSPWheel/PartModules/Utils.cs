@@ -326,5 +326,117 @@ namespace KSPWheel
             }
         }
 
+        public static void wheelGroupUpdate<T>(this T t, int wheelGroup, Action<T> act) where T : KSPWheelSubmodule
+        {
+            if (wheelGroup <= 0)
+            {
+                act.Invoke(t);
+                return;
+            }
+            try
+            {//need to call the passed in delegate on each module of the given type where the controller module for that part shares the wheel group that is passed in
+                List<T> subModules = new List<T>();
+                if (HighLogic.LoadedSceneIsFlight)
+                {
+                    int len = t.part.vessel.Parts.Count;
+                    for (int i = 0; i < len; i++)
+                    {
+                        KSPWheelBase baseModule = t.part.vessel.Parts[i].GetComponent<KSPWheelBase>();
+                        if (baseModule == null) { continue; }
+                        if (int.Parse(baseModule.wheelGroup) == wheelGroup)
+                        {
+                            subModules.AddRange(baseModule.part.GetComponents<T>());
+                        }
+                    }
+                }
+                int len2 = subModules.Count;
+                for (int i = 0; i < len2; i++)
+                {
+                    act.Invoke(subModules[i]);
+                }
+            }
+            catch (Exception e)
+            {
+                MonoBehaviour.print(e);
+            }            
+        }
+
+        public static void wheelGroupUpdateBase<T>(this T t, int wheelGroup, Action<T> act) where T : KSPWheelBase
+        {
+            if (wheelGroup <= 0)
+            {
+                act.Invoke(t);
+                return;
+            }
+            try
+            {
+                //need to call the passed in delegate on each module of the given type where the controller module for that part shares the wheel group that is passed in
+                List<T> subModules = new List<T>();
+                if (HighLogic.LoadedSceneIsFlight)
+                {
+                    int len = t.part.vessel.Parts.Count;
+                    for (int i = 0; i < len; i++)
+                    {
+                        KSPWheelBase baseModule = t.part.vessel.Parts[i].GetComponent<KSPWheelBase>();
+                        if (baseModule == null) { continue; }
+                        if (int.Parse(baseModule.wheelGroup) == wheelGroup)
+                        {
+                            subModules.AddRange(baseModule.part.GetComponents<T>());
+                        }
+                    }
+                }
+                else if (HighLogic.LoadedSceneIsEditor)
+                {
+                    //TODO loop through ship construct parts list...
+                }
+                int len2 = subModules.Count;
+                for (int i = 0; i < len2; i++)
+                {
+                    act.Invoke(subModules[i]);
+                    MonoUtilities.RefreshContextWindows(subModules[i].part);
+                }
+            }
+            catch (Exception e)
+            {
+                MonoBehaviour.print(e);
+            }
+        }
+
+        public static void updateUIFloatEditControl(this PartModule module, string fieldName, float newValue)
+        {
+            UI_FloatEdit widget = null;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                widget = (UI_FloatEdit)module.Fields[fieldName].uiControlEditor;
+            }
+            else if (HighLogic.LoadedSceneIsFlight)
+            {
+                widget = (UI_FloatEdit)module.Fields[fieldName].uiControlFlight;
+            }
+            else
+            {
+                return;
+            }
+            if (widget == null)
+            {
+                return;
+            }
+            BaseField field = module.Fields[fieldName];
+            field.SetValue(newValue, field.host);
+            if (widget.partActionItem != null)//force widget re-setup for changed values; this will update the GUI value and slider positions/internal cached data
+            {
+                UIPartActionFloatEdit ctr = (UIPartActionFloatEdit)widget.partActionItem;
+                var t = widget.onFieldChanged;//temporarily remove the callback; we don't need an event fired when -we- are the ones editing the value...            
+                widget.onFieldChanged = null;
+                ctr.incSmall.onToggle.RemoveAllListeners();
+                ctr.incLarge.onToggle.RemoveAllListeners();
+                ctr.decSmall.onToggle.RemoveAllListeners();
+                ctr.decLarge.onToggle.RemoveAllListeners();
+                ctr.slider.onValueChanged.RemoveAllListeners();
+                ctr.Setup(ctr.Window, module.part, module, HighLogic.LoadedSceneIsEditor ? UI_Scene.Editor : UI_Scene.Flight, widget, module.Fields[fieldName]);
+                widget.onFieldChanged = t;//re-seat callback
+            }
+        }
+
     }
 }

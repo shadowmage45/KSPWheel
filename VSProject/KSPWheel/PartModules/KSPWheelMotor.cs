@@ -98,33 +98,91 @@ namespace KSPWheel
 
         public void onMotorInvert(BaseField field, System.Object obj)
         {
-            if (HighLogic.LoadedSceneIsEditor && part.symmetryCounterparts.Count==1)
+            if (HighLogic.LoadedSceneIsEditor && part.symmetryCounterparts.Count == 1)
             {
                 part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor = !invertMotor;
+            }
+            else if (HighLogic.LoadedSceneIsFlight)
+            {
+                this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+                {
+                    m.invertMotor = invertMotor;
+                });
             }
         }
 
         public void onGearUpdated(BaseField field, System.Object ob)
         {
-            float maxRPM = this.maxRPM * rpmScalar;
-            float scale = part.rescaleFactor * controller.scale;
-            float radius = wheelData.scaledRadius(scale);
-            float torque = torqueScalar * maxMotorTorque;
-            float force = torque * gearRatio / radius;
-            maxPowerOutput = force;
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.gearRatio = gearRatio;
 
-            float rpm = maxRPM / gearRatio;
-            float rps = rpm / 60;
-            float circ = radius * 2 * Mathf.PI;
-            float ms = rps * circ;
-            maxDrivenSpeed = ms;
+                float maxRPM = m.maxRPM * m.rpmScalar;
+                float scale = m.part.rescaleFactor * m.controller.scale;
+                float radius = m.wheelData.scaledRadius(scale);
+                float torque = m.torqueScalar * m.maxMotorTorque;
+                float force = torque * m.gearRatio / radius;
+                m.maxPowerOutput = force;
+
+                float rpm = maxRPM / m.gearRatio;
+                float rps = rpm / 60;
+                float circ = radius * 2 * Mathf.PI;
+                float ms = rps * circ;
+                m.maxDrivenSpeed = ms;
+                m.updateUIFloatEditControl(nameof(m.gearRatio), m.gearRatio);
+            });
+        }
+
+        private void onMotorLock(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.motorLocked = motorLocked;
+            });
+        }
+
+        private void onSteeringLock(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.steeringLocked = steeringLocked;
+            });
+        }
+
+        private void onSteeringInvert(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.invertSteering = invertSteering;
+            });
+        }
+
+        private void onMotorLimitUpdated(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.motorOutput = motorOutput;
+            });
+        }
+
+        private void onHalftrackToggle(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.halfTrackSteering = halfTrackSteering;
+            });
         }
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            Fields[nameof(invertMotor)].uiControlEditor.onFieldChanged = onMotorInvert;
+            Fields[nameof(invertMotor)].uiControlEditor.onFieldChanged = Fields[nameof(invertMotor)].uiControlFlight.onFieldChanged = onMotorInvert;
             Fields[nameof(gearRatio)].uiControlEditor.onFieldChanged = Fields[nameof(gearRatio)].uiControlFlight.onFieldChanged = onGearUpdated;
+            Fields[nameof(motorLocked)].uiControlEditor.onFieldChanged = Fields[nameof(motorLocked)].uiControlFlight.onFieldChanged = onMotorLock;
+            Fields[nameof(steeringLocked)].uiControlEditor.onFieldChanged = Fields[nameof(steeringLocked)].uiControlFlight.onFieldChanged = onSteeringLock;
+            Fields[nameof(invertSteering)].uiControlEditor.onFieldChanged = Fields[nameof(invertSteering)].uiControlFlight.onFieldChanged = onSteeringInvert;
+            Fields[nameof(motorOutput)].uiControlEditor.onFieldChanged = Fields[nameof(motorOutput)].uiControlFlight.onFieldChanged = onMotorLimitUpdated;
+            Fields[nameof(halfTrackSteering)].uiControlEditor.onFieldChanged = Fields[nameof(halfTrackSteering)].uiControlFlight.onFieldChanged = onHalftrackToggle;
             if (torqueCurve.Curve.length == 0)
             {
                 torqueCurve.Add(0, 1, 0, 0);
@@ -203,13 +261,14 @@ namespace KSPWheel
                 fI += rI;
             }
             fI = Mathf.Clamp(fI, -1, 1);
-            float motorRPM = Mathf.Abs(wheel.rpm * gearRatio);
+            float motorRPM = wheel.rpm * gearRatio;
             //integrateMotorEuler(fI, motorRPM);
             integrateMotorEulerSub(fI, motorRPM, 5);
         }
 
         protected void integrateMotorEuler(float fI, float motorRPM)
         {
+            motorRPM = Mathf.Abs(motorRPM);
             float rawOutput = calcRawTorque(fI, motorRPM);
             float powerUse = calcECUse(Mathf.Abs(fI), motorRPM);
             rawOutput *= updateResourceDrain(powerUse);
@@ -248,6 +307,7 @@ namespace KSPWheel
 
         protected float calcRawTorque(float fI, float motorRPM)
         {
+            motorRPM = Mathf.Abs(motorRPM);
             float maxRPM = this.maxRPM * rpmScalar;
             if (motorRPM > maxRPM) { motorRPM = maxRPM; }
             float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
@@ -257,10 +317,11 @@ namespace KSPWheel
 
         protected float calcECUse(float fI, float motorRPM)
         {
+            motorRPM = Mathf.Abs(motorRPM);
             float maxRPM = this.maxRPM * rpmScalar;
             if (motorRPM > maxRPM) { motorRPM = maxRPM; }
             float percent = 1 - ( motorRPM / maxRPM );
-            float totalPower = motorPower * powerScalar * fI;
+            float totalPower = motorPower * powerScalar * Mathf.Abs(fI);
             float minPower = 0.05f * totalPower;
             float diff = totalPower - minPower;
             return minPower + percent * diff;

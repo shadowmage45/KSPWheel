@@ -24,7 +24,7 @@ namespace KSPWheel
         public bool brakesLocked = false;
 
         [KSPField(guiName = "Brakes Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f)]
+         UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f, suppressEditorShipModified = true)]
         public float brakeLimit = 100f;
 
         public float torqueOutput;
@@ -34,10 +34,19 @@ namespace KSPWheel
 
         private float torqueScalar = 1f;
 
+        private void brakeLimitUpdated(BaseField field, System.Object obj)
+        {
+            this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
+            {
+                m.brakeLimit = brakeLimit;
+            });
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
+            Fields[nameof(brakeLimit)].uiControlEditor.onFieldChanged = Fields[nameof(brakeLimit)].uiControlFlight.onFieldChanged = brakeLimitUpdated;
         }
 
         public void Start()
