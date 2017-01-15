@@ -15,9 +15,6 @@ namespace KSPWheel
         public string bustedWheelName = "bustedWheel";
 
         [KSPField]
-        public float impactTolerance = 75f;
-
-        [KSPField]
         public float persistentWear = 0f;
 
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Wheel Status: ")]
@@ -71,16 +68,6 @@ namespace KSPWheel
             if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
             updateWheelMeshes();
             updateDisplayState();
-        }
-
-        internal override void postWheelCreated()
-        {
-            base.postWheelCreated();
-            int len = controller.wheelData.Length;
-            for (int i = 0; i < len; i++)
-            {
-                controller.wheelData[i].wheel.setImpactCallback(onWheelImpact);
-            }
         }
 
         internal override void postWheelPhysicsUpdate()
@@ -215,48 +202,6 @@ namespace KSPWheel
                     displayStatus = displayStatus + " - " + (1 - persistentWear)+"%";
                     break;
                 default:
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Called from the KSPWheelCollider on first ground contact<para/>
-        /// The input Vector3 is the wheel-local impact velocity.  Relative impact speed can be derived from localImpactVelocity.magnitude
-        /// </summary>
-        /// <param name="localImpactVelocity"></param>
-        public void onWheelImpact(Vector3 localImpactVelocity)
-        {
-            //TODO
-            MonoBehaviour.print("Wheel impact, velocity: " + localImpactVelocity);
-            KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
-            switch (wearType)
-            {
-                case KSPWheelWearType.NONE:
-                    //NOOP
-                    break;
-                case KSPWheelWearType.SIMPLE:
-                    if (localImpactVelocity.sqrMagnitude > impactTolerance * impactTolerance)
-                    {
-                        ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from impact.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
-                        MonoBehaviour.print("Wheel broke from impact, velocity: " + localImpactVelocity);
-                        controller.wheelState = KSPWheelState.BROKEN;
-                        updateDisplayState();
-                        updateWheelMeshes();
-                    }
-                    break;
-                case KSPWheelWearType.ADVANCED:
-                    //TODO change this to a slightly more advanced method...
-                    if (localImpactVelocity.sqrMagnitude > impactTolerance * impactTolerance)
-                    {
-                        ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from impact.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
-                        MonoBehaviour.print("Wheel broke from impact, velocity: " + localImpactVelocity);
-                        controller.wheelState = KSPWheelState.BROKEN;
-                        updateDisplayState();
-                        updateWheelMeshes();
-                    }
-                    break;
-                default:
-                    //NOOP
                     break;
             }
         }
