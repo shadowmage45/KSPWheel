@@ -559,7 +559,8 @@ namespace KSPWheel
             {
                 return;
             }
-            vesselMass *= springEaseMult;
+            float gravityFactor = (float)vessel.gravityForPos.magnitude / 9.80665f;
+            vesselMass *= springEaseMult * gravityFactor;
             float compressionBoostFactor;
             float spring, damper, springLoad, natFreq, criticalDamping;
             float compression = 0;
