@@ -33,7 +33,7 @@ namespace KSPWheel
         private Transform wheelMesh;
         private Transform bustedWheelMesh;
         
-        [KSPEvent(guiName = "Repair Wheel/Gear", guiActive = true, guiActiveEditor = false, guiActiveUnfocused = false, externalToEVAOnly = true, unfocusedRange = 8f)]
+        [KSPEvent(guiName = "Repair Wheel/Gear", guiActive = false, guiActiveEditor = false, guiActiveUnfocused = false, externalToEVAOnly = true, unfocusedRange = 8f)]
         public void repairWheel()
         {
             MonoBehaviour.print("Repairing wheel!");
