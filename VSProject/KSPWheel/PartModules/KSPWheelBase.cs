@@ -171,7 +171,7 @@ namespace KSPWheel
                 m.springRating = springRating;
                 m.suspensionTarget = suspensionTarget;
                 m.dampRatio = dampRatio;
-                if (m.wheelData != null)
+                if (m.advancedMode && m.wheelData != null)
                 {
                     KSPWheelData wheel;
                     float suspensionSpring, suspensionDamper;
@@ -356,6 +356,7 @@ namespace KSPWheel
             field.guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
 
             Fields[nameof(scale)].uiControlEditor.onFieldChanged = onScaleAdjusted;
+            Fields[nameof(springRating)].uiControlFlight.onFieldChanged = onLoadUpdated;
 
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
