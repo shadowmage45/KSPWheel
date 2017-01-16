@@ -203,6 +203,7 @@ namespace KSPWheel
                 collider.height = wheel.length + wheel.radius * 2;
                 collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                 collider.enabled = controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING;
+                CollisionManager.IgnoreCollidersOnVessel(vessel, collider);
             }
         }
 
