@@ -29,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -65,6 +66,7 @@
     <Compile Include="PartModules\KSPWheelDebugOld.cs" />
     <Compile Include="PartModules\KSPWheelDebug.cs" />
     <Compile Include="PartModules\KSPWheelDeployment.cs" />
+    <Compile Include="PartModules\KSPWheelDustEffects.cs" />
     <Compile Include="PartModules\KSPWheelMotor.cs" />
     <Compile Include="PartModules\KSPWheelAnimationState.cs" />
     <Compile Include="PartModules\KSPWheelRepulsor.cs" />
