@@ -15,11 +15,13 @@ namespace KSPWheel
         //private AnimationData animationData;
         private float animTime = 0f;
         //private AnimationData[] secondaryAnimationData = new AnimationData[0];
+        private bool invertAnimation;
 
-        public WheelAnimationHandler(KSPWheelDeployment module, string animationName, float animationSpeed, int animationLayer, KSPWheelState initialState)
+        public WheelAnimationHandler(KSPWheelDeployment module, string animationName, float animationSpeed, int animationLayer, KSPWheelState initialState, bool invertAnimation)
         {
             this.module = module;
             this.currentAnimState = initialState;
+            this.invertAnimation = invertAnimation;
             this.animationData.Add(new AnimationData(module.part, animationName, animationSpeed, animationLayer));
         }
 
@@ -133,6 +135,7 @@ namespace KSPWheel
 
         private void setAnimTime(float time)
         {
+            if (invertAnimation) time = 1f - time;
             int len = animationData.Count;
             for (int i = 0; i < len; i++)
             {
@@ -142,6 +145,7 @@ namespace KSPWheel
 
         private void setAnimSpeed(float speed)
         {
+            if (invertAnimation) speed *= -1;
             int len = animationData.Count;
             for (int i = 0; i < len; i++)
             {

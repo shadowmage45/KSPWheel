@@ -48,6 +48,9 @@ namespace KSPWheel
         [KSPField(isPersistant = true)]
         public bool oneShotTriggered = false;
 
+        [KSPField]
+        public bool invertAnimation = false;
+
         [Persistent]
         public string configNodeData = String.Empty;
 
@@ -153,7 +156,7 @@ namespace KSPWheel
 
         private void setupAnimationController()
         {
-            animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState);
+            animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState, invertAnimation);
             ConfigNode node = ConfigNode.Parse(configNodeData);
             if (node != null)
             {
