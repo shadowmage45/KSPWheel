@@ -86,9 +86,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) $(SolutionDir)\..\GameData\KSPWheel\Plugin\$(TargetFileName)
+    <PostBuildEvent>copy "$(TargetPath)" "$(SolutionDir)\..\GameData\KSPWheel\Plugin\$(TargetFileName)"
 
-copy $(ProjectDir)Component\*.* $(SolutionDir)\..\UnityProject\Assets\Scripts\*.*
+copy "$(ProjectDir)Component\*.*" "$(SolutionDir)\..\UnityProject\Assets\Scripts\*.*"
 
 </PostBuildEvent>
   </PropertyGroup>
