@@ -15,10 +15,6 @@ namespace KSPWheel
         [KSPField]
         public string dustParticleEffect = "Effects/fx_smokeTrail_light";
 
-        [KSPField(guiName = "Dust", guiActive = true),
-         UI_Toggle(enabledText = "Enabled", disabledText = "Disabled", suppressEditorShipModified = true)]
-        public bool emittersEnabled = false;
-
         /// <summary>
         /// Below this value of spring force / spring loading, no contribution to emission will come from spring force
         /// </summary>
@@ -79,10 +75,6 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float dustMaxEnergy = 3f;
 
-        [KSPField(guiName = "Particle System", guiActive = true),
-         UI_Toggle(enabledText = "New", disabledText = "Old", suppressEditorShipModified = true)]
-        public bool useParticleSystem = false;
-
         [KSPField(guiName = "Body", guiActive = true)]
         public string body = String.Empty;
 
@@ -126,19 +118,11 @@ namespace KSPWheel
         {
             base.preWheelFrameUpdate();
             if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || wheel==null) { return; }
+            if (controller.wheelState != KSPWheelState.DEPLOYED) { return; }
             bool enabled = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustEffects;
             if (!enabled) { return; }
-            if (controller.wheelState != KSPWheelState.DEPLOYED) { return; }
-            if (!emittersEnabled) { return; }
-            if (useParticleSystem)
-            {
-                //TODO test out if stuff is compatible with Unity's new ParticleSystem setup
-            }
-            else
-            {
-                if (!setupEmitters) { setupDustEmitters(); }
-                updateDustEmission();
-            }
+            if (!setupEmitters) { setupDustEmitters(); }
+            updateDustEmission();
         }
 
         private void setupDustEmitters()
@@ -170,45 +154,42 @@ namespace KSPWheel
         private void updateDustEmission()
         {
             int len = dustObjects.Length;
-            if (colorUpdateTimer <= 0)
+            if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustCamera)
             {
-                body = vessel.mainBody.name;
-                biome = ScienceUtil.GetExperimentBiome(vessel.mainBody, vessel.latitude, vessel.longitude);
-                if (body != prevBody || biome != prevBiome)
-                {
-                    Color color = DustColors.getBodyColor(body, biome);
-                    MonoBehaviour.print("updating color for: " + body + " : " + biome + " new color: "+color);
-                    colArr[0] = color;
-                    colArr[1] = color;
-                    colArr[2] = color;
-                    colArr[3] = color;
-                    colArr[4] = color;
-                    colorString = color.ToString();
-                    for (int i = 0; i < len; i++)
-                    {
-                        dustAnimators[i].colorAnimation = colArr;
-                    }
-                }
-                colorUpdateTimer = colorUpdateTime;
-                prevBody = body;
-                prevBiome = biome;
+                //TODO remove this per-tick component lookup; source say to cache the vessel->module map in a static map in the vessel-module class; add/remove by the start/etc methods on the vessel-module
+                KSPWheelDustCamera cm = vessel.GetComponent<KSPWheelDustCamera>();
+                updateColorArray(cm.cameraColor);
             }
-            colorUpdateTimer -= Time.deltaTime;
+            else
+            {
+                if (colorUpdateTimer <= 0)
+                {
+                    body = vessel.mainBody.name;
+                    biome = ScienceUtil.GetExperimentBiome(vessel.mainBody, vessel.latitude, vessel.longitude);
+                    if (body != prevBody || biome != prevBiome)
+                    {
+                        updateColorArray(DustColors.getBodyColor(body, biome));
+                    }
+                    colorUpdateTimer = colorUpdateTime;
+                    prevBody = body;
+                    prevBiome = biome;
+                }
+                colorUpdateTimer -= Time.deltaTime;
+            }
             KSPWheelCollider wheel;
             float springForce = 1f;
             float speedForce = 1f;
             float slipForce = 1f;
             float mult = 0f;
-            float maxLoad = 0f;
             for (int i = 0; i < len; i++)
             {
                 wheel = controller.wheelData[i].wheel;
-                maxLoad = controller.maxLoadRating * controller.wheelData[i].loadShare * Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxLoadScalingPower);
                 if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude > minDustSpeed)
                 {
-                    springForce = wheel.springForce * 0.1f / maxLoad;
+                    springForce = wheel.compressionDistance / wheel.length;
                     speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
                     slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
+                    //TODO -- should use different mult calcs for emission, energy, size, speed
                     mult = Mathf.Sqrt(springForce * springForce * dustForceMult + speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult) * controller.scale;                    
                     dustObjects[i].transform.position = wheel.worldHitPos;
                     dustObjects[i].transform.rotation = wheel.transform.rotation;
@@ -221,6 +202,28 @@ namespace KSPWheel
                     dustEmitters[i].maxSize = dustMaxSize * mult;
                     dustEmitters[i].Emit();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Updates the color array used by the color animator for dust
+        /// TODO add some randomization factors to each of the colors in the array, perhaps reducing color and alpha in the later array indices
+        /// This will require instantiating the colors into the array originally as custom colors and then manually setting their RBGA values to avoid per-tick 'new' color allocations
+        /// </summary>
+        /// <param name="inputColor"></param>
+        private void updateColorArray(Color inputColor)
+        {
+            Color color = inputColor;
+            colArr[0] = color;
+            colArr[1] = color;
+            colArr[2] = color;
+            colArr[3] = color;
+            colArr[4] = color;
+            colorString = color.ToString();
+            int len = dustAnimators.Length;
+            for (int i = 0; i < len; i++)
+            {
+                dustAnimators[i].colorAnimation = colArr;
             }
         }
     }

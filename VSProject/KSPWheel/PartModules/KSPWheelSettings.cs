@@ -12,6 +12,9 @@
         [GameParameters.CustomParameterUI("Wheel Dust Effects", toolTip = "If enabled wheels will kick up dust when traversing terrain.")]
         public bool wheelDustEffects = true;
 
+        [GameParameters.CustomParameterUI("Wheel Dust Camera", toolTip = "If enabled the dust system will use real-time camera rendering data to determine dust colors.  If disabled dust colors will fall-back to the pre-defined lookup map.")]
+        public bool wheelDustCamera = true;
+
         [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "Wear and damage model.\nNone = No wheel wear or breakage.\nSimple = Stock equivalent, break on impact/over-stress.\nAdvanced = Time, speed, load, heat, and impact based wheel wear + breakage.")]
         public KSPWheelWearType wearType = KSPWheelWearType.SIMPLE;
 
