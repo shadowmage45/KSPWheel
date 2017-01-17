@@ -16,12 +16,6 @@ namespace KSPWheel
         public string dustParticleEffect = "Effects/fx_smokeTrail_light";
 
         /// <summary>
-        /// Below this value of spring force / spring loading, no contribution to emission will come from spring force
-        /// </summary>
-        [KSPField]
-        public float minDustForce = 0.1f;
-
-        /// <summary>
         /// Below this value of linear speed no contribution to emission will come from wheel speed/rpm
         /// </summary>
         [KSPField]
@@ -84,6 +78,9 @@ namespace KSPWheel
         [KSPField(guiName = "Color", guiActive = true)]
         public string colorString = String.Empty;
 
+        [KSPField]
+        public bool debugMode = false;
+
         private Color[] colArr = new Color[5];
         private string prevBody = string.Empty;
         private string prevBiome = string.Empty;
@@ -98,6 +95,17 @@ namespace KSPWheel
 
         //TODO test out if stuff is compatible with Unity's new ParticleSystem setup
         private bool setupParticleSystem = false;
+
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+            Fields[nameof(dustMinEmission)].guiActive = debugMode;
+            Fields[nameof(dustMaxEmission)].guiActive = debugMode;
+            Fields[nameof(dustMinEnergy)].guiActive = debugMode;
+            Fields[nameof(dustMaxEnergy)].guiActive = debugMode;
+            Fields[nameof(dustMinSize)].guiActive = debugMode;
+            Fields[nameof(dustMaxSize)].guiActive = debugMode;
+        }
 
         public override void OnDestroy()
         {
