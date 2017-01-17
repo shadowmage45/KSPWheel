@@ -462,6 +462,15 @@ namespace KSPWheel
         {
             get { return hitNormal; }
         }
+
+        /// <summary>
+        /// Returns the -ray- hit position of the current compression value.
+        /// Will return incorrect results if wheel is not grounded (returns uncompressed position), or if used with sphere/capsule sweeps (returns the position as if it was a raycast used)
+        /// </summary>
+        public Vector3 worldHitPos
+        {
+            get { return wheel.transform.position - wheel.transform.up * (suspensionLength - currentSuspensionCompression + wheelRadius); }
+        }
         
         #endregion ENDREGION - Public accessible methods, API get/set methods
 
