@@ -29,6 +29,8 @@ namespace KSPWheel
         [KSPField]
         public float energyUse = 1f;
 
+        private Vector3 oceanHitPos;
+
         private void repulsorToggled(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m => 
@@ -64,6 +66,8 @@ namespace KSPWheel
         internal override void preWheelPhysicsUpdate()
         {
             base.preWheelPhysicsUpdate();
+            //does current body have an ocean where repulsors should ride over water?
+            //vessel.mainBody.ocean;
             wheel.length = repulsorHeight*5f;
             if (repulsorEnabled && controller.springEaseMult < 1)
             {
