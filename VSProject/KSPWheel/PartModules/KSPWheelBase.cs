@@ -464,16 +464,20 @@ namespace KSPWheel
 
             if (wheelState == KSPWheelState.DEPLOYED)
             {
+                int subLen = subModules.Count;
+                for (int i = 0; i < subLen; i++)
+                {
+                    subModules[i].preWheelSuspensionCalc();
+                }
                 if (!advancedMode)
                 {
                     updateSuspension();
                 }
-                KSPWheelCollider wheel;
-                int subLen = subModules.Count;
                 for (int i = 0; i < subLen; i++)
                 {
                     subModules[i].preWheelPhysicsUpdate();
                 }
+                KSPWheelCollider wheel;
                 for (int i = 0; i < len; i++)
                 {
                     wheel = wheelData[i].wheel;

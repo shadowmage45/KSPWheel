@@ -86,6 +86,14 @@ namespace KSPWheel
         }
 
         /// <summary>
+        /// Called prior to calculating wheel suspension.  This is the chance to set external hit properties in the wheel collider (used by repulsors)
+        /// </summary>
+        internal virtual void preWheelSuspensionCalc()
+        {
+
+        }
+
+        /// <summary>
         /// Called prior to updating wheel physics, only if wheel physics are enabled for that frame.
         /// </summary>
         internal virtual void preWheelPhysicsUpdate()
