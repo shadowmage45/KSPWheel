@@ -10,7 +10,6 @@ namespace KSPWheel
     {
         private static float frameWidth = 6f;
         private static float frameHeight = 6f;
-        private static float frameCount = 0f;
         private static float frameTime = 3f;
         private static int cameraMask = 32784;
 
@@ -52,7 +51,7 @@ namespace KSPWheel
                     cameraColor.r = Mathf.Lerp(prevColor.r, destColor.r, p);
                     cameraColor.g = Mathf.Lerp(prevColor.g, destColor.g, p);
                     cameraColor.b = Mathf.Lerp(prevColor.b, destColor.b, p);
-                    cameraColor.a = Mathf.Lerp(prevColor.a, destColor.a, p);
+                    cameraColor.a = 0.014f;
                 }
                 else
                 {
@@ -89,6 +88,7 @@ namespace KSPWheel
             cameraObject.transform.rotation = vessel.transform.rotation;//rot will be updated when taking cam shots
             dustCamera = cameraObject.AddComponent<Camera>();
             dustCamera.targetTexture = cameraRenderTexture;
+            dustCamera.cullingMask = cameraMask;
             dustCamera.enabled = false;
             cameraRenderTexture = new RenderTexture(Convert.ToInt32(frameWidth), Convert.ToInt32(frameHeight), 24);
             cameraTexture = new Texture2D(Convert.ToInt32(frameWidth), Convert.ToInt32(frameHeight), TextureFormat.RGB24, false);
@@ -119,6 +119,9 @@ namespace KSPWheel
 
         private void updateCameraColor()
         {
+            prevColor.r = destColor.r;
+            prevColor.g = destColor.g;
+            prevColor.b = destColor.b;
             cameraObject.transform.position = vessel.transform.position;
             cameraObject.transform.LookAt(vessel.mainBody.transform.position);
             cameraObject.transform.Translate(0, 0, -10f);//translate negative z, as it is pointed at the ground this will leave it 10m above the ground at the vessels position, with the ground fully in the camera view box
@@ -135,7 +138,7 @@ namespace KSPWheel
             RenderTexture.active = null;
 
             Color[] cols = cameraTexture.GetPixels();
-            float r = 0, g = 0, b = 0, a = 0.014f;
+            float r = 0, g = 0, b = 0;
             int len = cols.Length;
             for (int i = 0; i < len; i++)
             {
@@ -146,6 +149,7 @@ namespace KSPWheel
             destColor.r = r / len;
             destColor.g = g / len;
             destColor.b = b / len;
+            destColor.a = 0.014f;
         }
 
     }
