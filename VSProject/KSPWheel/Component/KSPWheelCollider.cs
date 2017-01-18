@@ -17,6 +17,7 @@ namespace KSPWheel
         private float suspensionSpring = 10f;
         private float suspensionSpringExp = 0f;
         private float suspensionDamper = 2f;
+        private float suspensionForceOffset = 0f;
         private float currentFwdFrictionCoef = 1f;
         private float currentSideFrictionCoef = 1f;
         private float currentSurfaceFrictionCoef = 1f;
@@ -30,6 +31,7 @@ namespace KSPWheel
         private KSPWheelFrictionCurve fwdFrictionCurve = new KSPWheelFrictionCurve(0.06f, 1.2f, 0.065f, 1.25f, 0.7f);//current forward friction curve
         private KSPWheelFrictionCurve sideFrictionCurve = new KSPWheelFrictionCurve(0.03f, 1.0f, 0.04f, 1.05f, 0.7f);//current sideways friction curve
         private bool automaticUpdates = false;
+        private bool suspensionNormalForce = false;
         //set from get/set method
         private Vector3 gravity = new Vector3(0, -9.81f, 0);
         //calced when the gravity vector is set
@@ -152,6 +154,15 @@ namespace KSPWheel
                 inertiaInverse = 1.0f / currentMomentOfInertia;
                 radiusInverse = 1.0f / wheelRadius;
             }
+        }
+
+        /// <summary>
+        /// Get/Set the offset from hit-point along suspension vector where forces are applied.  1 = at wheel collider location, 0 = at hit location; inbetween values lerp between them.
+        /// </summary>
+        public float forceApplicationOffset
+        {
+            get { return suspensionForceOffset; }
+            set { suspensionForceOffset = Mathf.Clamp01(value); }
         }
 
         /// <summary>
@@ -284,6 +295,15 @@ namespace KSPWheel
         {
             get { return automaticUpdates; }
             set { automaticUpdates = value; }
+        }
+
+        /// <summary>
+        /// Get/Set if wheel-collider should effect forces along suspension normal (true) or hit-normal (false, default).  Used by repulsors to enable motive repulsion.
+        /// </summary>
+        public bool useSuspensionNormal
+        {
+            get { return suspensionNormalForce; }
+            set { suspensionNormalForce = value; }
         }
 
         /// <summary>
@@ -568,14 +588,28 @@ namespace KSPWheel
             {
                 localForce.x *= fMult;
             }
-            Vector3 calculatedForces = hitNormal * localForce.y;
+            Vector3 calculatedForces;
+            if (suspensionNormalForce)
+            {
+                calculatedForces = wheel.transform.up * localForce.y;
+            }
+            else
+            {
+                calculatedForces = hitNormal * localForce.y;
+                calculatedForces += calcAG(hitNormal, localForce.y);
+            }
             calculatedForces += localForce.z * wF;
             calculatedForces += localForce.x * wR;
-            calculatedForces += calcAG(hitNormal, localForce.y);
-            rigidBody.AddForceAtPosition(calculatedForces, hitPoint, ForceMode.Force);
+            Vector3 forcePoint = hitPoint;
+            if (suspensionForceOffset > 0)
+            {
+                float offsetDist = suspensionLength - compressionDistance + wheelRadius;
+                forcePoint = hitPoint + wheel.transform.up * (suspensionForceOffset * offsetDist);
+            }
+            rigidBody.AddForceAtPosition(calculatedForces, forcePoint, ForceMode.Force);
             if (hitCollider.attachedRigidbody != null && !hitCollider.attachedRigidbody.isKinematic)
             {
-                hitCollider.attachedRigidbody.AddForceAtPosition(-calculatedForces, hitPoint, ForceMode.Force);
+                hitCollider.attachedRigidbody.AddForceAtPosition(-calculatedForces, forcePoint, ForceMode.Force);
             }
             prevFLong = localForce.z;
             prevFLat = localForce.x;
