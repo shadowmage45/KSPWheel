@@ -20,6 +20,14 @@ namespace KSPWheel
         [KSPField(guiName = "Energy Use", guiActive = true, guiUnits = "EC/s")]
         public float guiEnergyUse = 0f;
 
+        [KSPField(guiName = "Force Application", guiActiveEditor = false, guiActive = true),
+         UI_Toggle(enabledText = "Offset", disabledText = "Standard", suppressEditorShipModified = true)]
+        public bool forcePointOffset = true;
+
+        [KSPField(guiName = "Force Axis", guiActiveEditor = false, guiActive = true),
+         UI_Toggle(enabledText = "Suspension", disabledText = "HitNormal", suppressEditorShipModified = true)]
+        public bool suspensionNormal = true;
+
         [KSPField]
         public float easeTimeMult = 0.5f;
 
@@ -28,6 +36,9 @@ namespace KSPWheel
         /// </summary>
         [KSPField]
         public float energyUse = 1f;
+
+        private float currentRepulsorLength;
+        private float desiredRepulsorLength;
 
         private Vector3 oceanHitPos;
 
@@ -53,22 +64,62 @@ namespace KSPWheel
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
                 m.repulsorHeight = repulsorHeight;
+                desiredRepulsorLength = m.repulsorHeight;
             });
         }
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            oceanHitPos = part.transform.position;
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
             Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
+            currentRepulsorLength = desiredRepulsorLength = repulsorHeight;
+        }
+
+        internal override void postWheelCreated()
+        {
+            base.postWheelCreated();
+        }
+
+        internal override void preWheelSuspensionCalc()
+        {
+            base.preWheelSuspensionCalc();
+            //update repulsor 'length' stats
+            wheel.length = currentRepulsorLength * 5f;
+            currentRepulsorLength = Mathf.MoveTowards(currentRepulsorLength, desiredRepulsorLength, 1 * Time.fixedDeltaTime);
+            wheel.useSuspensionNormal = suspensionNormal;
+            wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
+
+            if (vessel.mainBody.ocean)
+            {
+                float alt = FlightGlobals.getAltitudeAtPos(wheel.transform.position);
+                float susLen = wheel.length + wheel.radius;
+                if (alt > susLen)//impossible that wheel contacted surface regardless of orientation
+                {
+                    wheel.useExternalHit = false;
+                    return;
+                }
+                Vector3 surfaceNormal = vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
+                float surfSuspDot = Vector3.Dot(oceanHitPos, surfaceNormal);
+                oceanHitPos = wheel.transform.position - surfaceNormal * susLen * surfSuspDot;
+                if (alt - surfSuspDot * susLen < 0)
+                {
+                    wheel.useExternalHit = true;
+                    wheel.externalHitPoint = oceanHitPos;
+                    wheel.externalHitNormal = surfaceNormal;
+                }
+                else
+                {
+                    wheel.useExternalHit = false;
+                }
+            }
         }
 
         internal override void preWheelPhysicsUpdate()
         {
             base.preWheelPhysicsUpdate();
-            //does current body have an ocean where repulsors should ride over water?
-            //vessel.mainBody.ocean;
-            wheel.length = repulsorHeight*5f;
+
             if (repulsorEnabled && controller.springEaseMult < 1)
             {
                 controller.springEaseMult = Mathf.Clamp01(controller.springEaseMult + Time.fixedDeltaTime * easeTimeMult);
