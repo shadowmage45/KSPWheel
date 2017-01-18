@@ -41,6 +41,9 @@ namespace KSPWheel
         private Action<KSPWheelCollider> postUpdateCallback;//if automatic updates are enabled, this field may optionally be populated with a post-update callback method; will be called directly after the wheels internal update code processing.
 
         private float extSpringForce = 0f;
+        private Vector3 extHitPoint = Vector3.zero;
+        private Vector3 extHitNorm = Vector3.up;
+        private bool useExtHitPoint = false;
 
         private float rollingResistanceCoefficient = 0.005f;//tire-deformation based rolling-resistance; scaled by spring force, is a flat force that will be subtracted from wheel velocity every tick
         private float rotationalResistanceCoefficient = 0f;//bearing/friction based resistance; scaled by wheel rpm and 1/10 spring force
@@ -405,6 +408,37 @@ namespace KSPWheel
             set { extSpringForce = value; }
         }
 
+        /// <summary>
+        /// If true, will use the 'externalHitPoint' as the suspension-sweep point.  (external hit point must be updated manually).
+        /// This setting overrides the internal suspension sweep.
+        /// </summary>
+        public bool useExternalHit
+        {
+            get { return useExtHitPoint; }
+            set { useExtHitPoint = value; }
+        }
+
+        /// <summary>
+        /// Get/Set the world-coordinate hit point of the wheel sweep.  This point -must- be along the suspension axis as if it were derived from a raycast.  Only used if 'useExternalHit == true'.
+        /// </summary>
+        public Vector3 externalHitPoint
+        {
+            get { return extHitPoint; }
+            set { extHitPoint = value; }
+        }
+
+        /// <summary>
+        /// Get/Set the hit-normal used by the external hit point calculations.  Only used if 'useExternalHit == true'
+        /// </summary>
+        public Vector3 externalHitNormal
+        {
+            get { return extHitNorm; }
+            set { extHitNorm = value; }
+        }
+
+        /// <summary>
+        /// Get the calculated moment-of-inertia for the wheel
+        /// </summary>
         public float momentOfInertia
         {
             get { return currentMomentOfInertia; }
@@ -607,7 +641,7 @@ namespace KSPWheel
                 forcePoint = hitPoint + wheel.transform.up * (suspensionForceOffset * offsetDist);
             }
             rigidBody.AddForceAtPosition(calculatedForces, forcePoint, ForceMode.Force);
-            if (hitCollider.attachedRigidbody != null && !hitCollider.attachedRigidbody.isKinematic)
+            if (hitCollider!=null && hitCollider.attachedRigidbody != null && !hitCollider.attachedRigidbody.isKinematic)
             {
                 hitCollider.attachedRigidbody.AddForceAtPosition(-calculatedForces, forcePoint, ForceMode.Force);
             }
@@ -680,6 +714,16 @@ namespace KSPWheel
         /// <returns></returns>
         private bool checkSuspensionContact()
         {
+            if (useExtHitPoint)
+            {
+                float dist = (extHitPoint - wheel.transform.position).magnitude;
+                currentSuspensionCompression = suspensionLength + wheelRadius - dist;
+                hitNormal = extHitNorm;
+                hitPoint = extHitPoint;
+                hitCollider = null;
+                grounded = true;
+                return true;
+            }
             switch (currentSweepType)
             {
                 case KSPWheelSweepType.RAY:
