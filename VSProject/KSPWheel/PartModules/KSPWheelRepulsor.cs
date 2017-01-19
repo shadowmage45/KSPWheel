@@ -90,28 +90,39 @@ namespace KSPWheel
             currentRepulsorLength = Mathf.MoveTowards(currentRepulsorLength, desiredRepulsorLength, 1 * Time.fixedDeltaTime);
             wheel.useSuspensionNormal = suspensionNormal;
             wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
-
+            wheel.useExternalHit = false;
             if (vessel.mainBody.ocean)
             {
                 float alt = FlightGlobals.getAltitudeAtPos(wheel.transform.position);
                 float susLen = wheel.length + wheel.radius;
                 if (alt > susLen)//impossible that wheel contacted surface regardless of orientation
                 {
-                    wheel.useExternalHit = false;
                     return;
                 }
                 Vector3 surfaceNormal = vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
-                float surfSuspDot = Vector3.Dot(oceanHitPos, surfaceNormal);
-                oceanHitPos = wheel.transform.position - surfaceNormal * susLen * surfSuspDot;
-                if (alt - surfSuspDot * susLen < 0)
+                Vector3 pointOnSurface = wheel.transform.position - alt * surfaceNormal;
+                if (rayPlaneIntersect(wheel.transform.position, -wheel.transform.up, pointOnSurface, surfaceNormal, out oceanHitPos))
                 {
-                    wheel.useExternalHit = true;
-                    wheel.externalHitPoint = oceanHitPos;
-                    wheel.externalHitNormal = surfaceNormal;
-                }
-                else
-                {
-                    wheel.useExternalHit = false;
+                    RaycastHit hit;
+                    if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, susLen, controller.raycastMask))
+                    {
+                        float oceanDistance = (wheel.transform.position - oceanHitPos).magnitude;
+                        if (hit.distance < oceanDistance)
+                        {
+                            return;
+                        }
+                    }
+                    if (alt < 0)//underwater... should probably turn off?
+                    {
+                        MonoBehaviour.print("UNDERWATER -- TODO");
+                        //TODO .... 
+                    }
+                    else
+                    {
+                        wheel.useExternalHit = true;
+                        wheel.externalHitPoint = oceanHitPos;
+                        wheel.externalHitNormal = surfaceNormal;
+                    }
                 }
             }
         }
@@ -149,6 +160,25 @@ namespace KSPWheel
             Fields[nameof(repulsorHeight)].guiActive = Fields[nameof(repulsorHeight)].guiActiveEditor = show;
             Fields[nameof(repulsorEnabled)].guiActive = show;
             Fields[nameof(repulsorEnabled)].guiActive = Fields[nameof(repulsorEnabled)].guiActiveEditor = show;
+        }
+
+        private bool rayPlaneIntersect(Vector3 rayStart, Vector3 rayDirection, Vector3 point, Vector3 normal, out Vector3 hit)
+        {
+            float lndot = Vector3.Dot(rayDirection, normal);
+            if (lndot == 0)//parallel
+            {
+                //if(point - start) dot normal == 0 line is on plane
+                if(Vector3.Dot(point-rayStart, normal) == 0)
+                {
+                    hit = point;
+                    return true;
+                }
+                hit = Vector3.zero;
+                return false;
+            }
+            float dist = Vector3.Dot((point - rayStart), normal) / lndot;
+            hit = rayStart + dist * rayDirection;
+            return true;
         }
 
     }
