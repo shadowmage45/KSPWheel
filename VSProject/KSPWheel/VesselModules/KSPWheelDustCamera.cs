@@ -10,7 +10,7 @@ namespace KSPWheel
     {
         private static float frameWidth = 6f;
         private static float frameHeight = 6f;
-        private static float frameTime = 3f;
+        private static float frameTime = 1f;
         private static int cameraMask = 32784;
 
         public Color cameraColor = new Color(1f, 1f, 1f, 1f);
