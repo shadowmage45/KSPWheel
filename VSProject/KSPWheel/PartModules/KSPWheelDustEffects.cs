@@ -69,17 +69,10 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float dustMaxEnergy = 3f;
 
-        [KSPField(guiName = "Body", guiActive = true)]
-        public string body = String.Empty;
-
-        [KSPField(guiName = "Biome", guiActive = true)]
-        public string biome = String.Empty;
-
-        [KSPField(guiName = "Color", guiActive = true)]
-        public string colorString = String.Empty;
-
         [KSPField]
         public bool debugMode = false;
+
+        public bool waterMode = false;
 
         private Color[] colArr = new Color[5];
         private string prevBody = string.Empty;
@@ -172,8 +165,8 @@ namespace KSPWheel
             {
                 if (colorUpdateTimer <= 0)
                 {
-                    body = vessel.mainBody.name;
-                    biome = ScienceUtil.GetExperimentBiome(vessel.mainBody, vessel.latitude, vessel.longitude);
+                    string body = vessel.mainBody.name;
+                    string biome = ScienceUtil.GetExperimentBiome(vessel.mainBody, vessel.latitude, vessel.longitude);
                     if (body != prevBody || biome != prevBiome)
                     {
                         updateColorArray(DustColors.getBodyColor(body, biome));
@@ -222,12 +215,18 @@ namespace KSPWheel
         private void updateColorArray(Color inputColor)
         {
             Color color = inputColor;
+            if (waterMode)
+            {
+                color.r *= 2;
+                color.g *= 2;
+                color.b *= 2;
+                color.a *= 4;
+            }
             colArr[0] = color;
             colArr[1] = color;
             colArr[2] = color;
             colArr[3] = color;
             colArr[4] = color;
-            colorString = color.ToString();
             int len = dustAnimators.Length;
             for (int i = 0; i < len; i++)
             {
