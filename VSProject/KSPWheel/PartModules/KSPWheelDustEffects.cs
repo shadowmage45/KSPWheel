@@ -74,9 +74,6 @@ namespace KSPWheel
 
         public bool waterMode = false;
 
-        //silly inter-link hacks to ease the intergration of repulsor-style dust; this could just as well be called 'constant sporadic dust mode'... but repulsorMode is a bit more terse...
-        public bool repulsorMode = false;
-
         private Color[] colArr = new Color[5];
         private string prevBody = string.Empty;
         private string prevBiome = string.Empty;
@@ -185,7 +182,7 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 wheel = controller.wheelData[i].wheel;
-                if (wheel.isGrounded && (repulsorMode || wheel.wheelLocalVelocity.magnitude > minDustSpeed))
+                if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
                 {
                     springForce = wheel.compressionDistance / wheel.length;
                     speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
