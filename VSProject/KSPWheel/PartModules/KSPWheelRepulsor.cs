@@ -38,10 +38,10 @@ namespace KSPWheel
         public float energyUse = 1f;
 
         [KSPField]
-        public float animSpeed = 1f;
+        public float animSpeed = 0.1f;
 
         [KSPField]
-        public int animAxis = 0;
+        public int animAxis = 1;
 
         [KSPField]
         public bool gimbaled = false;
@@ -68,10 +68,8 @@ namespace KSPWheel
 
         private Transform gimbalTransform;
 
-        private GameObject lightObject;
-        private Light repulsorLight;
-
         private Material gridMaterial;
+        private Vector2 offset = Vector2.zero;
 
         private float curLen;
         private float destLen;
@@ -110,49 +108,45 @@ namespace KSPWheel
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
             Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
             curLen = destLen = repulsorHeight;
+            if (!string.IsNullOrEmpty(gridName))
+            {
+                Transform gridMesh = part.transform.FindRecursive(gridName);
+                if (gridMesh != null)
+                {
+                    Renderer rend = gridMesh.GetComponent<Renderer>();
+                    if (rend != null)
+                    {
+                        gridMaterial = rend.material;
+                        MonoBehaviour.print("Found grid object/mat: " + gridMesh + " :: " + gridMaterial);
+                    }
+                }
+            }
         }
 
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
             dustModule = part.GetComponent<KSPWheelDustEffects>();
-            if (lightObject == null)
-            {
-                lightObject = new GameObject("RepulsorLight");
-                lightObject.transform.parent = wheel.transform;
-                lightObject.transform.position = wheel.transform.position;
-                repulsorLight = lightObject.AddComponent<Light>();
-                repulsorLight.type = LightType.Point;//do we really want a point light?  wouldn't spot make more sense? (maybe not with the gimballed repulsor) -- perhaps configurable?
-                repulsorLight.renderMode = LightRenderMode.ForceVertex;//low quality
-                repulsorLight.shadows = LightShadows.None;
-                repulsorLight.range = 0f;
-                repulsorLight.color = Color.clear;
-                repulsorLight.intensity = 0f;
-                repulsorLight.enabled = false;
-            }
         }
 
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            bool lightActive = repulsorLight.enabled;
-            if (!repulsorEnabled)
+
+            if (gridMaterial != null)
             {
-                if (lightActive)
+                //TODO update texture offsets for grid texture animation
+                if (animAxis == 0)
                 {
-                    repulsorLight.enabled = false;
+                    offset.x += animSpeed * Time.deltaTime * guiEnergyUse * 0.25f;
                 }
-            }
-            else
-            {
-                if (!lightActive)
+                else
                 {
-                    repulsorLight.enabled = true;
-                    MonoBehaviour.print("activating light");
+                    offset.y += animSpeed * Time.deltaTime * guiEnergyUse * 0.25f;
                 }
-                repulsorLight.color = Color.blue;
-                repulsorLight.range = 20f;
-                repulsorLight.intensity = 5f;// Mathf.Clamp(wheel.springForce * 0.01f, 0.4f, 0.8f);
+                gridMaterial.SetTextureOffset("_MainTex", offset);
+                gridMaterial.SetTextureOffset("_BumpMap", offset);
+                gridMaterial.SetTextureOffset("_Emissive", offset);
             }
         }
 
@@ -177,7 +171,7 @@ namespace KSPWheel
                 Vector3 surfaceNormal = vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
                 Vector3 pointOnSurface = wheel.transform.position - alt * surfaceNormal;
                 Vector3 oceanHitPos = Vector3.zero;
-                if (rayPlaneIntersect(wheel.transform.position, -wheel.transform.up, pointOnSurface, surfaceNormal, out oceanHitPos))
+                if (Utils.rayPlaneIntersect(wheel.transform.position, -wheel.transform.up, pointOnSurface, surfaceNormal, out oceanHitPos))
                 {
                     RaycastHit hit;
                     if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, susLen, controller.raycastMask))
@@ -237,25 +231,6 @@ namespace KSPWheel
             Fields[nameof(repulsorHeight)].guiActive = Fields[nameof(repulsorHeight)].guiActiveEditor = show;
             Fields[nameof(repulsorEnabled)].guiActive = show;
             Fields[nameof(repulsorEnabled)].guiActive = Fields[nameof(repulsorEnabled)].guiActiveEditor = show;
-        }
-
-        private bool rayPlaneIntersect(Vector3 rayStart, Vector3 rayDirection, Vector3 point, Vector3 normal, out Vector3 hit)
-        {
-            float lndot = Vector3.Dot(rayDirection, normal);
-            if (lndot == 0)//parallel
-            {
-                //if(point - start) dot normal == 0 line is on plane
-                if(Vector3.Dot(point-rayStart, normal) == 0)
-                {
-                    hit = point;
-                    return true;
-                }
-                hit = Vector3.zero;
-                return false;
-            }
-            float dist = Vector3.Dot((point - rayStart), normal) / lndot;
-            hit = rayStart + dist * rayDirection;
-            return true;
         }
 
     }

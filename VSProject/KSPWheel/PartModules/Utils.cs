@@ -284,6 +284,25 @@ namespace KSPWheel
             }
         }
 
+        public static bool rayPlaneIntersect(Vector3 rayStart, Vector3 rayDirection, Vector3 point, Vector3 normal, out Vector3 hit)
+        {
+            float lndot = Vector3.Dot(rayDirection, normal);
+            if (lndot == 0)//parallel
+            {
+                //if(point - start) dot normal == 0 line is on plane
+                if (Vector3.Dot(point - rayStart, normal) == 0)
+                {
+                    hit = point;
+                    return true;
+                }
+                hit = Vector3.zero;
+                return false;
+            }
+            float dist = Vector3.Dot((point - rayStart), normal) / lndot;
+            hit = rayStart + dist * rayDirection;
+            return true;
+        }
+
         public static void updateAttachNodes(Part part, float prevScale, float newScale, bool userInput)
         {
             if (part.srfAttachNode != null)
