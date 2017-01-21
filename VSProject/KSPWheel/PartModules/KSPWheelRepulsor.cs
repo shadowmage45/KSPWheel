@@ -29,7 +29,7 @@ namespace KSPWheel
         public bool suspensionNormal = false;
 
         [KSPField]
-        public float easeTimeMult = 0.5f;
+        public float easeTimeMult = 0.25f;
 
         /// <summary>
         /// EC/s * tons of weight supported
@@ -152,7 +152,7 @@ namespace KSPWheel
             base.preWheelSuspensionCalc();
             //update repulsor 'length' stats
             wheel.length = curLen * 5f;
-            curLen = Mathf.MoveTowards(curLen, repulsorHeight, 1 * Time.fixedDeltaTime);
+            curLen = Mathf.MoveTowards(curLen, repulsorHeight, 0.5f * Time.fixedDeltaTime);
             wheel.useSuspensionNormal = suspensionNormal;
             wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
             wheel.useExternalHit = false;
@@ -201,11 +201,11 @@ namespace KSPWheel
 
             if (repulsorEnabled && controller.springEaseMult < 1)
             {
-                controller.springEaseMult = Mathf.Clamp01(controller.springEaseMult + Time.fixedDeltaTime * easeTimeMult);
+                controller.springEaseMult = Mathf.Clamp01(controller.springEaseMult + Time.fixedDeltaTime * easeTimeMult * repulsorHeight);
             }
             else if (!repulsorEnabled && controller.springEaseMult > 0)
             {
-                controller.springEaseMult = Mathf.Clamp01(controller.springEaseMult - Time.fixedDeltaTime * easeTimeMult);
+                controller.springEaseMult = Mathf.Clamp01(controller.springEaseMult - Time.fixedDeltaTime * easeTimeMult * repulsorHeight);
                 if (controller.springEaseMult <= 0)
                 {
                     controller.wheelState = KSPWheelState.RETRACTED;
