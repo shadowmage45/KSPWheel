@@ -86,9 +86,6 @@ namespace KSPWheel
         private ParticleEmitter[] dustEmitters;
         private ParticleAnimator[] dustAnimators;//no clue if these will even work in modern Unity versions, will investigate ParticleSystem instead...
 
-        //TODO test out if stuff is compatible with Unity's new ParticleSystem setup
-        private bool setupParticleSystem = false;
-
         public override void OnStart(StartState state)
         {
             base.OnStart(state);

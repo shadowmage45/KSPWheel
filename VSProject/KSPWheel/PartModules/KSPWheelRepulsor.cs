@@ -73,7 +73,6 @@ namespace KSPWheel
 
         private float curLen;
         private float destLen;
-        private Vector3 oceanHitPos;
 
         private void repulsorToggled(BaseField field, System.Object obj)
         {

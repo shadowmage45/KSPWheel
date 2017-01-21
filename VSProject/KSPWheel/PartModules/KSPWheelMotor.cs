@@ -93,7 +93,6 @@ namespace KSPWheel
         private float powerScalar = 1f;
         private float torqueScalar = 1f;
         private float rpmScalar = 1f;
-        private float fwdInput;
         public float torqueOutput;
 
         public void onMotorInvert(BaseField field, System.Object obj)
