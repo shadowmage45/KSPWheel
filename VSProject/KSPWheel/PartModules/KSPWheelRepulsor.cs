@@ -81,11 +81,7 @@ namespace KSPWheel
                 if (m.repulsorEnabled)
                 {
                     m.controller.wheelState = KSPWheelState.DEPLOYED;
-                    m.controller.springEaseMult = 0f;
-                }
-                else
-                {
-                    //handled by per-tick updating
+                    m.curLen = 0.0001f;
                 }
             });
         }
@@ -105,7 +101,7 @@ namespace KSPWheel
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
             Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
             curLen = repulsorHeight;
-            if (!string.IsNullOrEmpty(gridName))
+            if (!string.IsNullOrEmpty(gridName) && HighLogic.LoadedSceneIsFlight)
             {
                 Transform gridMesh = part.transform.FindRecursive(gridName);
                 if (gridMesh != null)
@@ -113,8 +109,9 @@ namespace KSPWheel
                     Renderer rend = gridMesh.GetComponent<Renderer>();
                     if (rend != null)
                     {
+                        //TODO -- grabbing a material reference from an object creates a -new- allocation somewhere in the process
+                        //can shared material be used in this case, as we are only grabbing the material in the flight scene? or is that shared material still 'shared' with the prefab and icon parts?
                         gridMaterial = rend.material;
-                        MonoBehaviour.print("Found grid object/mat: " + gridMesh + " :: " + gridMaterial);
                     }
                 }
             }
@@ -151,12 +148,23 @@ namespace KSPWheel
         {
             base.preWheelSuspensionCalc();
             //update repulsor 'length' stats
+            if (dustModule != null) { dustModule.waterMode = false; }
+            if (!repulsorEnabled)
+            {
+                curLen = Mathf.MoveTowards(curLen, 0.001f, 0.25f * Time.fixedDeltaTime);
+                if (curLen <= 0.001f)
+                {
+                    controller.wheelState = KSPWheelState.RETRACTED;
+                }
+            }
+            else if (repulsorEnabled)
+            {
+                curLen = Mathf.MoveTowards(curLen, repulsorHeight, 0.5f * Time.fixedDeltaTime);
+            }
             wheel.length = curLen * 5f;
-            curLen = Mathf.MoveTowards(curLen, repulsorHeight, 0.5f * Time.fixedDeltaTime);
             wheel.useSuspensionNormal = suspensionNormal;
             wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
             wheel.useExternalHit = false;
-            if (dustModule != null) { dustModule.waterMode = false; }
             if (vessel.mainBody.ocean)
             {
                 float alt = FlightGlobals.getAltitudeAtPos(wheel.transform.position);
@@ -198,20 +206,7 @@ namespace KSPWheel
         internal override void preWheelPhysicsUpdate()
         {
             base.preWheelPhysicsUpdate();
-
-            if (repulsorEnabled && controller.springEaseMult < 1)
-            {
-                controller.springEaseMult = Mathf.Clamp01(controller.springEaseMult + Time.fixedDeltaTime * easeTimeMult * repulsorHeight);
-            }
-            else if (!repulsorEnabled && controller.springEaseMult > 0)
-            {
-                controller.springEaseMult = Mathf.Clamp01(controller.springEaseMult - Time.fixedDeltaTime * easeTimeMult * repulsorHeight);
-                if (controller.springEaseMult <= 0)
-                {
-                    controller.wheelState = KSPWheelState.RETRACTED;
-                }
-            }
-            float ecPerSecond = wheel.springForce * 0.1f * controller.springEaseMult * energyUse;
+            float ecPerSecond = wheel.springForce * 0.1f * energyUse;
             float ecPerTick = ecPerSecond * Time.fixedDeltaTime;
             float used = part.RequestResource("ElectricCharge", ecPerTick);
             if (used < ecPerTick)
