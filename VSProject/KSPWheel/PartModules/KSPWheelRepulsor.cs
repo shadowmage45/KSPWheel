@@ -20,7 +20,7 @@ namespace KSPWheel
         [KSPField(guiName = "Energy Use", guiActive = true, guiUnits = "EC/s")]
         public float guiEnergyUse = 0f;
 
-        [KSPField(guiName = "Force Application", guiActiveEditor = false, guiActive = true),
+        [KSPField(guiName = "Force Application", guiActiveEditor = false, guiActive = false),
          UI_Toggle(enabledText = "Offset", disabledText = "Standard", suppressEditorShipModified = true)]
         public bool forcePointOffset = true;
 
@@ -51,18 +51,6 @@ namespace KSPWheel
 
         [KSPField]
         public string gridName = String.Empty;
-
-        [KSPField(guiName = "Light L", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.1f, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
-        public float lightLength = 10f;
-
-        [KSPField(guiName = "Light A", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.1f, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
-        public float lightAngle = 30f;
-
-        [KSPField(guiName = "Light I", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.1f, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
-        public float lightIntensity = 1f;
 
         private KSPWheelDustEffects dustModule;
 
@@ -162,6 +150,7 @@ namespace KSPWheel
             {
                 curLen = Mathf.MoveTowards(curLen, repulsorHeight, 0.5f * Time.fixedDeltaTime);
             }
+            if (gimbaled && gimbalTransform!=null) { gimbalTransform.LookAt(vessel.mainBody.transform.position); }
             wheel.length = curLen * 5f;
             wheel.useSuspensionNormal = suspensionNormal;
             wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
