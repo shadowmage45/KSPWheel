@@ -72,7 +72,6 @@ namespace KSPWheel
         private Vector2 offset = Vector2.zero;
 
         private float curLen;
-        private float destLen;
 
         private void repulsorToggled(BaseField field, System.Object obj)
         {
@@ -96,7 +95,6 @@ namespace KSPWheel
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
                 m.repulsorHeight = repulsorHeight;
-                destLen = m.repulsorHeight;
             });
         }
 
@@ -106,7 +104,7 @@ namespace KSPWheel
             if (!string.IsNullOrEmpty(gimbalName)) { gimbalTransform = part.transform.FindRecursive(gimbalName); }
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
             Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
-            curLen = destLen = repulsorHeight;
+            curLen = repulsorHeight;
             if (!string.IsNullOrEmpty(gridName))
             {
                 Transform gridMesh = part.transform.FindRecursive(gridName);
@@ -154,7 +152,7 @@ namespace KSPWheel
             base.preWheelSuspensionCalc();
             //update repulsor 'length' stats
             wheel.length = curLen * 5f;
-            curLen = Mathf.MoveTowards(curLen, destLen, 1 * Time.fixedDeltaTime);
+            curLen = Mathf.MoveTowards(curLen, repulsorHeight, 1 * Time.fixedDeltaTime);
             wheel.useSuspensionNormal = suspensionNormal;
             wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
             wheel.useExternalHit = false;
