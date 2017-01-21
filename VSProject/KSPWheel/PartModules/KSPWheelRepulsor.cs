@@ -121,6 +121,7 @@ namespace KSPWheel
         {
             base.postWheelCreated();
             dustModule = part.GetComponent<KSPWheelDustEffects>();
+            if (dustModule != null) { dustModule.repulsorMode = true; }
         }
 
         internal override void preWheelFrameUpdate()
