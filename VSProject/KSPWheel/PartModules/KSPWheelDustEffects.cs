@@ -45,27 +45,27 @@ namespace KSPWheel
         [KSPField]
         public float dustSlipMult = 1f;
 
-        [KSPField(guiName = "Min Size", guiActive = true),
+        [KSPField(guiName = "Min Size", guiActive = false, guiActiveEditor = false),
          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float dustMinSize = 0.1f;
 
-        [KSPField(guiName = "Max Size", guiActive = true),
+        [KSPField(guiName = "Max Size", guiActive = false, guiActiveEditor = false),
          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float dustMaxSize = 3.5f;
 
-        [KSPField(guiName = "Min Emit", guiActive = true),
+        [KSPField(guiName = "Min Emit", guiActive = false, guiActiveEditor = false),
          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float dustMinEmission = 0.1f;
 
-        [KSPField(guiName = "Max Emit", guiActive = true),
+        [KSPField(guiName = "Max Emit", guiActive = false, guiActiveEditor = false),
          UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = 0.25f, suppressEditorShipModified = true)]
         public float dustMaxEmission = 20f;
 
-        [KSPField(guiName = "Min Energy", guiActive = true),
+        [KSPField(guiName = "Min Energy", guiActive = false, guiActiveEditor = false),
          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float dustMinEnergy = 0.1f;
 
-        [KSPField(guiName = "Max Energy", guiActive = true),
+        [KSPField(guiName = "Max Energy", guiActive = false, guiActiveEditor = false),
          UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float dustMaxEnergy = 3f;
 
