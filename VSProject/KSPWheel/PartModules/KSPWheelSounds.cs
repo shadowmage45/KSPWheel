@@ -57,6 +57,7 @@ namespace KSPWheel
             if (!string.IsNullOrEmpty(motorEffect) && motor != null)
             {
                 float rpm = Mathf.Abs(wheel.rpm);
+                rpm *= motor.gearRatio;
                 float power = rpm > motor.maxRPM ? 1 : rpm / motor.maxRPM;
                 part.Effect(motorEffect, power);
             }
