@@ -40,7 +40,6 @@ namespace KSPWheel
         public void updateAnimationState()
         {
             animTime = 0f;
-            float time=0f;
             if (currentAnimState == KSPWheelState.RETRACTING || currentAnimState == KSPWheelState.DEPLOYING)
             {
                 bool playing = false;
@@ -50,7 +49,7 @@ namespace KSPWheel
                 {
                     data = animationData[i];
                     if (data.updateAnimations()) { playing = true; }
-                    if (data.time > time) { time = data.time; }
+                    if (data.time > animTime) { animTime = data.time; }
                 }
                 //if no longer playing, set the new animation state and inform the callback of the change
                 if (!playing)

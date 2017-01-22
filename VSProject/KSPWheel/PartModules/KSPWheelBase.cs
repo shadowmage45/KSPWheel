@@ -149,6 +149,8 @@ namespace KSPWheel
 
         public float wheelRepairTimer = 1f;
 
+        public float deployAnimationTime = 0f;
+
         private float prevScale = 1f;
 
         private bool advancedMode = false;

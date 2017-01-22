@@ -151,6 +151,12 @@ namespace KSPWheel
             {
                 animationControl.updateAnimationState();
                 updateDragCube();
+                if (controller != null)
+                {
+                    float time = animationControl.animationTime;
+                    if (invertAnimation) { time = 1 - time; }
+                    controller.deployAnimationTime = time;
+                }
             }
         }
 
