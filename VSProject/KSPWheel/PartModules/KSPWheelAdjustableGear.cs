@@ -36,9 +36,7 @@ namespace KSPWheel
         [KSPField]
         public float wheelRotatorRotationRetracted = 0f;
         [KSPField]
-        public float minSuspensionLength = 0.1f;
-        [KSPField]
-        public float maxSuspensionLength = 0.5f;
+        public float suspensionAdjustmentRange = 0.3f;
         [KSPField]
         public float suspensionOffsetDistance = 0.175f;
         [KSPField]
@@ -54,7 +52,7 @@ namespace KSPWheel
 
         [KSPField(guiName = "Suspension Length", guiActive = false, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float suspensionLength = 0.5f;
+        public float suspensionLength = 0.25f;
 
         [KSPField(guiName = "Flip Wheel", guiActive = false, guiActiveEditor = true, isPersistant = true),
          UI_Toggle(enabledText = "Left", disabledText = "Right")]
@@ -79,6 +77,7 @@ namespace KSPWheel
         public Quaternion leftDoorDefaultRotation;
         public Quaternion rearDoorDefaultRotation;
         public Quaternion rearDoorRotatorDefaultRotation;
+        public Vector3 wheelDefaultPos;
 
         private CapsuleCollider standInCollider;
 
@@ -87,6 +86,15 @@ namespace KSPWheel
         private float mainAnimTime = 0f;
 
         private bool initialized = false;
+
+        private void suspensionLengthUpdated(BaseField field, System.Object obj)
+        {
+            this.symmetryUpdate(m =>
+            {
+                m.suspensionLength = suspensionLength;
+                m.updateSuspensionLength();
+            });
+        }
 
         private void toggleWheelFlip(BaseField field, System.Object obj)
         {
@@ -202,6 +210,7 @@ namespace KSPWheel
             Fields[nameof(strutRotation)].uiControlEditor.onFieldChanged = wheelAnglesUpdated;
             Fields[nameof(wheelRotation)].uiControlEditor.onFieldChanged = wheelAnglesUpdated;
             Fields[nameof(flipWheel)].uiControlEditor.onFieldChanged = toggleWheelFlip;
+            Fields[nameof(suspensionLength)].uiControlEditor.onFieldChanged = suspensionLengthUpdated;
             UI_FloatRange wdgt = (UI_FloatRange)Fields[nameof(strutRotation)].uiControlEditor;
             if (wdgt != null)
             {
@@ -247,7 +256,22 @@ namespace KSPWheel
                         rearDoorRotatorDefaultRotation = rearDoorRotatorTransform.localRotation;
                     }
                 }
-                setupInitialState();
+                if (controller.wheelState == KSPWheelState.BROKEN)
+                {
+                    mainAnimTime = 1f;
+                    controller.wheelState = KSPWheelState.BROKEN;
+                }
+                else if (controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING)
+                {
+                    mainAnimTime = 1f;
+                    controller.wheelState = KSPWheelState.DEPLOYED;
+                }
+                else//retracted
+                {
+                    mainAnimTime = 0f;
+                    controller.wheelState = KSPWheelState.RETRACTED;
+                }
+                updateAnimation(0.0f);
             }
         }
 
@@ -269,46 +293,8 @@ namespace KSPWheel
                 CollisionManager.IgnoreCollidersOnVessel(vessel, standInCollider);
             }
             updateStandInCollider(false);
-        }
-
-        private void setupInitialState()
-        {
-            bool deployed = false;
-            bool broken = false;
-            switch (controller.wheelState)
-            {
-                case KSPWheelState.RETRACTED:                    
-                    break;
-                case KSPWheelState.RETRACTING:
-                    break;
-                case KSPWheelState.DEPLOYED:
-                    deployed = true;
-                    break;
-                case KSPWheelState.DEPLOYING:
-                    deployed = true;
-                    break;
-                case KSPWheelState.BROKEN:
-                    broken = true;
-                    break;
-                default:
-                    break;
-            }
-            if (broken)
-            {
-                mainAnimTime = 1f;
-                controller.wheelState = KSPWheelState.BROKEN;
-            }
-            else if (deployed)
-            {
-                mainAnimTime = 1f;
-                controller.wheelState = KSPWheelState.DEPLOYED;
-            }
-            else//retracted
-            {
-                mainAnimTime = 0f;
-                controller.wheelState = KSPWheelState.RETRACTED;
-            }
-            updateAnimation(0.0f);
+            wheelDefaultPos = wheelTransform.localPosition;//TODO -- this will have problems when cloned in the editor; the position will have already been moved
+            updateSuspensionLength();
         }
 
         public void Update()
@@ -327,13 +313,20 @@ namespace KSPWheel
                     break;
             }
             updateStandInCollider(false);
+        }
+
+        private void updateSuspensionLength()
+        {
             if (suspensionModule != null)
-            {                
-                suspensionModule.suspensionOffset = (1f - Vector3.Dot(carriageTransform.up, strutTransform.up)) * -suspensionOffsetDistance;
-            }
-            if (wheel != null)
             {
-                wheel.length = part.rescaleFactor * controller.scale * (minSuspensionLength + (suspensionLength * (maxSuspensionLength - minSuspensionLength)));
+                float offset = (1f - Vector3.Dot(carriageTransform.up, strutTransform.up)) * -suspensionOffsetDistance;
+                offset += suspensionLength * suspensionAdjustmentRange;
+                suspensionModule.suspensionOffset = offset;
+            }
+            if (wheelTransform != null)
+            {
+                wheelTransform.localPosition = wheelDefaultPos;
+                wheelTransform.position += -wheelTransform.up * suspensionLength * suspensionAdjustmentRange * part.rescaleFactor * controller.scale;
             }
         }
 
