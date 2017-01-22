@@ -245,7 +245,7 @@ namespace KSPWheel
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
             if (motorLocked) { fI = 0; }
             if (invertMotor) { fI = -fI; }
-            if (tankSteering)
+            if (tankSteering && !steeringLocked && !motorLocked)
             {
                 float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
                 if (invertSteering) { rI = -rI; }
