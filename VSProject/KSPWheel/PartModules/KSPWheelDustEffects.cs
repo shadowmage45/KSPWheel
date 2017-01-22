@@ -45,32 +45,23 @@ namespace KSPWheel
         [KSPField]
         public float dustSlipMult = 1f;
 
-        [KSPField(guiName = "Min Size", guiActive = false, guiActiveEditor = false),
-         UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        [KSPField]
         public float dustMinSize = 0.1f;
 
-        [KSPField(guiName = "Max Size", guiActive = false, guiActiveEditor = false),
-         UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        [KSPField]
         public float dustMaxSize = 3.5f;
 
-        [KSPField(guiName = "Min Emit", guiActive = false, guiActiveEditor = false),
-         UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        [KSPField]
         public float dustMinEmission = 0.1f;
 
-        [KSPField(guiName = "Max Emit", guiActive = false, guiActiveEditor = false),
-         UI_FloatRange(minValue = 0f, maxValue = 20f, stepIncrement = 0.25f, suppressEditorShipModified = true)]
+        [KSPField]
         public float dustMaxEmission = 20f;
 
-        [KSPField(guiName = "Min Energy", guiActive = false, guiActiveEditor = false),
-         UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        [KSPField]
         public float dustMinEnergy = 0.1f;
 
-        [KSPField(guiName = "Max Energy", guiActive = false, guiActiveEditor = false),
-         UI_FloatRange(minValue = 0f, maxValue = 10f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float dustMaxEnergy = 3f;
-
         [KSPField]
-        public bool debugMode = false;
+        public float dustMaxEnergy = 3f;
 
         public bool waterMode = false;
 
@@ -89,12 +80,6 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            Fields[nameof(dustMinEmission)].guiActive = debugMode;
-            Fields[nameof(dustMaxEmission)].guiActive = debugMode;
-            Fields[nameof(dustMinEnergy)].guiActive = debugMode;
-            Fields[nameof(dustMaxEnergy)].guiActive = debugMode;
-            Fields[nameof(dustMinSize)].guiActive = debugMode;
-            Fields[nameof(dustMaxSize)].guiActive = debugMode;
         }
 
         public override void OnDestroy()
