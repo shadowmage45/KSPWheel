@@ -306,11 +306,7 @@ namespace KSPWheel
                 }
                 maxSpeed = maxRad * 400f * Mathf.PI * 2 * 0.01666666f;
             }
-            foreach (KSPWheelData wheel in wheelDatas)
-            {
-                wheel.locateTransform(part.transform);
-            }
-            
+
             BaseField field = Fields[nameof(loadRating)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
             UI_FloatRange rng = (UI_FloatRange)field.uiControlFlight;
@@ -388,6 +384,26 @@ namespace KSPWheel
 
         public void Start()
         {
+            int count = wheelData.Length;
+            string[] wheelPersistentDatas = persistentData.Split(';');
+            for (int i = 0; i < count; i++)
+            {
+                wheelData[i].locateTransform(part.transform);
+                wheelData[i].setupWheel(null, raycastMask, part.rescaleFactor * scale);
+                wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
+                wheelData[i].wheel.rollingResistance = rollingResistance;
+                wheelData[i].wheel.rotationalResistance = rotationalResistance;
+                if (!string.IsNullOrEmpty(persistentData))
+                {
+                    wheelData[i].loadData(wheelPersistentDatas[i]);
+                }
+            }
+            //run wheel init on a second pass so that all wheels are available
+            //some modules may use more than a single wheel (damage, tracks, dust, debug)
+            for (int i = 0; i < count; i++)
+            {
+                onWheelCreated(i, wheelData[i]);
+            }
             this.onShowUIUpdated(null, null);
             initializedEditor = true;
         }
@@ -413,23 +429,9 @@ namespace KSPWheel
                 {
                     initializedWheels = true;
                     int count = wheelData.Length;
-                    string[] wheelPersistentDatas = persistentData.Split(';');
                     for (int i = 0; i < count; i++)
                     {
-                        wheelData[i].setupWheel(rb, raycastMask, part.rescaleFactor * scale);
-                        wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
-                        wheelData[i].wheel.rollingResistance = rollingResistance;
-                        wheelData[i].wheel.rotationalResistance = rotationalResistance;
-                        if (!string.IsNullOrEmpty(persistentData))
-                        {
-                            wheelData[i].loadData(wheelPersistentDatas[i]);
-                        }
-                    }
-                    //run wheel init on a second pass so that all wheels are available
-                    //some modules may use more than a single wheel (damage, tracks, dust, debug)
-                    for (int i = 0; i < count; i++)
-                    {
-                        onWheelCreated(i, wheelData[i]);
+                        wheelData[i].wheel.rigidbody = rb;
                     }
                     if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode)
                     {
@@ -744,32 +746,35 @@ namespace KSPWheel
                 wheel.length = scaledLength(scaleFactor);
                 wheel.raycastMask = raycastMask;
 
-                //calculate the size/scale of the bump-stop collider
-                float scaleY = wheelRadius * 0.2f * scaleFactor;//wheel width
-                scaleY *= 0.5f;//default is 2 units high, fix to 1 unit * width
-                float scaleXZ = wheelRadius * 2 * scaleFactor;
-                bumpStopGameObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                bumpStopGameObject.name = "KSPWheelBumpStop-" + wheelColliderName;
-                bumpStopGameObject.transform.localScale = new Vector3(scaleXZ, scaleY, scaleXZ);
-                bumpStopGameObject.layer = 26;
-                //remove existing capsule collider
-                GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<CapsuleCollider>());
-                //remove existing mesh renderer
-                GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<MeshRenderer>());
-                //add mesh collider
-                bumpStopCollider = bumpStopGameObject.AddComponent<MeshCollider>();
-                //mark as convex
-                bumpStopCollider.convex = true;
+                if (HighLogic.LoadedSceneIsFlight)
+                {
+                    //calculate the size/scale of the bump-stop collider
+                    float scaleY = wheelRadius * 0.2f * scaleFactor;//wheel width
+                    scaleY *= 0.5f;//default is 2 units high, fix to 1 unit * width
+                    float scaleXZ = wheelRadius * 2 * scaleFactor;
+                    bumpStopGameObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                    bumpStopGameObject.name = "KSPWheelBumpStop-" + wheelColliderName;
+                    bumpStopGameObject.transform.localScale = new Vector3(scaleXZ, scaleY, scaleXZ);
+                    bumpStopGameObject.layer = 26;
+                    //remove existing capsule collider
+                    GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<CapsuleCollider>());
+                    //remove existing mesh renderer
+                    GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<MeshRenderer>());
+                    //add mesh collider
+                    bumpStopCollider = bumpStopGameObject.AddComponent<MeshCollider>();
+                    //mark as convex
+                    bumpStopCollider.convex = true;
 
-                PhysicMaterial mat = new PhysicMaterial("BumpStopPhysicsMaterial");
-                mat.bounciness = 0f;
-                mat.dynamicFriction = 0;
-                mat.staticFriction = 0;
-                mat.frictionCombine = PhysicMaterialCombine.Minimum;
-                mat.bounceCombine = PhysicMaterialCombine.Minimum;
-                bumpStopCollider.material = mat;
-                bumpStopGameObject.transform.NestToParent(wheelTransform);
-                bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
+                    PhysicMaterial mat = new PhysicMaterial("BumpStopPhysicsMaterial");
+                    mat.bounciness = 0f;
+                    mat.dynamicFriction = 0;
+                    mat.staticFriction = 0;
+                    mat.frictionCombine = PhysicMaterialCombine.Minimum;
+                    mat.bounceCombine = PhysicMaterialCombine.Minimum;
+                    bumpStopCollider.material = mat;
+                    bumpStopGameObject.transform.NestToParent(wheelTransform);
+                    bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
+                }
             }
 
             public float scaledMass(float scaleFactor)

@@ -108,6 +108,7 @@ namespace KSPWheel
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
+            if (HighLogic.LoadedSceneIsEditor) { return; }
             dustModule = part.GetComponent<KSPWheelDustEffects>();
             if (dustModule != null) { dustModule.minDustSpeed = 0.0f; }
         }

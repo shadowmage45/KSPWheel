@@ -189,6 +189,7 @@ namespace KSPWheel
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
+            if (HighLogic.LoadedSceneIsEditor) { return; }
             if (tempColliderTransform != null)
             {
                 GameObject standInCollider = new GameObject("KSPWheelTempCollider");

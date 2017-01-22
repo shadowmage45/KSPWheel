@@ -25,6 +25,7 @@ namespace KSPWheel
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
+            if (HighLogic.LoadedSceneIsEditor) { return; }
             smr = part.GetComponentInChildren<SkinnedMeshRenderer>();
             if (smr != null)
             {
