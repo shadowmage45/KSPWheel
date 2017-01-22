@@ -345,6 +345,23 @@ namespace KSPWheel
             }
         }
 
+        public static void symmetryUpdate<T>(this T t, Action<T> act) where T : PartModule
+        {
+            act(t);
+            int len = t.part.symmetryCounterparts.Count;
+            T[] ts;
+            int len2;
+            for (int i = 0; i < len; i++)
+            {
+                ts = t.part.symmetryCounterparts[i].GetComponents<T>();
+                len2 = ts.Length;
+                for (int k = 0; k < len2; k++)
+                {
+                    act(ts[k]);
+                }
+            }
+        }
+
         public static void wheelGroupUpdate<T>(this T t, int wheelGroup, Action<T> act) where T : KSPWheelSubmodule
         {
             if (wheelGroup <= 0)
