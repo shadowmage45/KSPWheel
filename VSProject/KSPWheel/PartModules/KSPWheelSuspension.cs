@@ -31,8 +31,8 @@ namespace KSPWheel
          UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.None)]
         public bool lockSuspension = false;
 
-        private Vector3 defaultPos;
-        private Transform suspensionTransform;
+        public Vector3 defaultPos;
+        public Transform suspensionTransform;
         private GameObject lockedSuspensionObject;
         private CapsuleCollider lockedSuspensionCollider;
         private Vector3 lockedPos = Vector3.zero;
@@ -62,17 +62,32 @@ namespace KSPWheel
             Fields[nameof(lockSuspension)].uiControlFlight.onFieldChanged = suspensionLockChanged;
         }
 
+        public void Update()
+        {
+            if (HighLogic.LoadedSceneIsEditor && controller != null && wheel != null && suspensionTransform != null)
+            {
+                float scale = part.rescaleFactor * controller.scale;
+                float offset = suspensionOffset * scale + (controller.wheelState == KSPWheelState.DEPLOYED? wheel.length * 0.5f : 0f);
+                Vector3 o = suspensionTransform.TransformDirection(suspensionAxis);
+                suspensionTransform.localPosition = defaultPos;
+                suspensionTransform.position -= o * offset;
+            }
+        }
+
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
-            suspensionTransform = part.transform.FindRecursive(suspensionName);
             if (suspensionTransform == null)
             {
-                MonoBehaviour.print("ERROR: Suspension transform was null for name: " + suspensionName);
-                MonoBehaviour.print("Model Hierarchy: ");
-                Utils.printHierarchy(part.gameObject);
+                suspensionTransform = part.transform.FindRecursive(suspensionName);
+                if (suspensionTransform == null)
+                {
+                    MonoBehaviour.print("ERROR: Suspension transform was null for name: " + suspensionName);
+                    MonoBehaviour.print("Model Hierarchy: ");
+                    Utils.printHierarchy(part.gameObject);
+                }
+                defaultPos = suspensionTransform.localPosition;
             }
-            defaultPos = suspensionTransform.localPosition;
         }
 
         internal override void preWheelFrameUpdate()
