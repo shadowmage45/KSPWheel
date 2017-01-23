@@ -496,11 +496,18 @@ namespace KSPWheel
                 this.kp = kp;
                 this.ki = ki;
                 this.kd = kd;
+                prevError = error = dest - input;
+                errorSum = 0;
             }
 
             public void setParams(float dest, float kp, float ki, float kd)
             {
-                //TODO
+                this.dest = dest;
+                this.kp = kp;
+                this.ki = ki;
+                this.kd = kd;
+                error = prevError = 0f;
+                errorSum = 0;
             }
 
             public float update(float current, float dt)

@@ -118,6 +118,22 @@ namespace KSPWheel
          UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 40f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
         public float scale = 1f;
 
+        [KSPField(guiName = "kT", guiActive = false, guiActiveEditor = true, isPersistant = true),
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.0f, maxValue = 1, incrementLarge = 0.25f, incrementSmall = 0.125f, incrementSlide = 0.005f, sigFigs = 2)]
+        public float kT = 0f;
+
+        [KSPField(guiName = "kP", guiActive = false, guiActiveEditor = true, isPersistant = true),
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 10f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
+        public float kP = 0f;
+
+        [KSPField(guiName = "kI", guiActive = false, guiActiveEditor = true, isPersistant = true),
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 10f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
+        public float kI = 0f;
+
+        [KSPField(guiName = "kD", guiActive = false, guiActiveEditor = true, isPersistant = true),
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 10f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
+        public float kD = 0f;
+
         #endregion
 
         #region REGION - Persistent data
@@ -635,10 +651,9 @@ namespace KSPWheel
         /// <returns></returns>
         private float calculateSpringFactor(float compression, float currentSpring)
         {
-            pid.setParams(0.5f, 1, 0, 0);
+            pid.setParams(kT, kP, kI, kD);
             float output = pid.update(compression, Time.fixedDeltaTime);
-            //TODO -- calc spring value from current spring value and compression and output param
-            return 0f;
+            return currentSpring * output;
         }
 
         private Utils.PIDController pid = new Utils.PIDController(0.5f, 0.5f, 1, 0, 0);
