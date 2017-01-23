@@ -474,5 +474,46 @@ namespace KSPWheel
             }
         }
 
+        public class PIDController
+        {
+
+            private float kp;
+            private float ki;
+            private float kd;
+
+            private float error;
+            private float prevError;
+            private float errorSum;
+
+            private float input;
+            private float dest;
+            private float output;
+
+            public PIDController(float input, float dest, float kp, float ki, float kd)
+            {
+                this.input = input;
+                this.dest = dest;
+                this.kp = kp;
+                this.ki = ki;
+                this.kd = kd;
+            }
+
+            public void setParams(float dest, float kp, float ki, float kd)
+            {
+                //TODO
+            }
+
+            public float update(float current, float dt)
+            {
+                input = current;
+                error = dest - input;
+                errorSum = errorSum + error * dt;
+                float dError = (error - prevError) / dt;
+                output = kp * error + ki * errorSum + kd * dError;
+                return output;
+            }
+
+        }
+
     }
 }
