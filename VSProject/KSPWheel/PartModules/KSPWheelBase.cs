@@ -572,16 +572,21 @@ namespace KSPWheel
             float compressionBoostFactor;
             float spring, damper, springLoad, natFreq, criticalDamping;
             float compression = 0;
+            float lengthCorrectedMass;
+            float compressionRate;
             int len = wheelData.Length;
             KSPWheelData data;
             for (int i = 0; i < len; i++)
             {
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
+                lengthCorrectedMass = vesselMass / data.wheel.length;
+                //TODO
+                compressionRate = 0f;
                 if (wheelRepairTimer < 1)
                 {
                     data.timeBoostFactor = 0f;
-                    spring = vesselMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
+                    spring = lengthCorrectedMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
                     springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
                     natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
                     criticalDamping = 2 * springLoad * natFreq;//critical damping
@@ -599,7 +604,8 @@ namespace KSPWheel
                     }
                     data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
                     compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
-                    spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
+                    //spring = Mathf.Clamp(lengthCorrectedMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
+                    spring = calculateSpringFactor(compression, data.wheel.spring);
                     springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
                     natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
                     criticalDamping = 2 * springLoad * natFreq;//critical damping
@@ -620,6 +626,22 @@ namespace KSPWheel
         {
             return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(comp, time)), 0.01f, 10000000f);
         }
+
+        /// <summary>
+        /// Calculate the current auto-adjustment to spring ratio based on the current compression, duration of over/under-compression, and rate of compression change
+        /// </summary>
+        /// <param name="compression"></param>
+        /// <param name="duration"></param>
+        /// <returns></returns>
+        private float calculateSpringFactor(float compression, float currentSpring)
+        {
+            pid.setParams(0.5f, 1, 0, 0);
+            float output = pid.update(compression, Time.fixedDeltaTime);
+            //TODO -- calc spring value from current spring value and compression and output param
+            return 0f;
+        }
+
+        private Utils.PIDController pid = new Utils.PIDController(0.5f, 0.5f, 1, 0, 0);
 
         internal void addSubmodule(KSPWheelSubmodule module)
         {
