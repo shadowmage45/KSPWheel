@@ -234,7 +234,6 @@ namespace KSPWheel
         }
     }
 
-    //TODO -- this needs to be a KSPAddon with a game-database-loaded callback and MM database reloaded callbacks
     [KSPAddon(KSPAddon.Startup.Instantly, true)]
     public class DustColors : MonoBehaviour
     {
@@ -268,13 +267,11 @@ namespace KSPWheel
             {
                 return bodyDustColors[body].getBiomeColor(biome);
             }
-            MonoBehaviour.print("body dust colors did not contain value for : " + body);
             return defaultColor;
         }
 
         public static void loadDustColors()
         {
-            MonoBehaviour.print("Loading KSPWheel dust color maps!");
             //TODO -- when would loading of the config values be appropriate outside of a module-manager context?
             //TODO -- can only really load them on game-database finished processing
             //TODO -- add a MM callback for -re-loading- of the color values
@@ -291,14 +288,12 @@ namespace KSPWheel
             {
                 bodyNode = bodyDustColorNode.nodes[i];
                 bodyName = bodyNode.name;
-                MonoBehaviour.print("Processing body: "+bodyName);
                 int len2 = bodyNode.nodes.Count;
                 for (int k = 0; k < len2; k++)
                 {
                     biomeNode = bodyNode.nodes[k];
                     biomeName = biomeNode.name;
                     color = ConfigNode.ParseColor(biomeNode.GetStringValue("Color", "0.75, 0.75, 0.75, 0.014"));
-                    MonoBehaviour.print("Parsed color for biome: " + biomeName + " : " + color.ToString());
                     loadColor(bodyName, biomeName, color);
                 }
             }
@@ -322,7 +317,6 @@ namespace KSPWheel
         public Color getBiomeColor(string name)
         {
             if (biomeDustColors.ContainsKey(name)) { return biomeDustColors[name]; }
-            MonoBehaviour.print("biome dust colors did not contain value for : " + name);
             return bodyDefaultColor == null? DustColors.defaultColor : bodyDefaultColor;
         }
 
