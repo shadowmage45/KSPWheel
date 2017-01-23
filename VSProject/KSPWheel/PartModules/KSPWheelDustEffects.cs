@@ -65,6 +65,8 @@ namespace KSPWheel
 
         public bool waterMode = false;
 
+        private bool gamePaused = false;
+
         private Color[] colArr = new Color[5];
         private string prevBody = string.Empty;
         private string prevBiome = string.Empty;
@@ -80,6 +82,8 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
+            GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
         }
 
         public override void OnDestroy()
@@ -95,6 +99,18 @@ namespace KSPWheel
                     GameObject.Destroy(dustObjects[i]);
                 }
             }
+            GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
+            GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
+        }
+
+        private void onGamePause()
+        {
+            gamePaused = true;
+        }
+
+        private void onGameUnpause()
+        {
+            gamePaused = false;
         }
 
         internal override void preWheelFrameUpdate()
@@ -136,6 +152,7 @@ namespace KSPWheel
 
         private void updateDustEmission()
         {
+            if (gamePaused) { return; }//game paused...
             int len = dustObjects.Length;
             if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustCamera)
             {
