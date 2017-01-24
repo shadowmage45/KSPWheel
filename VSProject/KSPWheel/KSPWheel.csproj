@@ -84,6 +84,7 @@
     <Compile Include="PartModules\Utils.cs" />
     <Compile Include="PartModules\WheelAnimationHandler.cs" />
     <Compile Include="VesselModules\KSPWheelDustCamera.cs" />
+    <Compile Include="VesselModules\KSPWheelVesselDebug.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
