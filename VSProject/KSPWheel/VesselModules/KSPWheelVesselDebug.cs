@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using KSP.UI.Screens;
 
 namespace KSPWheel
 {
 
     public class KSPWheelVesselDebug : VesselModule
     {
-
         private int id = 0;
         private Rect windowRect = new Rect(100, 100, 640, 480);
         private Vector2 scrollPos;
@@ -15,9 +15,9 @@ namespace KSPWheel
 
         private List<WheelDebugData> wheels = new List<WheelDebugData>();
 
-        public void toggleGUI()
+        public void toggleGUI(bool active)
         {
-            guiOpen = !guiOpen;
+            guiOpen = active;
             if (guiOpen && !guiInitialized)
             {
                 wheels.Clear();
@@ -41,7 +41,14 @@ namespace KSPWheel
         {
             if (guiOpen)
             {
-                drawDebugGUI();
+                if (vessel.isActiveVessel)
+                {
+                    drawDebugGUI();
+                }
+                else
+                {
+                    guiOpen = false;
+                }
             }
         }
 
@@ -63,7 +70,8 @@ namespace KSPWheel
 
             //data column header row
             GUILayout.BeginHorizontal();
-            GUILayout.Label("idx", GUILayout.Width(w1));
+            GUILayout.Label("idx", GUILayout.Width(w1));//index
+            GUILayout.Label("grp", GUILayout.Width(w1));//group
             GUILayout.Label("rad", GUILayout.Width(w2));//radius
             GUILayout.Label("mass", GUILayout.Width(w2));//mass
             GUILayout.Label("len", GUILayout.Width(w2));//length of travel
@@ -75,6 +83,7 @@ namespace KSPWheel
             GUILayout.Label("brk", GUILayout.Width(w2));//brake torque
             GUILayout.Label("comp", GUILayout.Width(w2));//compression
             GUILayout.Label("comp%", GUILayout.Width(w2));//compression (percent of max)
+            GUILayout.Label("timeB", GUILayout.Width(w2));//time boost factor
             GUILayout.Label("fY", GUILayout.Width(w2));//springForce
             GUILayout.Label("fZ", GUILayout.Width(w2));//longForce
             GUILayout.Label("fX", GUILayout.Width(w2));//latForce
@@ -91,6 +100,7 @@ namespace KSPWheel
                 GUILayout.BeginHorizontal();
                 wheel = wheels[i].wheelData.wheel;
                 GUILayout.Label(i.ToString(), GUILayout.Width(w1));
+                GUILayout.Label(wheels[i].baseModule.wheelGroup.ToString(), GUILayout.Width(w2));//wheel group
                 GUILayout.Label(wheel.radius.ToString("0.##"), GUILayout.Width(w2));//radius
                 GUILayout.Label(wheel.mass.ToString("0.##"), GUILayout.Width(w2));//mass
                 GUILayout.Label(wheel.length.ToString("0.##"), GUILayout.Width(w2));//length of travel
@@ -102,6 +112,7 @@ namespace KSPWheel
                 GUILayout.Label(wheel.brakeTorque.ToString("0.##"), GUILayout.Width(w2));//brake torque
                 GUILayout.Label(wheel.compressionDistance.ToString("0.##"), GUILayout.Width(w2));//compression
                 GUILayout.Label((wheel.compressionDistance / wheel.length).ToString("0.##"), GUILayout.Width(w2));//compression (percent of max)
+                GUILayout.Label(wheels[i].wheelData.timeBoostFactor.ToString("0.##"), GUILayout.Width(w2));//time boost factor
                 GUILayout.Label(wheel.springForce.ToString("0.##"), GUILayout.Width(w2));//springForce
                 GUILayout.Label(wheel.longitudinalForce.ToString("0.##"), GUILayout.Width(w2));//longForce
                 GUILayout.Label(wheel.lateralForce.ToString("0.##"), GUILayout.Width(w2));//latForce
@@ -109,7 +120,6 @@ namespace KSPWheel
                 GUILayout.Label(wheel.lateralSlip.ToString("0.##"), GUILayout.Width(w2));//latSlip
                 //using a button as for some retarted reason auto-word-wrap is enabled for labels...
                 GUILayout.Button(wheel.contactColliderHit == null ? "none" : wheel.contactColliderHit.ToString() + ":" + wheel.contactColliderHit.gameObject.layer);//collider hit
-
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
@@ -122,8 +132,6 @@ namespace KSPWheel
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
-
-
     }
 
     public struct WheelDebugData
@@ -134,6 +142,51 @@ namespace KSPWheel
         {
             this.baseModule = baseModule;
             this.wheelData = wheelData;
+        }
+    }
+
+    [KSPAddon(KSPAddon.Startup.FlightAndEditor, false)]
+    public class KSPWheelLauncher : MonoBehaviour
+    {
+        private ApplicationLauncherButton appButton;
+
+        public void Awake()
+        {
+            Texture2D tex = GameDatabase.Instance.GetTexture("Squad/PartList/SimpleIcons/RDIcon_fuelSystems-highPerformance", false);
+            appButton = ApplicationLauncher.Instance.AddModApplication(GuiOn, GuiOff, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, tex);
+        }
+
+        private void GuiOn()
+        {
+            MonoBehaviour.print("GUI ON!!");
+            FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
+            if (fi == null || fi.Vessel==null)
+            {
+                return;
+            }
+            toggleGUI(fi.Vessel, true);
+        }
+
+        private void GuiOff()
+        {
+            MonoBehaviour.print("GUI OFF!!");
+            FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
+            if (fi == null || fi.Vessel == null)
+            {
+                return;
+            }
+            toggleGUI(fi.Vessel, false);
+        }
+
+        private void toggleGUI(Vessel vessel, bool active)
+        {
+            KSPWheelVesselDebug debug = (KSPWheelVesselDebug)vessel.vesselModules.Find(m => m.GetType() == typeof(KSPWheelVesselDebug));
+            if (debug != null) { debug.toggleGUI(active); }
+        }
+
+        public void OnDestroy()
+        {
+            ApplicationLauncher.Instance.RemoveModApplication(appButton);
         }
     }
 
