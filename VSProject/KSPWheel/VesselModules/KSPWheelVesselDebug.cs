@@ -152,8 +152,11 @@ namespace KSPWheel
 
         public void Awake()
         {
-            Texture2D tex = GameDatabase.Instance.GetTexture("Squad/PartList/SimpleIcons/RDIcon_fuelSystems-highPerformance", false);
-            appButton = ApplicationLauncher.Instance.AddModApplication(GuiOn, GuiOff, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, tex);
+            if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().debugMode)
+            {
+                Texture2D tex = GameDatabase.Instance.GetTexture("Squad/PartList/SimpleIcons/RDIcon_fuelSystems-highPerformance", false);
+                appButton = ApplicationLauncher.Instance.AddModApplication(GuiOn, GuiOff, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, tex);
+            }
         }
 
         private void GuiOn()
@@ -186,7 +189,10 @@ namespace KSPWheel
 
         public void OnDestroy()
         {
-            ApplicationLauncher.Instance.RemoveModApplication(appButton);
+            if (appButton != null)
+            {
+                ApplicationLauncher.Instance.RemoveModApplication(appButton);
+            }
         }
     }
 

@@ -18,6 +18,9 @@
         [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "Wear and damage model.\nNone = No wheel wear or breakage.\nSimple = Stock equivalent, break on impact/over-stress.\nAdvanced = Time, speed, load, heat, and impact based wheel wear + breakage.")]
         public KSPWheelWearType wearType = KSPWheelWearType.SIMPLE;
 
+        [GameParameters.CustomParameterUI("Enable Debugging", toolTip = "If enabled debug tools will be available in the app-launcher bar..")]
+        public bool debugMode = false;
+
         public override string Section { get { return "KSPWheel"; } }
 
         public override int SectionOrder { get { return 1; } }
