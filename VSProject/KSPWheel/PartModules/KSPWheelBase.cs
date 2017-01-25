@@ -82,8 +82,8 @@ namespace KSPWheel
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 1, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float springRating = 0.65f;
+         UI_FloatRange(minValue = 0.2f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
         UI_FloatRange(minValue = 0.05f, maxValue = 2, stepIncrement = 0.025f, suppressEditorShipModified = true)]
@@ -117,22 +117,6 @@ namespace KSPWheel
         [KSPField(guiName = "Scale", guiActive = false, guiActiveEditor = true, isPersistant = true, guiUnits = "x"),
          UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 40f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
         public float scale = 1f;
-
-        [KSPField(guiName = "kT", guiActive = false, guiActiveEditor = true, isPersistant = true),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.0f, maxValue = 1, incrementLarge = 0.25f, incrementSmall = 0.125f, incrementSlide = 0.005f, sigFigs = 2)]
-        public float kT = 0f;
-
-        [KSPField(guiName = "kP", guiActive = false, guiActiveEditor = true, isPersistant = true),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 10f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
-        public float kP = 0f;
-
-        [KSPField(guiName = "kI", guiActive = false, guiActiveEditor = true, isPersistant = true),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 10f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
-        public float kI = 0f;
-
-        [KSPField(guiName = "kD", guiActive = false, guiActiveEditor = true, isPersistant = true),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 10f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
-        public float kD = 0f;
 
         #endregion
 
@@ -397,6 +381,8 @@ namespace KSPWheel
                 }
             }
 
+            curSpringRating = springRating;
+
             initializeScaling();
         }
 
@@ -576,6 +562,8 @@ namespace KSPWheel
             setScale(scale, false);
         }
 
+        private float curSpringRating = 0f;
+
         private void updateSuspension()
         {
             float vesselMass = 0;
@@ -583,9 +571,13 @@ namespace KSPWheel
             {
                 return;
             }
-            float gravityFactor = (float)vessel.gravityForPos.magnitude / 9.80665f;
-            vesselMass *= springEaseMult * gravityFactor;
-            float compressionBoostFactor;
+            vesselMass *= springEaseMult;
+            if (vesselMass <= 0)
+            {
+                MonoBehaviour.print("ERROR: Calculated vessel mass <=0: " + vesselMass);
+                vesselMass = 0.001f;
+            }
+            float g = (float)vessel.gravityForPos.magnitude;
             float spring, damper, springLoad, natFreq, criticalDamping;
             float compression = 0;
             float lengthCorrectedMass;
@@ -607,22 +599,54 @@ namespace KSPWheel
                 }
                 else
                 {
-                    if (compression > 0.8f)
+                    if (false)
                     {
-                        data.timeBoostFactor = data.timeBoostFactor + 0.5f * Time.fixedDeltaTime;
+                        float compressionBoostFactor;
+                        if (compression > 0.8f)
+                        {
+                            data.timeBoostFactor = data.timeBoostFactor + 0.5f * Time.fixedDeltaTime;
+                        }
+                        else if (data.wheel.isGrounded && compression < 0.4f)
+                        {
+                            data.timeBoostFactor = data.timeBoostFactor - 0.2f * Time.fixedDeltaTime;
+                        }
+                        data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
+                        compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
+                        spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
+                        springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
+                        natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
+                        criticalDamping = 2 * springLoad * natFreq;//critical damping
+                        damper = criticalDamping * dampRatio;
                     }
-                    else if (data.wheel.isGrounded && compression < 0.4f)
+                    else
                     {
-                        data.timeBoostFactor = data.timeBoostFactor - 0.2f * Time.fixedDeltaTime;
+                        float target = 0f;
+                        float rate = 1f;
+                        if (compression > 0.8f)
+                        {
+                            target = 1;
+                            rate = 0.25f;
+                        }
+                        else if (compression < 0.2f)
+                        {
+                            target = 0;
+                            rate = 0.25f;
+                        }
+                        data.timeBoostFactor = Mathf.MoveTowards(data.timeBoostFactor, target, Time.fixedDeltaTime * rate);
+                        data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, -1, 1);
+                        spring = lengthCorrectedMass * calculateSpring(compression, data.timeBoostFactor) * springRating * g;
+                        if (spring > 0)
+                        {
+                            springLoad = spring * data.wheel.length * 0.5f * 1 / g;//target load for damper calc is spring at half compression
+                            natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
+                            criticalDamping = 2 * springLoad * natFreq;//critical damping
+                            damper = criticalDamping * dampRatio;
+                        }
+                        else
+                        {
+                            damper = 0f;
+                        }
                     }
-                    data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
-                    compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
-                    spring = Mathf.Clamp(lengthCorrectedMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
-                    spring = lengthCorrectedMass * calculateSpring(compression, data.timeBoostFactor, 0.2f, 0.8f);
-                    springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
-                    natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
-                    criticalDamping = 2 * springLoad * natFreq;//critical damping
-                    damper = criticalDamping * dampRatio;
                 }
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
@@ -635,31 +659,26 @@ namespace KSPWheel
 
         /// <summary>
         /// Comp = 0-1 compression
-        /// Time = -1 - 1 time factor, based on response to compression (-1 means undercompressed for duration, 1 means overcompressed for duration, 0 means no duration)
+        /// Time = 0-1 time factor, based on response to compression (1 means overcompressed or undercompressed for duration, 0 means no duration of over/under compression)
         /// Lower = lower stability bounds, below this compression it is considered 'undercompressed' and spring value is lowered
         /// Upper = upper stability bounds, above this compression it is considered 'overcompressed' and spring value is raised
         /// </summary>
         /// <returns></returns>
-        private float calculateSpring(float comp, float time, float lower, float upper)
+        private float calculateSpring(float comp, float time)
         {
-            float n1 = 1 / lower;
-            float n2 = 1 / (1-upper);
+            if (comp <= 0) { return 0.0001f; }
             float compFactor = 0;
-            if (comp < lower)
-            {
-                compFactor = (comp - lower) * n1;
-            }
-            else if(comp > upper)
-            {
-                compFactor = (comp - upper) * n2;
-            }
-            compFactor += 1;
-            float timeFactor = 1 + Mathf.Abs(time * time * time);
-            return Mathf.Pow(compFactor, timeFactor);
+            float compPow = 1;
+            compFactor = Mathf.Pow((-1 + comp * 2), compPow);// * compFactor * compFactor;
+            float timeFactor = time * time * time;
+            float combinedFactor = (2 + timeFactor + compFactor) * 0.5f;
+            float power = 3;
+            float curveOutput = Mathf.Pow(combinedFactor, power);
+            float output = curveOutput;
+            output = Mathf.Clamp(output, 0.0001f, 100f);
+            return output;
         }
 
-        //TODO derive cleaner curves / alternate curves / alternate spring-setting methods for over and under compression
-        // can use a curve that starts at y=1 when x=comp limit
         private float evaluateCurve(float comp, float time)
         {
             return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(comp, time)), 0.01f, 10000000f);
