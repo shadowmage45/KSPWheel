@@ -369,7 +369,6 @@ namespace KSPWheel
                     }
                 }
             }
-            part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
 
             //destroy bounds collider, if specified and present (KF wheels)
             if (!string.IsNullOrEmpty(boundsColliderName))
@@ -381,7 +380,8 @@ namespace KSPWheel
                 }
             }
 
-            curSpringRating = springRating;
+            //part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
+            Utils.setPartColliderField(part);
 
             initializeScaling();
         }
@@ -561,8 +561,6 @@ namespace KSPWheel
             initializedScaling = true;
             setScale(scale, false);
         }
-
-        private float curSpringRating = 0f;
 
         private void updateSuspension()
         {
