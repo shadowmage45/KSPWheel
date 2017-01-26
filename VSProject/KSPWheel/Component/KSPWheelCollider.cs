@@ -692,6 +692,7 @@ namespace KSPWheel
             contactPatch.wheelRight = Vector3.Cross(contactPatch.normal, contactPatch.wheelForward);
             contactPatch.hitDepth = suspensionLength - contactPatch.compressionDepth;
             contactPatch.rayHitPoint = wheel.transform.position - wheel.transform.up * (wheelRadius + contactPatch.hitDepth);
+            contactPatch.compressionPercent = contactPatch.compressionDepth / suspensionLength;
             Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(contactPatch.rayHitPoint).normalized;
             float mag = worldVelocityAtHit.magnitude;
             contactPatch.localVelocity.x = Vector3.Dot(worldVelocityAtHit, contactPatch.wheelRight) * mag;
