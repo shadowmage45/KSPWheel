@@ -82,7 +82,7 @@ namespace KSPWheel
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.2f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0.0f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -435,7 +435,7 @@ namespace KSPWheel
                     int count = wheelData.Length;
                     for (int i = 0; i < count; i++)
                     {
-                        wheelData[i].wheel.rigidbody = rb;
+                        wheelData[i].setRigidbody(part, rb);
                     }
                     if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode)
                     {
@@ -464,7 +464,7 @@ namespace KSPWheel
                 Rigidbody rb = part.GetComponent<Rigidbody>();
                 for (int i = 0; i < len; i++)
                 {
-                    wheelData[i].wheel.rigidbody = rb;
+                    wheelData[i].setRigidbody(part, rb);
                 }
             }
 
@@ -586,7 +586,24 @@ namespace KSPWheel
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
                 lengthCorrectedMass = vesselMass / data.wheel.length;
-                if (wheelRepairTimer < 1)
+                float force = 0;
+                if (data.colliderData != null) { force = data.colliderData.collisionForce; }
+                data.wheel.externalSpringForce = force;
+                if (data.wheel.contactColliderHit != null)
+                {
+                    PhysicMaterial pm = data.wheel.contactColliderHit.sharedMaterial;
+                    if (pm == null)
+                    {
+                        pm = new PhysicMaterial();
+                    }
+                    pm.frictionCombine = PhysicMaterialCombine.Multiply;
+                    data.wheel.contactColliderHit.material = pm;
+                }
+                if (springRating == 0)
+                {
+                    spring = damper = 0f;
+                }
+                else if (wheelRepairTimer < 1)
                 {
                     data.timeBoostFactor = 0f;
                     spring = lengthCorrectedMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
@@ -773,6 +790,7 @@ namespace KSPWheel
             public readonly float loadShare;
             public readonly float offset;
             public KSPWheelCollider wheel;
+            public KSPWheelCollisionData colliderData;
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
             public MeshCollider bumpStopCollider;
@@ -832,11 +850,25 @@ namespace KSPWheel
                     mat.bounciness = 0f;
                     mat.dynamicFriction = 0;
                     mat.staticFriction = 0;
-                    mat.frictionCombine = PhysicMaterialCombine.Minimum;
-                    mat.bounceCombine = PhysicMaterialCombine.Minimum;
+                    mat.frictionCombine = PhysicMaterialCombine.Multiply;
+                    mat.bounceCombine = PhysicMaterialCombine.Multiply;
                     bumpStopCollider.material = mat;
                     bumpStopGameObject.transform.NestToParent(wheelTransform);
                     bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
+                }
+            }
+
+            public void setRigidbody(Part part, Rigidbody rb)
+            {
+                if (wheel != null)
+                {
+                    wheel.rigidbody = rb;
+                    if (colliderData != null)
+                    {
+                        GameObject.DestroyImmediate(colliderData);
+                    }
+                    colliderData = part.gameObject.AddComponent<KSPWheelCollisionData>();
+                    colliderData.monitoredCollider = bumpStopCollider;
                 }
             }
 

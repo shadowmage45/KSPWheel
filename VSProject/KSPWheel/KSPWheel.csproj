@@ -63,6 +63,7 @@
     <Compile Include="PartModules\KSPWheelBase.cs" />
     <Compile Include="PartModules\KSPWheelBogey.cs" />
     <Compile Include="PartModules\KSPWheelBrakes.cs" />
+    <Compile Include="PartModules\KSPWheelCollisionData.cs" />
     <Compile Include="PartModules\KSPWheelDamage.cs" />
     <Compile Include="PartModules\KSPWheelDebugOld.cs" />
     <Compile Include="PartModules\KSPWheelDebug.cs" />
