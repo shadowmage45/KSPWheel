@@ -130,9 +130,7 @@ namespace KSPWheel
                     lockedPos.y = -(wheel.length - wheel.compressionDistance);
                     lockedSuspensionCollider.center = lockedPos;
                 }
-                float extSpeed = 0.05f*Time.fixedDeltaTime;
                 float d = Mathf.Abs(lockedPos.y) - wheel.length * 0.95f;
-                if (d < -extSpeed) { d = -extSpeed; }
                 if (d != 0)
                 {
                     lockedPos.y += d;
