@@ -244,6 +244,13 @@ namespace KSPWheel
                 rearDoorRotatorTransform.localRotation = rearDoorRotatorDefaultRotation;
                 rearDoorRotatorTransform.Rotate(0, 0, rot, Space.Self);
             }
+            if (controller.wheelState == KSPWheelState.DEPLOYED)
+            {
+                strutRotatorTransform.localRotation = strutRotatorDefaultRotation;
+                carriageTransform.localRotation = wheelDefaultRotation;
+                strutRotatorTransform.Rotate(0, 0, strutRotation, Space.Self);
+                carriageTransform.Rotate(0, 0, wheelRotation, Space.Self);
+            }
         }
 
         internal override void postControllerSetup()
