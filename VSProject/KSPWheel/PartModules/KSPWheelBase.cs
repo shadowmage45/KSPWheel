@@ -367,7 +367,7 @@ namespace KSPWheel
                 {
                     if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
                     {
-                        GameObject.Destroy(colliders[i].gameObject);
+                        GameObject.DestroyImmediate(colliders[i].gameObject);
                     }
                 }
             }
@@ -378,12 +378,14 @@ namespace KSPWheel
                 Transform boundsCollider = part.transform.FindRecursive(boundsColliderName);
                 if (boundsCollider != null)
                 {
-                    GameObject.Destroy(boundsCollider.gameObject);
+                    GameObject.DestroyImmediate(boundsCollider.gameObject);
                 }
             }
 
-            //part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
-            Utils.setPartColliderField(part);
+            if (part.collider == null)
+            {
+                Utils.setPartColliderField(part);
+            }
 
             initializeScaling();
         }
