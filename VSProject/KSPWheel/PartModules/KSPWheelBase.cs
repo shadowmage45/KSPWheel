@@ -159,6 +159,8 @@ namespace KSPWheel
 
         private bool initializedScaling = false;
 
+        private bool prevGrounded = false;
+
         private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
 
         #endregion
@@ -394,6 +396,10 @@ namespace KSPWheel
             {
                 wheelData[i].locateTransform(part.transform);
                 wheelData[i].setupWheel(null, raycastMask, part.rescaleFactor * scale);
+                if (HighLogic.LoadedSceneIsFlight)
+                {
+                    CollisionManager.IgnoreCollidersOnVessel(vessel, wheelData[i].bumpStopCollider);
+                }
                 wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
                 wheelData[i].wheel.rollingResistance = rollingResistance;
                 wheelData[i].wheel.rotationalResistance = rotationalResistance;
@@ -716,16 +722,32 @@ namespace KSPWheel
         //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow (or they are handled by regular Part methods?)
         private void updateLandedState()
         {
-            grounded = false;
-            int len = wheelData.Length;
-            for (int i = 0; i < len; i++)
+            //if wheels are not deployed let the stock code handle grounded checks from the collider data
+            if (wheelState != KSPWheelState.DEPLOYED && part.GroundContact && prevGrounded)
             {
-                if (wheelData[i].wheel.isGrounded) { grounded = true; break; }
+                prevGrounded = false;
+                part.GroundContact = false;
+                vessel.checkLanded();
+                return;
             }
-            part.GroundContact = grounded;
-            vessel.checkLanded();
+            if (wheelState == KSPWheelState.DEPLOYED)
+            {
+                grounded = false;
+                int len = wheelData.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    if (wheelData[i].wheel.isGrounded)
+                    {
+                        grounded = true;
+                        break;
+                    }
+                }
+                part.GroundContact = grounded;
+                vessel.checkLanded();
+                prevGrounded = grounded;
+            }
         }
-        
+
         /// <summary>
         /// Input load in tons, suspension length, target (0-1), and desired damp ratio (1 = critical)
         /// and output spring and damper for that load and ratio
