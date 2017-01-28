@@ -111,14 +111,14 @@ namespace KSPWheel
             {
                 load += controller.wheelData[i].wheel.springForce / 10f;
             }
-            float maxLoad = controller.maxLoadRating * Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxLoadScalingPower);
+            float maxLoad = controller.maxLoadRating * controller.wheelMaxLoadScalingFactor;
             loadStress = load / maxLoad;
             if (load > maxLoad)
             {
                 stressTime += Time.fixedDeltaTime * (load - maxLoad) * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().stressDamageMultiplier;
             }
 
-            float maxSpeed = controller.maxSpeed * Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxSpeedScalingPower);
+            float maxSpeed = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
             float speed = Mathf.Abs( wheel.linearVelocity );
             if (speed > maxSpeed )
             {

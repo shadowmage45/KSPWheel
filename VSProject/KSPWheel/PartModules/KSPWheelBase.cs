@@ -156,6 +156,16 @@ namespace KSPWheel
 
         public float deployAnimationTime = 0f;
 
+        internal float partMassScaleFactor = 1;
+        internal float partCostScaleFactor = 1;
+        internal float wheelMassScaleFactor = 1;
+        internal float wheelMaxSpeedScalingFactor = 1f;
+        internal float wheelMaxLoadScalingFactor = 1f;
+        internal float rollingResistanceScalingFactor = 1f;
+        internal float motorTorqueScalingFactor = 1f;
+        internal float motorPowerScalingFactor = 1f;
+        internal float motorMaxRPMScalingFactor = 1f;
+
         private float prevScale = 1f;
 
         private bool advancedMode = false;
@@ -236,9 +246,9 @@ namespace KSPWheel
             {
                 child.localScale = scale;
             }
-            onScaleUpdated();
             Utils.updateAttachNodes(part, prevScale, newScale, userInput);
             prevScale = newScale;
+            onScaleUpdated();
         }
 
         #endregion
@@ -391,7 +401,6 @@ namespace KSPWheel
             {
                 Utils.setPartColliderField(part);
             }
-
             initializeScaling();
         }
 
@@ -709,6 +718,18 @@ namespace KSPWheel
 
         private void onScaleUpdated()
         {
+            if (HighLogic.CurrentGame != null)//should not happen for on start
+            {
+                KSPWheelScaleSettings scales = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>();
+                partMassScaleFactor = Mathf.Pow(scale, scales.partMassScalingPower);
+                partCostScaleFactor = Mathf.Pow(scale, scales.partCostScalingPower);
+                wheelMassScaleFactor = Mathf.Pow(scale, scales.wheelMassScalingPower);
+                wheelMaxLoadScalingFactor = Mathf.Pow(scale, scales.wheelMaxLoadScalingPower);
+                wheelMaxSpeedScalingFactor = Mathf.Pow(scale, scales.wheelMaxSpeedScalingPower);
+                motorMaxRPMScalingFactor = Mathf.Pow(scale, scales.motorMaxRPMScalingPower);
+                motorPowerScalingFactor = Mathf.Pow(scale, scales.motorPowerScalingPower);
+                motorTorqueScalingFactor = Mathf.Pow(scale, scales.motorTorqueScalingPower);
+            }
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
