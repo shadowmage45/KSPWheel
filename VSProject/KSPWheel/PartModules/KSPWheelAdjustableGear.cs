@@ -142,10 +142,10 @@ namespace KSPWheel
                 switch (controller.wheelState)
                 {
                     case KSPWheelState.RETRACTED:
-                        controller.wheelState = KSPWheelState.DEPLOYING;
+                        changeWheelState(KSPWheelState.DEPLOYING);
                         break;
                     case KSPWheelState.RETRACTING:
-                        controller.wheelState = KSPWheelState.DEPLOYING;
+                        changeWheelState(KSPWheelState.DEPLOYING);
                         break;
                     default:
                         break;
@@ -156,10 +156,10 @@ namespace KSPWheel
                 switch (controller.wheelState)
                 {
                     case KSPWheelState.DEPLOYED:
-                        controller.wheelState = KSPWheelState.RETRACTING;
+                        changeWheelState(KSPWheelState.RETRACTING);
                         break;
                     case KSPWheelState.DEPLOYING:
-                        controller.wheelState = KSPWheelState.RETRACTING;
+                        changeWheelState(KSPWheelState.RETRACTING);
                         break;
                     default:
                         break;
@@ -175,16 +175,16 @@ namespace KSPWheel
             switch (controller.wheelState)
             {
                 case KSPWheelState.RETRACTED:
-                    controller.wheelState = KSPWheelState.DEPLOYING;
+                    changeWheelState(KSPWheelState.DEPLOYING);
                     break;
                 case KSPWheelState.RETRACTING:
-                    controller.wheelState = KSPWheelState.DEPLOYING;
+                    changeWheelState(KSPWheelState.DEPLOYING);
                     break;
                 case KSPWheelState.DEPLOYED:
-                    controller.wheelState = KSPWheelState.RETRACTING;
+                    changeWheelState(KSPWheelState.RETRACTING);
                     break;
                 case KSPWheelState.DEPLOYING:
-                    controller.wheelState = KSPWheelState.RETRACTING;
+                    changeWheelState(KSPWheelState.RETRACTING);
                     break;
                 case KSPWheelState.BROKEN:
                     break;
@@ -275,17 +275,14 @@ namespace KSPWheel
                 if (controller.wheelState == KSPWheelState.BROKEN)
                 {
                     mainAnimTime = 1f;
-                    controller.wheelState = KSPWheelState.BROKEN;
                 }
                 else if (controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING)
                 {
                     mainAnimTime = 1f;
-                    controller.wheelState = KSPWheelState.DEPLOYED;
                 }
                 else//retracted
                 {
                     mainAnimTime = 0f;
-                    controller.wheelState = KSPWheelState.RETRACTED;
                 }
                 updateAnimation(0.0f);
             }
@@ -408,7 +405,7 @@ namespace KSPWheel
                 wheelRotX = wheelRotationRetracted;
                 wheelRotZ = 0f;
                 wheelSecRot = wheelRotatorRotationRetracted;
-                controller.wheelState = KSPWheelState.RETRACTED;
+                changeWheelState(KSPWheelState.RETRACTED);
             }
             else if (mainAnimTime < 0.15f)//doors only (0 - 0.15)
             {
@@ -463,8 +460,7 @@ namespace KSPWheel
                 wheelRotX = 0f;
                 wheelRotZ = wheelRotation;
                 wheelSecRot = 0f;
-                controller.wheelState = KSPWheelState.DEPLOYED;
-                //TODO door rotation set
+                changeWheelState(KSPWheelState.DEPLOYED);
             }
 
             strutRotatorTransform.localRotation = strutRotatorDefaultRotation;

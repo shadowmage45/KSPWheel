@@ -68,7 +68,7 @@ namespace KSPWheel
                 m.repulsorEnabled = repulsorEnabled;
                 if (m.repulsorEnabled)
                 {
-                    m.controller.wheelState = KSPWheelState.DEPLOYED;
+                    m.changeWheelState(KSPWheelState.DEPLOYED);
                     m.curLen = 0.0001f;
                 }
             });
@@ -144,7 +144,7 @@ namespace KSPWheel
                 curLen = Mathf.MoveTowards(curLen, 0.001f, 0.25f * Time.fixedDeltaTime);
                 if (curLen <= 0.001f)
                 {
-                    controller.wheelState = KSPWheelState.RETRACTED;
+                    changeWheelState(KSPWheelState.RETRACTED);
                 }
             }
             else if (repulsorEnabled)

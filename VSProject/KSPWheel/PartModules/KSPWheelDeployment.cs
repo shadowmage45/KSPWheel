@@ -102,7 +102,7 @@ namespace KSPWheel
             if (oneShotAnimation && oneShotTriggered) { return; }
             if (controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING)
             {
-                controller.wheelState = KSPWheelState.RETRACTING;
+                changeWheelState(KSPWheelState.RETRACTING);
                 animationControl.setToAnimationState(controller.wheelState, false);
                 if (collider != null)
                 {
@@ -119,7 +119,7 @@ namespace KSPWheel
             }
             else if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING)
             {
-                controller.wheelState = KSPWheelState.DEPLOYING;
+                changeWheelState(KSPWheelState.DEPLOYING);
                 animationControl.setToAnimationState(controller.wheelState, false);
                 if (collider != null)
                 {
@@ -229,7 +229,7 @@ namespace KSPWheel
         /// <param name="state"></param>
         public void onAnimationStateChanged(KSPWheelState state)
         {
-            controller.wheelState = state;
+            changeWheelState(state);
             if (state == KSPWheelState.RETRACTED)
             {
                 //TODO reset suspension and steering transforms to neutral?
