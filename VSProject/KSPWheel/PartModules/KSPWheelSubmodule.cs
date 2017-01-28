@@ -127,5 +127,18 @@ namespace KSPWheel
 
         }
 
+        internal virtual void onStateChanged(KSPWheelState oldState, KSPWheelState newState)
+        {
+
+        }
+
+        internal void changeWheelState(KSPWheelState newState, bool selfCallback = false)
+        {
+            if (controller != null)
+            {
+                controller.changeWheelState(newState, this, selfCallback);
+            }
+        }
+
     }
 }

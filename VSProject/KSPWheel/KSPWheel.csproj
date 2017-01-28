@@ -73,6 +73,7 @@
     <Compile Include="PartModules\KSPWheelRepulsor.cs" />
     <Compile Include="PartModules\KSPWheelRotation.cs" />
     <Compile Include="PartModules\KSPWheelSettings.cs" />
+    <Compile Include="PartModules\KSPWheelSidedModel.cs" />
     <Compile Include="PartModules\KSPWheelSounds.cs" />
     <Compile Include="PartModules\KSPWheelState.cs" />
     <Compile Include="PartModules\KSPWheelSteering.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="PartModules\Utils.cs" />
     <Compile Include="PartModules\WheelAnimationHandler.cs" />
     <Compile Include="VesselModules\KSPWheelDustCamera.cs" />
+    <Compile Include="VesselModules\KSPWheelVesselDebug.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

@@ -82,8 +82,8 @@ namespace KSPWheel
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 1, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float springRating = 0.65f;
+         UI_FloatRange(minValue = 0.2f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
         UI_FloatRange(minValue = 0.05f, maxValue = 2, stepIncrement = 0.025f, suppressEditorShipModified = true)]
@@ -143,7 +143,12 @@ namespace KSPWheel
 
         public KSPWheelData[] wheelData;
 
-        public KSPWheelState wheelState = KSPWheelState.DEPLOYED;
+        public KSPWheelState wheelState
+        {
+            get { return currentWheelState; }
+        }
+
+        private KSPWheelState currentWheelState = KSPWheelState.DEPLOYED;
 
         public float springEaseMult = 1f;
 
@@ -151,6 +156,18 @@ namespace KSPWheel
 
         public float deployAnimationTime = 0f;
 
+        internal float partMassScaleFactor = 1;
+        internal float partCostScaleFactor = 1;
+        internal float wheelMassScaleFactor = 1;
+        internal float wheelMaxSpeedScalingFactor = 1f;
+        internal float wheelMaxLoadScalingFactor = 1f;
+        internal float rollingResistanceScalingFactor = 1f;
+        internal float motorTorqueScalingFactor = 1f;
+        internal float motorPowerScalingFactor = 1f;
+        internal float motorMaxRPMScalingFactor = 1f;
+
+        //serialize in editor/etc, should fix cloned-parts starting with improperly offset nodes
+        [SerializeField]
         private float prevScale = 1f;
 
         private bool advancedMode = false;
@@ -158,6 +175,8 @@ namespace KSPWheel
         private bool initializedWheels = false;
 
         private bool initializedScaling = false;
+
+        private bool prevGrounded = false;
 
         private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
 
@@ -229,9 +248,9 @@ namespace KSPWheel
             {
                 child.localScale = scale;
             }
-            onScaleUpdated();
             Utils.updateAttachNodes(part, prevScale, newScale, userInput);
             prevScale = newScale;
+            onScaleUpdated();
         }
 
         #endregion
@@ -245,14 +264,14 @@ namespace KSPWheel
             {
                 configNodeData = node.ToString();
             }
-            wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
+            currentWheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
             initializeScaling();
         }
 
         public override void OnSave(ConfigNode node)
         {
             base.OnSave(node);
-            persistentState = wheelState.ToString();
+            persistentState = currentWheelState.ToString();
             node.SetValue("persistentState", persistentState, true);
             if (wheelData != null)
             {
@@ -273,7 +292,7 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            wheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
+            currentWheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
             advancedMode = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode;
 
             ConfigNode node = ConfigNode.Parse(configNodeData).nodes[0];
@@ -365,11 +384,10 @@ namespace KSPWheel
                 {
                     if (colliders[i].gameObject.name.ToLower() == "collisionenhancer")
                     {
-                        GameObject.Destroy(colliders[i].gameObject);
+                        GameObject.DestroyImmediate(colliders[i].gameObject);
                     }
                 }
             }
-            part.collider = null;//clear the part collider that causes explosions.... collisions still happen, but things won't break
 
             //destroy bounds collider, if specified and present (KF wheels)
             if (!string.IsNullOrEmpty(boundsColliderName))
@@ -377,10 +395,14 @@ namespace KSPWheel
                 Transform boundsCollider = part.transform.FindRecursive(boundsColliderName);
                 if (boundsCollider != null)
                 {
-                    GameObject.Destroy(boundsCollider.gameObject);
+                    GameObject.DestroyImmediate(boundsCollider.gameObject);
                 }
             }
 
+            if (part.collider == null)
+            {
+                Utils.setPartColliderField(part);
+            }
             initializeScaling();
         }
 
@@ -392,6 +414,11 @@ namespace KSPWheel
             {
                 wheelData[i].locateTransform(part.transform);
                 wheelData[i].setupWheel(null, raycastMask, part.rescaleFactor * scale);
+                if (HighLogic.LoadedSceneIsFlight)
+                {
+                    CollisionManager.IgnoreCollidersOnVessel(vessel, wheelData[i].bumpStopCollider);
+                    wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
+                }
                 wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
                 wheelData[i].wheel.rollingResistance = rollingResistance;
                 wheelData[i].wheel.rotationalResistance = rotationalResistance;
@@ -439,22 +466,15 @@ namespace KSPWheel
                     {
                         onLoadUpdated(null, null);
                     }
+                    if (part.collisionEnhancer != null)
+                    {
+                        part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
+                    }
+                    updateDragCubes(1, scale);
                 }
             }
 
-            //TODO -- should only need to set this once on part init
-            if (part.collisionEnhancer != null)
-            {
-                part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
-            }
-
-            //TODO -- better handling of bump-stop collider state, should NOT need to reset it every tick
             int len = wheelData.Length;
-            for (int i = 0; i < len; i++)
-            {
-                wheelData[i].bumpStopCollider.enabled = wheelState == KSPWheelState.DEPLOYED||wheelState==KSPWheelState.BROKEN;
-            }
-
             //TODO -- subscribe to vessel modified events and update rigidbody assignment whenever parts/etc are modified
             if (useParentRigidbody && part.parent == null)
             {
@@ -466,7 +486,7 @@ namespace KSPWheel
                 }
             }
 
-            if (wheelState == KSPWheelState.DEPLOYED)
+            if (currentWheelState == KSPWheelState.DEPLOYED)
             {
                 int subLen = subModules.Count;
                 for (int i = 0; i < subLen; i++)
@@ -516,7 +536,7 @@ namespace KSPWheel
         /// <param name="phq"></param>
         public void OnPutToGround(PartHeightQuery phq)
         {
-            float pos = part.transform.position.y - groundHeightOffset * (part.rescaleFactor);
+            float pos = part.transform.position.y - groundHeightOffset * (part.rescaleFactor * scale);
             phq.lowestOnParts[part] = Mathf.Min(phq.lowestOnParts[part], pos);
             phq.lowestPoint = Mathf.Min(phq.lowestPoint, phq.lowestOnParts[part]);
         }
@@ -567,21 +587,27 @@ namespace KSPWheel
             {
                 return;
             }
-            float gravityFactor = (float)vessel.gravityForPos.magnitude / 9.80665f;
-            vesselMass *= springEaseMult * gravityFactor;
-            float compressionBoostFactor;
+            vesselMass *= springEaseMult;
+            if (vesselMass <= 0)
+            {
+                MonoBehaviour.print("ERROR: Calculated vessel mass <=0: " + vesselMass);
+                vesselMass = 0.001f;
+            }
+            float g = (float)vessel.gravityForPos.magnitude;
             float spring, damper, springLoad, natFreq, criticalDamping;
             float compression = 0;
+            float lengthCorrectedMass;
             int len = wheelData.Length;
             KSPWheelData data;
             for (int i = 0; i < len; i++)
             {
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
+                lengthCorrectedMass = vesselMass / data.wheel.length;
                 if (wheelRepairTimer < 1)
                 {
                     data.timeBoostFactor = 0f;
-                    spring = vesselMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
+                    spring = lengthCorrectedMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
                     springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
                     natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
                     criticalDamping = 2 * springLoad * natFreq;//critical damping
@@ -589,21 +615,27 @@ namespace KSPWheel
                 }
                 else
                 {
+                    float target = 0f;
+                    float rate = 0.1f;
                     if (compression > 0.8f)
                     {
-                        data.timeBoostFactor = data.timeBoostFactor + 0.5f * Time.fixedDeltaTime;
+                        target = 1;
+                        rate = 0.25f;
                     }
-                    else if (data.wheel.isGrounded && compression < 0.4f)
+                    data.timeBoostFactor = Mathf.MoveTowards(data.timeBoostFactor, target, Time.fixedDeltaTime * rate);
+                    data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, -1, 1);
+                    spring = lengthCorrectedMass * calculateSpring(compression, data.timeBoostFactor) * springRating * g;
+                    if (spring > 0)
                     {
-                        data.timeBoostFactor = data.timeBoostFactor - 0.2f * Time.fixedDeltaTime;
+                        springLoad = spring * data.wheel.length * 0.5f * 1 / g;//target load for damper calc is spring at half compression
+                        natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
+                        criticalDamping = 2 * springLoad * natFreq;//critical damping
+                        damper = criticalDamping * dampRatio;
                     }
-                    data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, 0.01f, 0.85f);
-                    compressionBoostFactor = 1.0f + Mathf.Clamp(compression * 2f, 0, 1f);
-                    spring = Mathf.Clamp(vesselMass * evaluateCurve(compressionBoostFactor, data.timeBoostFactor) * springRating * 10f, 0.01f, 50000f);
-                    springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
-                    natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
-                    criticalDamping = 2 * springLoad * natFreq;//critical damping
-                    damper = criticalDamping * dampRatio;
+                    else
+                    {
+                        damper = 0f;
+                    }
                 }
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
@@ -614,11 +646,37 @@ namespace KSPWheel
             }
         }
 
-        //TODO derive cleaner curves / alternate curves / alternate spring-setting methods for over and under compression
-        // can use a curve that starts at y=1 when x=comp limit
-        private float evaluateCurve(float comp, float time)
+        /// <summary>
+        /// Comp = 0-1 compression
+        /// Time = 0-1 time factor, based on response to compression (1 means overcompressed or undercompressed for duration, 0 means no duration of over/under compression)
+        /// Lower = lower stability bounds, below this compression it is considered 'undercompressed' and spring value is lowered
+        /// Upper = upper stability bounds, above this compression it is considered 'overcompressed' and spring value is raised
+        /// </summary>
+        /// <returns></returns>
+        private float calculateSpring(float comp, float time)
         {
-            return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(comp, time)), 0.01f, 10000000f);
+            if (comp <= 0) { return 0.0001f; }
+            float compFactor = 0;
+            float compPow = 3;
+            if (comp < 0.5)
+            {
+                if (comp < 0.2)
+                {
+                    float c5 = comp * 5;//brings it to a 0-1 range
+                    compFactor = Mathf.Pow((-1 + comp * 2), compPow) * c5 * c5;
+                }
+            }
+            else
+            {
+                compFactor = Mathf.Pow((-1 + comp * 2), compPow);// * compFactor * compFactor;
+            }
+            float timeFactor = time * time * time;
+            float combinedFactor = (2 + timeFactor + compFactor) * 0.5f;
+            float power = 3;
+            float curveOutput = Mathf.Pow(combinedFactor, power);
+            float output = curveOutput;
+            output = Mathf.Clamp(output, 0.0001f, 100f);
+            return output;
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)
@@ -631,12 +689,87 @@ namespace KSPWheel
             subModules.Remove(module);
         }
 
-        internal void onScaleUpdated()
+        internal void changeWheelState(KSPWheelState newState, KSPWheelSubmodule module, bool selfCallback = false)
         {
+            KSPWheelState oldState = currentWheelState;
+            currentWheelState = newState;
+            int len = subModules.Count;
+            for (int i = 0; i < len; i++)
+            {
+                if (module == subModules[i])
+                {
+                    if (selfCallback)
+                    {
+                        module.onStateChanged(oldState, newState);
+                    }
+                }
+                else
+                {
+                    subModules[i].onStateChanged(oldState, newState);
+                }
+            }
+
+            if (HighLogic.LoadedSceneIsFlight && wheelData!=null)
+            {
+                len = wheelData.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    if (wheelData[i].bumpStopCollider == null) { break; }//if one is not present, none will be, as something is not initialized yet;
+                    wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
+                }
+            }
+        }
+
+        private void onScaleUpdated()
+        {
+            if (HighLogic.CurrentGame != null)//should not happen for on start
+            {
+                KSPWheelScaleSettings scales = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>();
+                partMassScaleFactor = Mathf.Pow(scale, scales.partMassScalingPower);
+                partCostScaleFactor = Mathf.Pow(scale, scales.partCostScalingPower);
+                wheelMassScaleFactor = Mathf.Pow(scale, scales.wheelMassScalingPower);
+                wheelMaxLoadScalingFactor = Mathf.Pow(scale, scales.wheelMaxLoadScalingPower);
+                wheelMaxSpeedScalingFactor = Mathf.Pow(scale, scales.wheelMaxSpeedScalingPower);
+                motorMaxRPMScalingFactor = Mathf.Pow(scale, scales.motorMaxRPMScalingPower);
+                motorPowerScalingFactor = Mathf.Pow(scale, scales.motorPowerScalingPower);
+                motorTorqueScalingFactor = Mathf.Pow(scale, scales.motorTorqueScalingPower);
+            }
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
                 subModules[i].onScaleUpdated();
+            }
+        }
+
+        private void updateDragCubes(float prevScale, float newScale)
+        {
+            if (part.DragCubes != null && part.DragCubes.Cubes != null)// && prevScale!=newScale && newScale!=1)
+            {
+                DragCube cube;
+                float area, depth;
+                int len = part.DragCubes.Cubes.Count;
+                int l2;
+                for (int i = 0; i < len; i++)
+                {
+                    cube = part.DragCubes.Cubes[i];
+                    l2 = cube.Area.Length;
+                    for (int k = 0; k < l2; k++)
+                    {
+                        area = cube.Area[k];
+                        area /= prevScale;
+                        area *= newScale;
+                        cube.Area[k] = area;
+                    }
+                    l2 = cube.Depth.Length;
+                    for (int k = 0; k < l2; k++)
+                    {
+                        depth = cube.Depth[k];
+                        depth /= prevScale;
+                        depth *= newScale;
+                        cube.Depth[k] = depth;
+                    }
+                }
+                part.DragCubes.ForceUpdate(true, true);
             }
         }
 
@@ -655,16 +788,32 @@ namespace KSPWheel
         //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow (or they are handled by regular Part methods?)
         private void updateLandedState()
         {
-            grounded = false;
-            int len = wheelData.Length;
-            for (int i = 0; i < len; i++)
+            //if wheels are not deployed let the stock code handle grounded checks from the collider data
+            if (currentWheelState != KSPWheelState.DEPLOYED && part.GroundContact && prevGrounded)
             {
-                if (wheelData[i].wheel.isGrounded) { grounded = true; break; }
+                prevGrounded = false;
+                part.GroundContact = false;
+                vessel.checkLanded();
+                return;
             }
-            part.GroundContact = grounded;
-            vessel.checkLanded();
+            if (currentWheelState == KSPWheelState.DEPLOYED)
+            {
+                grounded = false;
+                int len = wheelData.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    if (wheelData[i].wheel.isGrounded)
+                    {
+                        grounded = true;
+                        break;
+                    }
+                }
+                part.GroundContact = grounded;
+                vessel.checkLanded();
+                prevGrounded = grounded;
+            }
         }
-        
+
         /// <summary>
         /// Input load in tons, suspension length, target (0-1), and desired damp ratio (1 = critical)
         /// and output spring and damper for that load and ratio

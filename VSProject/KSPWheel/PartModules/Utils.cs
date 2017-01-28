@@ -284,6 +284,13 @@ namespace KSPWheel
             }
         }
 
+        public static void setPartColliderField(Part part)
+        {
+            Collider[] cols = part.GetComponentsInChildren<Collider>();
+            if (cols != null && cols.Length > 0) { part.collider = cols[0]; }
+            MonoBehaviour.print("Set part.collider to: " + part.collider);
+        }
+
         public static bool rayPlaneIntersect(Vector3 rayStart, Vector3 rayDirection, Vector3 point, Vector3 normal, out Vector3 hit)
         {
             float lndot = Vector3.Dot(rayDirection, normal);
@@ -472,6 +479,54 @@ namespace KSPWheel
                 ctr.Setup(ctr.Window, module.part, module, HighLogic.LoadedSceneIsEditor ? UI_Scene.Editor : UI_Scene.Flight, widget, module.Fields[fieldName]);
                 widget.onFieldChanged = t;//re-seat callback
             }
+        }
+
+        public class PIDController
+        {
+
+            private float kp;
+            private float ki;
+            private float kd;
+
+            private float error;
+            private float prevError;
+            private float errorSum;
+
+            private float input;
+            private float dest;
+            private float output;
+
+            public PIDController(float input, float dest, float kp, float ki, float kd)
+            {
+                this.input = input;
+                this.dest = dest;
+                this.kp = kp;
+                this.ki = ki;
+                this.kd = kd;
+                prevError = error = dest - input;
+                errorSum = 0;
+            }
+
+            public void setParams(float dest, float kp, float ki, float kd)
+            {
+                this.dest = dest;
+                this.kp = kp;
+                this.ki = ki;
+                this.kd = kd;
+                error = prevError = 0f;
+                errorSum = 0;
+            }
+
+            public float update(float current, float dt)
+            {
+                input = current;
+                error = dest - input;
+                errorSum = errorSum + error * dt;
+                float dError = (error - prevError) / dt;
+                output = kp * error + ki * errorSum + kd * dError;
+                return output;
+            }
+
         }
 
     }

@@ -52,9 +52,8 @@ namespace KSPWheel
             }
         }
 
-        protected override void updateScaleValues()
+        protected void updateScaleValues()
         {
-            base.updateScaleValues();
             if (this.wheel == null) { return; }//wheel not initialized
 
             KSPWheelCollider wheel;

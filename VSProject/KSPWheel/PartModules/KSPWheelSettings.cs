@@ -18,6 +18,9 @@
         [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "Wear and damage model.\nNone = No wheel wear or breakage.\nSimple = Stock equivalent, break on impact/over-stress.\nAdvanced = Time, speed, load, heat, and impact based wheel wear + breakage.")]
         public KSPWheelWearType wearType = KSPWheelWearType.SIMPLE;
 
+        [GameParameters.CustomParameterUI("Enable Debugging", toolTip = "If enabled debug tools will be available in the app-launcher bar..")]
+        public bool debugMode = false;
+
         public override string Section { get { return "KSPWheel"; } }
 
         public override int SectionOrder { get { return 1; } }
@@ -33,31 +36,31 @@
     public class KSPWheelScaleSettings : GameParameters.CustomParameterNode
     {
 
-        [GameParameters.CustomFloatParameterUI("Part Mass Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which part mass is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Part Mass Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which part mass is scaled when scaling up or down")]
         public float partMassScalingPower = 3f;
 
-        [GameParameters.CustomFloatParameterUI("Part Cost Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which part cost is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Part Cost Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which part cost is scaled when scaling up or down")]
         public float partCostScalingPower = 3f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Mass Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which wheel mass is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Wheel Mass Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel mass is scaled when scaling up or down")]
         public float wheelMassScalingPower = 3f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Max Speed Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which wheel max safe speed is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Wheel Max Speed Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel max safe speed is scaled when scaling up or down")]
         public float wheelMaxSpeedScalingPower = 1f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Max Load Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which wheel min/max load are scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Wheel Max Load Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel min/max load are scaled when scaling up or down")]
         public float wheelMaxLoadScalingPower = 3f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Rolling Resistance Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which rolling resistance is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Wheel Rolling Resistance Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which rolling resistance is scaled when scaling up or down")]
         public float rollingResistanceScalingPower = 1f;
 
-        [GameParameters.CustomFloatParameterUI("Motor Torque Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which motor torque is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Motor Torque Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which motor torque is scaled when scaling up or down")]
         public float motorTorqueScalingPower = 3f;
 
-        [GameParameters.CustomFloatParameterUI("Motor Power Scale Power", minValue = 1, maxValue = 4, stepCount = 12, toolTip = "Sets the exponent to which motor power draw is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Motor Power Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which motor power draw is scaled when scaling up or down")]
         public float motorPowerScalingPower = 3f;
 
-        [GameParameters.CustomFloatParameterUI("Motor RPM Scale Power", minValue = 0, maxValue = 4, stepCount = 16, toolTip = "Sets the exponent to which motor max rpm is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Motor RPM Scale Power", minValue = 0, maxValue = 4, stepCount = 15, displayFormat = "F2", toolTip = "Sets the exponent to which motor max rpm is scaled when scaling up or down")]
         public float motorMaxRPMScalingPower = 0f;
 
         public override string Section { get { return "KSPWheel"; } }
@@ -75,22 +78,22 @@
     public class KSPWheelWearSettings : GameParameters.CustomParameterNode
     {
 
-        [GameParameters.CustomFloatParameterUI("Impact Tolerance Multiplier", minValue = 0, maxValue = 4, stepCount = 40, toolTip = "Global multiplier to the config specified impact tolerance of wheels, applied to the calculated impact velocity.  Lower values result in higher impact tolerance, setting to zero disables impact damage.")]
+        [GameParameters.CustomFloatParameterUI("Impact Tolerance Multiplier", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "Global multiplier to the config specified impact tolerance of wheels, applied to the calculated impact velocity.  Lower values result in higher impact tolerance, setting to zero disables impact damage.")]
         public float impactToleranceMultiplier = 1f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Stress Damage Rate", minValue = 0, maxValue = 4, stepCount = 40, toolTip = "Determines how quickly wheels break from being overloaded or absorbing impact forces.  Lower values result in increased load and impact stress tolerance, setting to zero disables stress based damage.")]
+        [GameParameters.CustomFloatParameterUI("Wheel Stress Damage Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "Determines how quickly wheels break from being overloaded or absorbing impact forces.  Lower values result in increased load and impact stress tolerance, setting to zero disables stress based damage.")]
         public float stressDamageMultiplier = 1f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Speed Damage Rate", minValue = 0, maxValue = 4, stepCount = 40, toolTip = "Determines how quickly wheels break from being driven past their maximum safe speed.  Lower values result in increased over-speed tolerance, setting to zero disables speed based damage.\nIn advanced wear mode this setting influences the overall rate of wheel wear accumulation that is contributed to speed.")]
+        [GameParameters.CustomFloatParameterUI("Wheel Speed Damage Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "Determines how quickly wheels break from being driven past their maximum safe speed.  Lower values result in increased over-speed tolerance, setting to zero disables speed based damage.\nIn advanced wear mode this setting influences the overall rate of wheel wear accumulation that is contributed to speed.")]
         public float speedDamageMultiplier = 1f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Slip Damage Rate", minValue = 0, maxValue = 4, stepCount = 40, toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how quickly wheels accumulate wear from wheel slip.  Lower values result in increased slip tolerance, setting to zero disables slip based damage.")]
+        [GameParameters.CustomFloatParameterUI("Wheel Slip Damage Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how quickly wheels accumulate wear from wheel slip.  Lower values result in increased slip tolerance, setting to zero disables slip based damage.")]
         public float slipDamageMultiplier = 1f;
 
-        [GameParameters.CustomFloatParameterUI("Motor Use Wear Rate", minValue = 0, maxValue = 4, stepCount = 40, toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how quickly motors accumulate wear from standard use.  Lower values result in increased motor lifespan, setting to zero disables use based damage.")]
+        [GameParameters.CustomFloatParameterUI("Motor Use Wear Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how quickly motors accumulate wear from standard use.  Lower values result in increased motor lifespan, setting to zero disables use based damage.")]
         public float motorDamageMultiplier = 1f;
 
-        [GameParameters.CustomFloatParameterUI("Motor Heat Wear Rate", minValue = 0, maxValue = 4, stepCount = 40, toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how quickly motors accumulate wear from being used while overheated.  Lower values result in increased motor heat tolerance, setting to zero disables heat based damage.")]
+        [GameParameters.CustomFloatParameterUI("Motor Heat Wear Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how quickly motors accumulate wear from being used while overheated.  Lower values result in increased motor heat tolerance, setting to zero disables heat based damage.")]
         public float motorHeatMultiplier = 1f;
 
         public override string Section { get { return "KSPWheel"; } }
