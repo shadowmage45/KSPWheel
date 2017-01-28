@@ -166,6 +166,8 @@ namespace KSPWheel
         internal float motorPowerScalingFactor = 1f;
         internal float motorMaxRPMScalingFactor = 1f;
 
+        //serialize in editor/etc, should fix cloned-parts starting with improperly offset nodes
+        [SerializeField]
         private float prevScale = 1f;
 
         private bool advancedMode = false;
@@ -468,6 +470,7 @@ namespace KSPWheel
                     {
                         part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
                     }
+                    updateDragCubes(1, scale);
                 }
             }
 
@@ -734,6 +737,38 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 subModules[i].onScaleUpdated();
+            }
+        }
+
+        private void updateDragCubes(float prevScale, float newScale)
+        {
+            if (part.DragCubes != null && part.DragCubes.Cubes != null)// && prevScale!=newScale && newScale!=1)
+            {
+                DragCube cube;
+                float area, depth;
+                int len = part.DragCubes.Cubes.Count;
+                int l2;
+                for (int i = 0; i < len; i++)
+                {
+                    cube = part.DragCubes.Cubes[i];
+                    l2 = cube.Area.Length;
+                    for (int k = 0; k < l2; k++)
+                    {
+                        area = cube.Area[k];
+                        area /= prevScale;
+                        area *= newScale;
+                        cube.Area[k] = area;
+                    }
+                    l2 = cube.Depth.Length;
+                    for (int k = 0; k < l2; k++)
+                    {
+                        depth = cube.Depth[k];
+                        depth /= prevScale;
+                        depth *= newScale;
+                        cube.Depth[k] = depth;
+                    }
+                }
+                part.DragCubes.ForceUpdate(true, true);
             }
         }
 
