@@ -406,6 +406,7 @@ namespace KSPWheel
                 if (HighLogic.LoadedSceneIsFlight)
                 {
                     CollisionManager.IgnoreCollidersOnVessel(vessel, wheelData[i].bumpStopCollider);
+                    wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
                 }
                 wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
                 wheelData[i].wheel.rollingResistance = rollingResistance;
@@ -454,22 +455,14 @@ namespace KSPWheel
                     {
                         onLoadUpdated(null, null);
                     }
+                    if (part.collisionEnhancer != null)
+                    {
+                        part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
+                    }
                 }
             }
 
-            //TODO -- should only need to set this once on part init
-            if (part.collisionEnhancer != null)
-            {
-                part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
-            }
-
-            //TODO -- better handling of bump-stop collider state, should NOT need to reset it every tick
             int len = wheelData.Length;
-            for (int i = 0; i < len; i++)
-            {
-                wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED||currentWheelState==KSPWheelState.BROKEN;
-            }
-
             //TODO -- subscribe to vessel modified events and update rigidbody assignment whenever parts/etc are modified
             if (useParentRigidbody && part.parent == null)
             {
@@ -700,6 +693,16 @@ namespace KSPWheel
                 else
                 {
                     subModules[i].onStateChanged(oldState, newState);
+                }
+            }
+
+            if (HighLogic.LoadedSceneIsFlight && wheelData!=null)
+            {
+                len = wheelData.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    if (wheelData[i].bumpStopCollider == null) { break; }//if one is not present, none will be, as something is not initialized yet;
+                    wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
                 }
             }
         }
