@@ -74,6 +74,7 @@
     <Compile Include="PartModules\KSPWheelRepulsor.cs" />
     <Compile Include="PartModules\KSPWheelRotation.cs" />
     <Compile Include="PartModules\KSPWheelSettings.cs" />
+    <Compile Include="PartModules\KSPWheelSidedModel.cs" />
     <Compile Include="PartModules\KSPWheelSounds.cs" />
     <Compile Include="PartModules\KSPWheelState.cs" />
     <Compile Include="PartModules\KSPWheelSteering.cs" />

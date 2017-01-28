@@ -90,9 +90,6 @@ namespace KSPWheel
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
 
-        private float powerScalar = 1f;
-        private float torqueScalar = 1f;
-        private float rpmScalar = 1f;
         public float torqueOutput;
 
         public void onMotorInvert(BaseField field, System.Object obj)
@@ -116,10 +113,10 @@ namespace KSPWheel
             {
                 m.gearRatio = gearRatio;
 
-                float maxRPM = m.maxRPM * m.rpmScalar;
+                float maxRPM = m.maxRPM * m.controller.motorMaxRPMScalingFactor;
                 float scale = m.part.rescaleFactor * m.controller.scale;
                 float radius = m.wheelData.scaledRadius(scale);
-                float torque = m.torqueScalar * m.maxMotorTorque;
+                float torque = m.maxMotorTorque * m.controller.motorTorqueScalingFactor;
                 float force = torque * m.gearRatio / radius;
                 m.maxPowerOutput = force;
 
@@ -191,7 +188,6 @@ namespace KSPWheel
             {
                 invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
             }
-            updateScaleValues();
         }
 
         public override string GetInfo()
@@ -206,7 +202,6 @@ namespace KSPWheel
         internal override void onScaleUpdated()
         {
             base.onScaleUpdated();
-            updateScaleValues();
         }
 
         internal override void onUIControlsUpdated(bool show)
@@ -233,13 +228,6 @@ namespace KSPWheel
             powerOut = Mathf.Abs(wheel.motorTorque) / wheel.radius;
         }
 
-        protected virtual void updateScaleValues()
-        {
-            torqueScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorTorqueScalingPower);
-            rpmScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorMaxRPMScalingPower);
-            powerScalar = Mathf.Pow(controller.scale, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().motorPowerScalingPower);
-        }
-
         protected virtual void updateMotor()
         {
             float fI = part.vessel.ctrlState.wheelThrottle + part.vessel.ctrlState.wheelThrottleTrim;
@@ -263,6 +251,7 @@ namespace KSPWheel
             float motorRPM = wheel.rpm * gearRatio;
             //integrateMotorEuler(fI, motorRPM);
             integrateMotorEulerSub(fI, motorRPM, 5);
+            //integrateMotorRK4(fI, motorRPM, wheel.mass);
         }
 
         protected void integrateMotorEuler(float fI, float motorRPM)
@@ -307,20 +296,20 @@ namespace KSPWheel
         protected float calcRawTorque(float fI, float motorRPM)
         {
             motorRPM = Mathf.Abs(motorRPM);
-            float maxRPM = this.maxRPM * rpmScalar;
+            float maxRPM = this.maxRPM * controller.motorMaxRPMScalingFactor;
             if (motorRPM > maxRPM) { motorRPM = maxRPM; }
             float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
-            float outputTorque = curveOut * maxMotorTorque * fI * torqueScalar;
+            float outputTorque = curveOut * maxMotorTorque * fI * controller.motorTorqueScalingFactor;
             return outputTorque;
         }
 
         protected float calcECUse(float fI, float motorRPM)
         {
             motorRPM = Mathf.Abs(motorRPM);
-            float maxRPM = this.maxRPM * rpmScalar;
+            float maxRPM = this.maxRPM * controller.motorMaxRPMScalingFactor;
             if (motorRPM > maxRPM) { motorRPM = maxRPM; }
             float percent = 1 - ( motorRPM / maxRPM );
-            float totalPower = motorPower * powerScalar * Mathf.Abs(fI);
+            float totalPower = motorPower * controller.motorPowerScalingFactor * Mathf.Abs(fI);
             float minPower = 0.05f * totalPower;
             float diff = totalPower - minPower;
             return minPower + percent * diff;
@@ -329,14 +318,13 @@ namespace KSPWheel
         private static float rpmToRad = 0.104719755f;
         private static float radToRPM = 1 / 0.104719755f;
 
-        protected float wheelRPMIntegration(float rpm, float wm, float t, float dt)
+        protected float wheelRPMIntegration(float rpm, float wm, float torque, float deltaTime)
         {
-            float outRPM = rpm;
             float wheelRPM = rpm / gearRatio;
             float wWheel = rpm * rpmToRad;
-            float wAccel = t / wm * dt;
+            float wAccel = torque / wm * deltaTime;
             wWheel += wAccel;
-            return outRPM = wWheel * radToRPM * gearRatio;
+            return wWheel * radToRPM * gearRatio;
         }
 
         protected float updateResourceDrain(float ecs)
@@ -362,14 +350,18 @@ namespace KSPWheel
         ///// <summary>
         ///// RK4 integration for motor torque, to prevent wheel from spinning excessively
         ///// </summary>
-        ///// <param name="fI"></param>
-        ///// <param name="torque"></param>
-        ///// <param name="ec"></param>
-        //protected void integrateMotor(float fI, float rpm, float wm, out float torque, out float ec)
+        //protected void integrateMotorRK4(float fI, float rpm, float wheelMass)
         //{
+        //    if (fI == 0)
+        //    {
+        //        wheel.motorTorque = torqueOut = torqueOutput = 0f;
+        //        guiResourceUse = 0f;
+        //        return;
+        //    }
+        //    //final outputs;
+        //    float torque, ec;
         //    //initial state input
-        //    float dt = 0f;
-        //    float t = 0f;
+        //    float deltaTime = Time.fixedDeltaTime;
         //    //derivative outputs
         //    float ec1, ec2, ec3, ec4;
         //    float rpm1, rpm2, rpm3, rpm4;
@@ -379,24 +371,28 @@ namespace KSPWheel
         //    //float or;//not needed
         //    float oe;
         //    //derivative calcs
-        //    motorDerivative(fI, rpm, wm, t, 0f, 0, 0, out t1, out rpm1, out ec1);
-        //    motorDerivative(fI, rpm, wm, t, dt * 0.5f, rpm1, t1, out t2, out rpm2, out ec2);
-        //    motorDerivative(fI, rpm, wm, t, dt * 0.5f, rpm2, t2, out t3, out rpm3, out ec3);
-        //    motorDerivative(fI, rpm, wm, t, dt, rpm3, t3, out t4, out rpm4, out ec4);
+        //    motorDerivative(fI, wheelMass, deltaTime * 0.0f, rpm, 0, out t1, out rpm1, out ec1);
+        //    motorDerivative(fI, wheelMass, deltaTime * 0.5f, rpm1, t1, out t2, out rpm2, out ec2);
+        //    motorDerivative(fI, wheelMass, deltaTime * 0.5f, rpm2, t2, out t3, out rpm3, out ec3);
+        //    motorDerivative(fI, wheelMass, deltaTime * 1.0f, rpm3, t3, out t4, out rpm4, out ec4);
         //    //derivative integration
         //    ot = 1.0f / 6.0f * (t1 + 2.0f * (t2 + t3) + t4);
+        //    if (float.IsNaN(ot)) { ot = 0f; }//as /6*xxxxx can be /0...
         //    //or = 1.0f / 6.0f * (rpm1 + 2.0f * (rpm2 + rpm3) + rpm4);
         //    oe = 1.0f / 6.0f * (ec1 + 2.0f * (ec2 + ec3) + ec4);
+        //    if (float.IsNaN(oe)) { oe = 0f; }
         //    torque = ot;
         //    ec = oe;
+
+        //    torque *= updateResourceDrain(ec);
+        //    wheel.motorTorque = torqueOutput = torqueOut = torque;
         //}
 
-        //protected void motorDerivative(float fI, float rpm, float wm, float t, float time, float dRpm, float dt, out float outTorque, out float outRpm, out float outECUse)
+        //protected void motorDerivative(float fI, float wheelMass, float time, float dRpm, float dTorque, out float outTorque, out float outRpm, out float outECUse)
         //{
         //    outECUse = calcECUse(fI, dRpm);
-        //    outTorque = 0f;            
-        //    outRpm = 0f;
-        //    //TODO
+        //    outTorque = calcRawTorque(fI, dRpm);
+        //    outRpm = wheelRPMIntegration(dRpm, wheelMass, dTorque, time);
         //}
 
     }
