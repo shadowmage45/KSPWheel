@@ -46,7 +46,7 @@ namespace KSPWheel
          UI_FloatRange(minValue = -30f, maxValue = 30f, stepIncrement = 0.1f, suppressEditorShipModified = true)]
         public float strutRotation = 0f;
         
-        [KSPField(guiName = "Strut Angle", guiActive = false, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Wheel Angle", guiActive = false, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = -30f, maxValue = 30f, stepIncrement = 0.1f, suppressEditorShipModified = true)]
         public float wheelRotation = 0f;
 
@@ -223,6 +223,11 @@ namespace KSPWheel
             {
                 KSPWheelAdjustableGear g = part.symmetryCounterparts[0].GetComponent<KSPWheelAdjustableGear>();
                 flipWheel = !g.flipWheel;
+                strutRotation = -g.strutRotation;
+                if (!allowFlip || carriageRotatorTransform == null)//when flipping is allowed, wheel rotation handled by the carriage transform rotation
+                {
+                    wheelRotation = -g.wheelRotation;
+                }
             }
         }
 
