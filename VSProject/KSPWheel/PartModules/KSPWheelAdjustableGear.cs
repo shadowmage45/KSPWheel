@@ -105,17 +105,7 @@ namespace KSPWheel
                 {
                     m.flipWheel = !m.flipWheel;
                 }
-                float rot = m.flipWheel ? 180 : 0;
-                if (m.carriageRotatorTransform != null)
-                {
-                    m.carriageRotatorTransform.localRotation = m.wheelRotatorDefaultRotation;
-                    m.carriageRotatorTransform.Rotate(0, 0, rot, Space.Self);
-                }
-                if (m.rearDoorRotatorTransform != null)
-                {
-                    m.rearDoorRotatorTransform.localRotation = m.rearDoorRotatorDefaultRotation;
-                    m.rearDoorRotatorTransform.Rotate(0, 0, rot, Space.Self);
-                }
+                m.setupFlippedState();
             });
         }
 
@@ -175,7 +165,7 @@ namespace KSPWheel
                         break;
                 }
             }
-            updateStandInCollider(true);
+            updateDeploymentState(true);
         }
 
         [KSPEvent(guiName = "Toggle Gear", guiActive = true, guiActiveEditor = true)]
@@ -201,7 +191,7 @@ namespace KSPWheel
                 default:
                     break;
             }
-            updateStandInCollider(true);
+            updateDeploymentState(true);
         }
 
         public override void OnStart(StartState state)
@@ -222,7 +212,33 @@ namespace KSPWheel
             {
                 wdgt.minValue = -wheelRotationMax;
                 wdgt.maxValue = wheelRotationMax;                
-            }            
+            }
+            setupCloneState();
+            setupFlippedState();
+        }
+
+        private void setupCloneState()
+        {
+            if (part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
+            {
+                KSPWheelAdjustableGear g = part.symmetryCounterparts[0].GetComponent<KSPWheelAdjustableGear>();
+                flipWheel = !g.flipWheel;
+            }
+        }
+
+        private void setupFlippedState()
+        {
+            float rot = flipWheel ? 180 : 0;
+            if (carriageRotatorTransform != null)
+            {
+                carriageRotatorTransform.localRotation = wheelRotatorDefaultRotation;
+                carriageRotatorTransform.Rotate(0, 0, rot, Space.Self);
+            }
+            if (rearDoorRotatorTransform != null)
+            {
+                rearDoorRotatorTransform.localRotation = rearDoorRotatorDefaultRotation;
+                rearDoorRotatorTransform.Rotate(0, 0, rot, Space.Self);
+            }
         }
 
         internal override void postControllerSetup()
@@ -292,7 +308,7 @@ namespace KSPWheel
                 standInCollider.enabled = false;
                 CollisionManager.IgnoreCollidersOnVessel(vessel, standInCollider);
             }
-            updateStandInCollider(false);
+            updateDeploymentState(false);
             wheelDefaultPos = wheelTransform.localPosition;//TODO -- this will have problems when cloned in the editor; the position will have already been moved
             updateSuspensionLength();
         }
@@ -312,7 +328,7 @@ namespace KSPWheel
                 default:
                     break;
             }
-            updateStandInCollider(false);
+            updateDeploymentState(false);
         }
 
         private void updateSuspensionLength()
@@ -330,13 +346,14 @@ namespace KSPWheel
             }
         }
 
-        private void updateStandInCollider(bool setup)
+        private void updateDeploymentState(bool setup)
         {
             if (!HighLogic.LoadedSceneIsFlight || standInCollider == null) { return; }
             switch (controller.wheelState)
             {
                 case KSPWheelState.RETRACTED:
                     standInCollider.enabled = false;
+                    wheel.angularVelocity = 0f;
                     break;
                 case KSPWheelState.RETRACTING:
                     if (setup)
@@ -347,6 +364,7 @@ namespace KSPWheel
                         float o = -h * 0.5f + wheel.radius;
                         standInCollider.center = new Vector3(0, o, 0);
                     }
+                    wheel.angularVelocity = 0f;
                     standInCollider.enabled = true;
                     break;
                 case KSPWheelState.DEPLOYED:
@@ -359,9 +377,11 @@ namespace KSPWheel
                         standInCollider.height = wheel.radius * 2f + wheel.length;
                         standInCollider.center = new Vector3(0, -standInCollider.height * 0.5f + wheel.radius, 0);
                     }
+                    wheel.angularVelocity = 0f;
                     standInCollider.enabled = true;
                     break;
                 case KSPWheelState.BROKEN:
+                    wheel.angularVelocity = 0f;
                     standInCollider.enabled = false;
                     break;
                 default:
