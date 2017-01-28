@@ -162,6 +162,8 @@ namespace KSPWheel
                     for (int i = 0; i < len; i++)
                     {
                         controller.wheelData[i].wheel.angularVelocity = 0f;
+                        controller.wheelData[i].wheel.motorTorque = 0f;
+                        controller.wheelData[i].wheel.brakeTorque = 0f;
                     }
                 }
             }
