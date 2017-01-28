@@ -536,7 +536,7 @@ namespace KSPWheel
         /// <param name="phq"></param>
         public void OnPutToGround(PartHeightQuery phq)
         {
-            float pos = part.transform.position.y - groundHeightOffset * (part.rescaleFactor);
+            float pos = part.transform.position.y - groundHeightOffset * (part.rescaleFactor * scale);
             phq.lowestOnParts[part] = Mathf.Min(phq.lowestOnParts[part], pos);
             phq.lowestPoint = Mathf.Min(phq.lowestPoint, phq.lowestOnParts[part]);
         }
@@ -616,15 +616,10 @@ namespace KSPWheel
                 else
                 {
                     float target = 0f;
-                    float rate = 1f;
+                    float rate = 0.1f;
                     if (compression > 0.8f)
                     {
                         target = 1;
-                        rate = 0.25f;
-                    }
-                    else if (compression < 0.2f)
-                    {
-                        target = 0;
                         rate = 0.25f;
                     }
                     data.timeBoostFactor = Mathf.MoveTowards(data.timeBoostFactor, target, Time.fixedDeltaTime * rate);
@@ -662,8 +657,19 @@ namespace KSPWheel
         {
             if (comp <= 0) { return 0.0001f; }
             float compFactor = 0;
-            float compPow = 1;
-            compFactor = Mathf.Pow((-1 + comp * 2), compPow);// * compFactor * compFactor;
+            float compPow = 3;
+            if (comp < 0.5)
+            {
+                if (comp < 0.2)
+                {
+                    float c5 = comp * 5;//brings it to a 0-1 range
+                    compFactor = Mathf.Pow((-1 + comp * 2), compPow) * c5 * c5;
+                }
+            }
+            else
+            {
+                compFactor = Mathf.Pow((-1 + comp * 2), compPow);// * compFactor * compFactor;
+            }
             float timeFactor = time * time * time;
             float combinedFactor = (2 + timeFactor + compFactor) * 0.5f;
             float power = 3;
@@ -671,11 +677,6 @@ namespace KSPWheel
             float output = curveOutput;
             output = Mathf.Clamp(output, 0.0001f, 100f);
             return output;
-        }
-
-        private float evaluateCurve(float comp, float time)
-        {
-            return Mathf.Clamp(1f / Mathf.Abs(1f - 2f / Mathf.Pow(comp, time)), 0.01f, 10000000f);
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)
