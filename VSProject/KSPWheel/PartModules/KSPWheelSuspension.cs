@@ -74,15 +74,10 @@ namespace KSPWheel
 
         public void Update()
         {
-            preWheelFrameUpdate();
-            //if (HighLogic.LoadedSceneIsEditor && controller != null && wheel != null && suspensionTransform != null)
-            //{
-            //    float scale = part.rescaleFactor * controller.scale;
-            //    float offset = suspensionOffset * scale + (controller.wheelState == KSPWheelState.DEPLOYED? wheel.length * 0.5f : 0f);
-            //    Vector3 o = suspensionTransform.TransformDirection(suspensionAxis);
-            //    suspensionTransform.localPosition = defaultPos;
-            //    suspensionTransform.position -= o * offset;
-            //}
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                preWheelFrameUpdate();
+            }
         }
 
         internal override void postControllerSetup()
