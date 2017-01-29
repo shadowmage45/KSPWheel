@@ -154,13 +154,17 @@ namespace KSPWheel
             get { return currentWheelState; }
         }
 
+        //TODO -- there has to be a better way to fix the lack of OnLoad for root parts in editor than this, but I can't find one
+        //TODO - might still have problems in other places, as that is where the [Persistent] tag for config-node data came from
+        //Serialized to allow the state to be loaded from config data in prefab and persisted to in-editor/etc.
+        [SerializeField]
         private KSPWheelState currentWheelState = KSPWheelState.DEPLOYED;
 
         public float springEaseMult = 1f;
 
         public float wheelRepairTimer = 1f;
 
-        public float deployAnimationTime = 0f;
+        public float deployAnimationTime = 1f;
 
         internal float partMassScaleFactor = 1;
         internal float partCostScaleFactor = 1;
