@@ -47,37 +47,34 @@ namespace KSPWheel
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            if (controller.wheelState == KSPWheelState.DEPLOYED)
+            if (!string.IsNullOrEmpty(runningEffect))
             {
-                if (!string.IsNullOrEmpty(runningEffect))
-                {
-                    float rpm = Mathf.Abs(wheel.rpm);
-                    float power = rpm > runningRpmPeak ? 1 : rpm / runningRpmPeak;
-                    part.Effect(runningEffect, power);
-                }
+                float rpm = Mathf.Abs(wheel.rpm);
+                float power = rpm > runningRpmPeak ? 1 : rpm / runningRpmPeak;
+                part.Effect(runningEffect, power);
+            }
 
-                if (!string.IsNullOrEmpty(motorEffect) && motor != null)
-                {
-                    float rpm = Mathf.Abs(wheel.rpm);
-                    rpm *= motor.gearRatio;
-                    float power = rpm > motor.maxRPM ? 1 : rpm / motor.maxRPM;
-                    part.Effect(motorEffect, power);
-                }
+            if (!string.IsNullOrEmpty(motorEffect) && motor != null)
+            {
+                float rpm = Mathf.Abs(wheel.rpm);
+                rpm *= motor.gearRatio;
+                float power = rpm > motor.maxRPM ? 1 : rpm / motor.maxRPM;
+                part.Effect(motorEffect, power);
+            }
 
-                if (!string.IsNullOrEmpty(longSlipEffect))
-                {
-                    float range = longSlipPeak - longSlipStart;
-                    float val = (wheel.longitudinalSlip - longSlipStart) / range;
-                    val = val < 0 ? 0 : val > 1 ? 1 : val;
-                    part.Effect(longSlipEffect, val);
-                }
+            if (!string.IsNullOrEmpty(longSlipEffect))
+            {
+                float range = longSlipPeak - longSlipStart;
+                float val = (wheel.longitudinalSlip - longSlipStart) / range;
+                val = val < 0 ? 0 : val > 1 ? 1 : val;
+                part.Effect(longSlipEffect, val);
+            }
 
-                if (!string.IsNullOrEmpty(latSlipEffect))
-                {
-                    float div = 1 / (latSlipPeak - latSlipStart);
-                    float power = Mathf.Max(Mathf.Min((wheel.lateralSlip - latSlipStart) * div, 1), 0);
-                    part.Effect(latSlipEffect, power);
-                }
+            if (!string.IsNullOrEmpty(latSlipEffect))
+            {
+                float div = 1 / (latSlipPeak - latSlipStart);
+                float power = Mathf.Max(Mathf.Min((wheel.lateralSlip - latSlipStart) * div, 1), 0);
+                part.Effect(latSlipEffect, power);
             }
         }
 

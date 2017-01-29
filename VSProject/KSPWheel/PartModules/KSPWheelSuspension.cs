@@ -25,6 +25,15 @@ namespace KSPWheel
         public Vector3 suspensionAxis = Vector3.up;
 
         [KSPField]
+        public float retractedPosition = 1f;
+
+        [KSPField]
+        public float deployStart = 0.5f;
+
+        [KSPField]
+        public float deployEnd = 0.7f;
+
+        [KSPField]
         public bool allowLockedSuspension = false;
 
         [KSPField(guiName = "Lock Suspension", guiActive = false, guiActiveEditor = false, isPersistant = true),
@@ -33,6 +42,7 @@ namespace KSPWheel
 
         public Vector3 defaultPos;
         public Transform suspensionTransform;
+        private float deployedPosition = 1f;
         private GameObject lockedSuspensionObject;
         private CapsuleCollider lockedSuspensionCollider;
         private Vector3 lockedPos = Vector3.zero;
@@ -64,13 +74,9 @@ namespace KSPWheel
 
         public void Update()
         {
-            if (HighLogic.LoadedSceneIsEditor && controller != null && wheel != null && suspensionTransform != null)
+            if (HighLogic.LoadedSceneIsEditor)
             {
-                float scale = part.rescaleFactor * controller.scale;
-                float offset = suspensionOffset * scale + (controller.wheelState == KSPWheelState.DEPLOYED? wheel.length * 0.5f : 0f);
-                Vector3 o = suspensionTransform.TransformDirection(suspensionAxis);
-                suspensionTransform.localPosition = defaultPos;
-                suspensionTransform.position -= o * offset;
+                preWheelFrameUpdate();
             }
         }
 
@@ -88,22 +94,50 @@ namespace KSPWheel
                 }
                 defaultPos = suspensionTransform.localPosition;
             }
+            if (vessel != null && controller.wheelState == KSPWheelState.DEPLOYED)
+            {
+                vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, true);
+            }
         }
 
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            if (suspensionTransform != null)
+            if (suspensionTransform != null && wheel!=null)
             {
                 float offset = 0;
                 if (controller.wheelState == KSPWheelState.DEPLOYED)
                 {
-                    offset = (wheel.length - wheel.compressionDistance + (suspensionOffset * part.rescaleFactor * controller.scale));
+                    offset = wheel.length - wheel.compressionDistance;
                 }
                 else if (controller.wheelState == KSPWheelState.BROKEN)
                 {
                     offset = suspensionOffset * part.rescaleFactor * controller.scale;
                 }
+                else//retracting or deploying, find and set to proper position
+                {
+                    float animPos = controller.deployAnimationTime;
+                    if (animPos < deployStart)
+                    {
+                        offset = retractedPosition * wheel.length;
+                    }
+                    else if (animPos < deployEnd)
+                    {
+                        float interval = deployEnd - deployStart;//length of interval
+                        if (interval > 0)
+                        {
+                            float adjustment = deployedPosition - retractedPosition;
+                            float time = (animPos - deployStart) / interval;//0-1 position within adjustment range
+                            float pos = retractedPosition + time * adjustment;
+                            offset = pos * wheel.length;
+                        }
+                    }
+                    else
+                    {
+                        offset = deployedPosition * wheel.length;
+                    }
+                }
+                offset += suspensionOffset * part.rescaleFactor * controller.scale;
                 Vector3 o = suspensionTransform.TransformDirection(suspensionAxis);
                 suspensionTransform.localPosition = defaultPos;
                 suspensionTransform.position -= o * offset;
@@ -137,6 +171,17 @@ namespace KSPWheel
                     lockedSuspensionCollider.center = lockedPos;
                 }
             }
+        }
+
+        internal override void onStateChanged(KSPWheelState oldState, KSPWheelState newState)
+        {
+            base.onStateChanged(oldState, newState);
+            if (newState == KSPWheelState.RETRACTING && oldState == KSPWheelState.DEPLOYED && wheel != null)
+            {
+                float comp = wheel.length - wheel.compressionDistance;
+                deployedPosition = comp / wheel.length;
+            }
+            else { deployedPosition = 1f; }
         }
     }
 }
