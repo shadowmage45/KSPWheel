@@ -109,6 +109,9 @@ namespace KSPWheel
         public float groundHeightOffset = 0f;
 
         [KSPField]
+        public bool allowScaling = true;
+
+        [KSPField]
         public float minScale = 0.1f;
 
         [KSPField]
@@ -117,6 +120,9 @@ namespace KSPWheel
         [KSPField(guiName = "Scale", guiActive = false, guiActiveEditor = true, isPersistant = true, guiUnits = "x"),
          UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 40f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
         public float scale = 1f;
+
+        [KSPField]
+        public string scalingTransform = string.Empty;
 
         #endregion
 
@@ -241,14 +247,32 @@ namespace KSPWheel
 
         private void setScale(float newScale, bool userInput)
         {
-            this.scale = newScale;
-            Vector3 scale = new Vector3(newScale, newScale, newScale);
-            Transform modelRoot = part.transform.FindRecursive("model");
-            foreach (Transform child in modelRoot)
+            scale = newScale;
+            if (allowScaling)
             {
-                child.localScale = scale;
+                Vector3 scale = new Vector3(newScale, newScale, newScale);
+                Transform modelRoot = part.transform.FindRecursive("model");
+                if (!string.IsNullOrEmpty(scalingTransform))
+                {
+                    Transform scalar = modelRoot.FindRecursive(scalingTransform);
+                    if (scalar != null)
+                    {
+                        scalar.localScale = scale;
+                    }
+                }
+                else
+                {
+                    foreach (Transform child in modelRoot)
+                    {
+                        child.localScale = scale;
+                    }
+                }
+                Utils.updateAttachNodes(part, prevScale, newScale, userInput);
             }
-            Utils.updateAttachNodes(part, prevScale, newScale, userInput);
+            else
+            {
+                scale = newScale = 1f;
+            }
             prevScale = newScale;
             onScaleUpdated();
         }
@@ -716,6 +740,12 @@ namespace KSPWheel
                 {
                     if (wheelData[i].bumpStopCollider == null) { break; }//if one is not present, none will be, as something is not initialized yet;
                     wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
+                    if (newState != KSPWheelState.DEPLOYED && wheelData[i].wheel != null)
+                    {
+                        wheelData[i].wheel.angularVelocity = 0f;
+                        wheelData[i].wheel.motorTorque = 0f;
+                        wheelData[i].wheel.brakeTorque = 0f;
+                    }
                 }
             }
         }
