@@ -399,6 +399,8 @@ namespace KSPWheel
             Fields[nameof(scale)].uiControlEditor.onFieldChanged = onScaleAdjusted;
             Fields[nameof(springRating)].uiControlFlight.onFieldChanged = onLoadUpdated;
 
+            Fields[nameof(scale)].guiActiveEditor = allowScaling;
+
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
             {
