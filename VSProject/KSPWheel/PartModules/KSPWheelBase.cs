@@ -396,10 +396,13 @@ namespace KSPWheel
             field = Fields[nameof(maxLoadRating)];
             field.guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
 
-            Fields[nameof(scale)].uiControlEditor.onFieldChanged = onScaleAdjusted;
             Fields[nameof(springRating)].uiControlFlight.onFieldChanged = onLoadUpdated;
 
+            Fields[nameof(scale)].uiControlEditor.onFieldChanged = onScaleAdjusted;
             Fields[nameof(scale)].guiActiveEditor = allowScaling;
+            UI_FloatEdit ufe = (UI_FloatEdit)Fields[nameof(scale)].uiControlEditor;
+            ufe.minValue = minScale;
+            ufe.maxValue = maxScale;
 
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
