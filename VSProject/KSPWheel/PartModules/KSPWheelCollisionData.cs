@@ -12,15 +12,6 @@ namespace KSPWheel
         public Collider monitoredCollider;
         public float collisionForce;
 
-        private PhysicMaterial wheelMat;
-        private PhysicMaterial prevMat;
-
-        public void Start()
-        {
-            wheelMat = new PhysicMaterial();
-            wheelMat.frictionCombine = PhysicMaterialCombine.Multiply;
-        }
-
         public void OnCollisionEnter(Collision c)
         {
             if (isMonitoredCollision(c))
@@ -41,21 +32,13 @@ namespace KSPWheel
         {
             if (isMonitoredCollision(c))
             {
-                updateCollisionForce(null);
+                collisionForce = 0f;
             }
         }
 
         private void updateCollisionForce(Collision c)
         {
-            int len = c.contacts.Length;
-            if (c == null)
-            {
-                collisionForce = 0f;
-            }
-            else
-            {
-                collisionForce = c.impulse.magnitude / Time.fixedDeltaTime;
-            }
+            collisionForce = c.impulse.magnitude / Time.fixedDeltaTime;
         }
 
         private bool isMonitoredCollision(Collision c)

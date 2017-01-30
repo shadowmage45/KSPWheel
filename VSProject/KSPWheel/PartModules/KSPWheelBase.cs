@@ -437,6 +437,9 @@ namespace KSPWheel
                 Utils.setPartColliderField(part);
             }
             initializeScaling();
+
+            customMat = new PhysicMaterial("SlideMaterial");
+            customMat.frictionCombine = PhysicMaterialCombine.Multiply;
         }
 
         public void Start()
@@ -504,6 +507,7 @@ namespace KSPWheel
                         part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
                     }
                     updateDragCubes(1, scale);
+                    onStateChanged(currentWheelState);//updates bump-stop collider friction
                 }
             }
 
@@ -613,6 +617,10 @@ namespace KSPWheel
             setScale(scale, false);
         }
 
+        private Collider prevHit;
+        private PhysicMaterial prevMat;
+        private PhysicMaterial customMat;
+
         private void updateSuspension()
         {
             float vesselMass = 0;
@@ -637,9 +645,7 @@ namespace KSPWheel
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
                 lengthCorrectedMass = vesselMass / data.wheel.length;
-                float force = 0;
-                if (data.colliderData != null) { force = data.colliderData.collisionForce; }
-                data.wheel.externalSpringForce = force;
+                data.wheel.externalSpringForce = data.colliderData.collisionForce;
                 if (data.wheel.contactColliderHit != null)
                 {
                     PhysicMaterial pm = data.wheel.contactColliderHit.sharedMaterial;
@@ -661,7 +667,7 @@ namespace KSPWheel
                     springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
                     natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
                     criticalDamping = 2 * springLoad * natFreq;//critical damping
-                    damper = criticalDamping * dampRatio * wheelRepairTimer;//add an -additiona- reduction to damper based on repair timer, ensure it is essentially nil for the first tick after repaired
+                    damper = criticalDamping * dampRatio * wheelRepairTimer;//add an -additional- reduction to damper based on repair timer, ensure it is essentially nil for the first tick after repaired
                 }
                 else
                 {
@@ -758,14 +764,37 @@ namespace KSPWheel
                     subModules[i].onStateChanged(oldState, newState);
                 }
             }
+            onStateChanged(newState);
+        }
 
-            if (HighLogic.LoadedSceneIsFlight && wheelData!=null)
+        private void onStateChanged(KSPWheelState newState)
+        {
+            if (HighLogic.LoadedSceneIsFlight && wheelData != null)
             {
-                len = wheelData.Length;
+                int len = wheelData.Length;
                 for (int i = 0; i < len; i++)
                 {
-                    if (wheelData[i].bumpStopCollider == null) { break; }//if one is not present, none will be, as something is not initialized yet;
-                    wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
+                    if (wheelData[i].bumpStopCollider != null)
+                    {
+                        wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
+                        if (currentWheelState == KSPWheelState.DEPLOYED)
+                        {
+                            wheelData[i].bumpStopMat.bounciness = 0;
+                            wheelData[i].bumpStopMat.staticFriction = 0;
+                            wheelData[i].bumpStopMat.dynamicFriction = 0;
+                            wheelData[i].bumpStopMat.frictionCombine = PhysicMaterialCombine.Multiply;
+                            wheelData[i].bumpStopMat.bounceCombine = PhysicMaterialCombine.Multiply;
+                        }
+                        else
+                        {
+                            wheelData[i].bumpStopMat.bounciness = 0.6f;
+                            wheelData[i].bumpStopMat.staticFriction = 0.6f;
+                            wheelData[i].bumpStopMat.dynamicFriction = 0.6f;
+                            wheelData[i].bumpStopMat.frictionCombine = PhysicMaterialCombine.Minimum;
+                            wheelData[i].bumpStopMat.bounceCombine = PhysicMaterialCombine.Minimum;
+                        }
+                        wheelData[i].bumpStopCollider.material = wheelData[i].bumpStopMat;
+                    }
                     if (newState != KSPWheelState.DEPLOYED && wheelData[i].wheel != null)
                     {
                         wheelData[i].wheel.angularVelocity = 0f;
@@ -921,6 +950,7 @@ namespace KSPWheel
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
             public MeshCollider bumpStopCollider;
+            public PhysicMaterial bumpStopMat;
             public float loadRating;
             public float loadTarget;
             public float timeBoostFactor;
@@ -973,13 +1003,13 @@ namespace KSPWheel
                     //mark as convex
                     bumpStopCollider.convex = true;
 
-                    PhysicMaterial mat = new PhysicMaterial("BumpStopPhysicsMaterial");
-                    mat.bounciness = 0f;
-                    mat.dynamicFriction = 0;
-                    mat.staticFriction = 0;
-                    mat.frictionCombine = PhysicMaterialCombine.Multiply;
-                    mat.bounceCombine = PhysicMaterialCombine.Multiply;
-                    bumpStopCollider.material = mat;
+                    bumpStopMat = new PhysicMaterial("BumpStopPhysicsMaterial");
+                    bumpStopMat.bounciness = 0f;
+                    bumpStopMat.dynamicFriction = 0;
+                    bumpStopMat.staticFriction = 0;
+                    bumpStopMat.frictionCombine = PhysicMaterialCombine.Multiply;
+                    bumpStopMat.bounceCombine = PhysicMaterialCombine.Multiply;
+                    bumpStopCollider.material = bumpStopMat;
                     bumpStopGameObject.transform.NestToParent(wheelTransform);
                     bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
                 }
