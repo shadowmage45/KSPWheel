@@ -617,8 +617,6 @@ namespace KSPWheel
             setScale(scale, false);
         }
 
-        private Collider prevHit;
-        private PhysicMaterial prevMat;
         private PhysicMaterial customMat;
 
         private void updateSuspension()
@@ -955,6 +953,8 @@ namespace KSPWheel
             public float loadTarget;
             public float timeBoostFactor;
             public float prevComp;
+            public Collider prevHit;
+            public PhysicMaterial prevMat;
 
             public KSPWheelData(ConfigNode node)
             {
