@@ -194,6 +194,25 @@ namespace KSPWheel
             updateDeploymentState(true);
         }
 
+        [KSPEvent(guiName = "Align Wheel To Ground", guiActiveEditor = true, guiActive = false)]
+        public void alignToGround()
+        {
+            Transform cr = carriageTransform;//the wheel, to be aligned
+            Vector3 target = Vector3.up + carriageTransform.position;//one unit above the transform, in world-space in the editor
+            Vector3 localTarget = cr.InverseTransformPoint(target);//one unit above the transform, as seen in local space
+            //rotating around the local Z axis, so we only care about the x and y offsets
+            float xOff = localTarget.x;
+            float yOff = localTarget.y;
+            //erm.. feed this into Mathf.Atan2 as a slope, to get the returned angle
+            //check the returned angle versus current angle and max angle
+            //set to maximum of max angle or dest angle
+            float angle = Mathf.Atan2(yOff, xOff) * Mathf.Rad2Deg;
+            float dest = Mathf.Clamp(wheelRotation + angle, -wheelRotationMax, wheelRotationMax);
+            wheelRotation = dest;
+            carriageTransform.localRotation = wheelDefaultRotation;
+            carriageTransform.Rotate(0, 0, wheelRotation, Space.Self);
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
