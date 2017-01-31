@@ -40,6 +40,13 @@ namespace KSPWheel
             });
         }
 
+        [KSPAction(actionGroup = KSPActionGroup.Brakes, guiName = "Brakes")]
+        public void brakesAction(KSPActionParam p)
+        {
+            //NOOP - blank method stub to get an AG action to show up in the AG list...
+            //what a stupid system....
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
@@ -67,7 +74,7 @@ namespace KSPWheel
         internal override void preWheelPhysicsUpdate()
         {
             base.preWheelPhysicsUpdate();
-            float bI = brakesLocked ? 1 : part.vessel.ActionGroups[KSPActionGroup.Brakes] ? 1 : 0;
+            float bI = brakesLocked ? 1 : part.vessel.ActionGroups[Actions[nameof(brakesAction)].actionGroup] ? 1 : 0;
             if (!brakesLocked && brakeResponse > 0 && bI > 0)
             {
                 bI = Mathf.Lerp(brakeInput, bI, brakeResponse * Time.deltaTime);
