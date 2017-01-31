@@ -52,6 +52,9 @@ namespace KSPWheel
         [KSPField]
         public string gridName = String.Empty;
 
+        [KSPField]
+        public string repulsorSoundEffect = String.Empty;
+
         private KSPWheelDustEffects dustModule;
 
         private Transform gimbalTransform;
@@ -131,6 +134,10 @@ namespace KSPWheel
                 gridMaterial.SetTextureOffset("_MainTex", offset);
                 gridMaterial.SetTextureOffset("_BumpMap", offset);
                 gridMaterial.SetTextureOffset("_Emissive", offset);
+            }
+            if (!string.IsNullOrEmpty(repulsorSoundEffect))
+            {
+                part.Effect(repulsorSoundEffect, Time.deltaTime * guiEnergyUse);
             }
         }
 
