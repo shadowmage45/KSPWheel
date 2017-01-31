@@ -155,35 +155,77 @@ namespace KSPWheel
             wheel.length = curLen * 5f;
             wheel.useSuspensionNormal = suspensionNormal;
             wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
+
+            //repulsor water handling code
             wheel.useExternalHit = false;
             if (vessel.mainBody.ocean)
             {
-                float alt = FlightGlobals.getAltitudeAtPos(wheel.transform.position);
-                float susLen = wheel.length + wheel.radius;
-                if (alt > susLen)//impossible that wheel contacted surface regardless of orientation
+                Vector3 rayStartPos = wheel.transform.position - wheel.transform.up * wheel.radius;
+                Vector3 oceanHitPos = Vector3.zero;
+                float alt = FlightGlobals.getAltitudeAtPos(rayStartPos);
+                float length = wheel.length;
+                if (alt > length)//impossible that wheel contacted surface regardless of orientation
                 {
                     return;
                 }
                 Vector3 surfaceNormal = vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
-                Vector3 pointOnSurface = wheel.transform.position - alt * surfaceNormal;
-                Vector3 oceanHitPos = Vector3.zero;
-                if (Utils.rayPlaneIntersect(wheel.transform.position, -wheel.transform.up, pointOnSurface, surfaceNormal, out oceanHitPos))
+
+                float surfaceWheelDot = Vector3.Dot(surfaceNormal, wheel.transform.up);
+                //upside down, or otherwise impossible to contact the surface of the ocean
+                if (surfaceWheelDot <= 0)
                 {
-                    RaycastHit hit;
-                    if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, susLen, controller.raycastMask))
+                    return;
+                }
+
+                //special handling for if underwater
+                if (alt < 0)
+                {
+                    //use a base of 0.5 length, adjust by inverse of dot, so that at max angle force is near zero.  This gives a smooth response when uprighting an inverted repulsor.
+                    oceanHitPos = rayStartPos - wheel.transform.up * (length * 0.5f + length * 0.5f * (1f - surfaceWheelDot));
+                    wheel.useExternalHit = true;
+                    wheel.externalHitPoint = oceanHitPos;
+                    wheel.externalHitNormal = surfaceNormal;
+                    if (dustModule != null) { dustModule.waterMode = true; }
+                    return;
+                }
+
+                //point on the surface directly below the origin of the ray (below as defined by the surface normal), used for defining the plane of the ocean, below
+                Vector3 pointOnSurface = rayStartPos - alt * surfaceNormal;
+                //first check to see if there was any contact with the plane of the ocean (there will be), and get the hit position
+                if (Utils.rayPlaneIntersect(rayStartPos, -wheel.transform.up, pointOnSurface, surfaceNormal, out oceanHitPos))
+                {
+                    //check distance to the contact point; may be outside of suspension range at this point
+                    float oceanDistance = (rayStartPos - oceanHitPos).magnitude;
+                    if (oceanDistance <= 0 || oceanDistance > length)//not within valid hit range, either zero distance, or beyond repulsor range
                     {
-                        float oceanDistance = (wheel.transform.position - oceanHitPos).magnitude;
+                        return;
+                    }
+                    //check to see if there is ground closer than the ocean surface, if so, use that
+                    //could possibly check radar altitude prior to ocean intersect, but this gives a more precise altitude for the orientation of the wheel
+                    RaycastHit hit;
+                    bool groundHit = false;
+                    if (groundHit = Physics.Raycast(rayStartPos, -wheel.transform.up, out hit, length, controller.raycastMask))
+                    {
                         if (hit.distance < oceanDistance)
                         {
                             return;
                         }
                     }
-                    if (alt < 0)//underwater... should probably turn off?
+                    //if very close to the surface, use a point halfway on suspension compression for hit point
+                    //this limits force output when rising out of the water to the maximum from the underwater code
+                    if (oceanDistance < length * 0.5f)
                     {
-                        MonoBehaviour.print("UNDERWATER -- TODO");
-                        //TODO .... 
+                        if (groundHit && hit.distance < length * 0.5f)//use the ground contact if it is closer
+                        {
+                            return;
+                        }
+                        oceanHitPos = rayStartPos - wheel.transform.up * length * 0.5f;
+                        wheel.useExternalHit = true;
+                        wheel.externalHitPoint = oceanHitPos;
+                        wheel.externalHitNormal = surfaceNormal;
+                        if (dustModule != null) { dustModule.waterMode = true; }
                     }
-                    else
+                    else//use the surface of the ocean itself for the hit position
                     {
                         wheel.useExternalHit = true;
                         wheel.externalHitPoint = oceanHitPos;
