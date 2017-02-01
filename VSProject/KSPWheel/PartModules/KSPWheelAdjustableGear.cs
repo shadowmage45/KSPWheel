@@ -462,22 +462,22 @@ namespace KSPWheel
                 float lerp = (mainAnimTime - 0.15f) / 0.35f;
                 doorRot = 90;
                 rearDoorRot = 90;
-                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp * 0.5f);
+                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp);
                 strutRotZ = 0f;
-                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp * 0.5f);
+                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp);
                 wheelRotZ = 0f;
-                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp * 0.5f);
+                wheelSecRot = wheelRotatorRotationRetracted;
             }
             else if (mainAnimTime < 0.85f)//main, secondary (0.50 - 0.85)
             {
                 float lerp = (mainAnimTime - 0.50f) / 0.35f;
                 rearDoorRot = 90;
                 doorRot = 90;
-                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                strutRotX = 0;
                 strutRotZ = Mathf.Lerp(0, strutRotation, lerp);
-                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                wheelRotX = 0;
                 wheelRotZ = Mathf.Lerp(0, wheelRotation, lerp);
-                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp);
             }
             else if (mainAnimTime < 1f)//doors2 (0.85 - 1)
             {
