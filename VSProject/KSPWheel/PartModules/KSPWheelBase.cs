@@ -293,7 +293,6 @@ namespace KSPWheel
                 configNodeData = node.ToString();
             }
             currentWheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-            initializeScaling();
         }
 
         public override void OnSave(ConfigNode node)
