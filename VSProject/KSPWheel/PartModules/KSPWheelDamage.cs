@@ -115,7 +115,8 @@ namespace KSPWheel
             loadStress = load / maxLoad;
             if (load > maxLoad)
             {
-                stressTime += Time.fixedDeltaTime * (load - maxLoad) * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().stressDamageMultiplier * 0.25f;
+                float overStress = (load / maxLoad) - 1f;
+                stressTime += Time.fixedDeltaTime * overStress * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().stressDamageMultiplier * 0.25f;
             }
 
             float maxSpeed = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
