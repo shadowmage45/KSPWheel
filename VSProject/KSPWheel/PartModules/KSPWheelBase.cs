@@ -481,8 +481,15 @@ namespace KSPWheel
             }
             if (!initializedWheels)
             {
-                Rigidbody rb = part.GetComponent<Rigidbody>();
-                if (useParentRigidbody && part.parent != null) { rb = part.parent.GetComponent<Rigidbody>(); }
+                Rigidbody rb = null;
+                if (useParentRigidbody && part.parent != null)
+                {
+                    rb = Utils.locateRigidbodyUpwards(part);
+                }
+                else
+                {
+                    rb = part.GetComponent<Rigidbody>();
+                }
                 if (rb == null)
                 {
                     return;
@@ -636,7 +643,7 @@ namespace KSPWheel
             {
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
-                lengthCorrectedMass = vesselMass / data.wheel.length;
+                lengthCorrectedMass = vesselMass / data.wheel.length * data.loadShare;
                 if (wheelRepairTimer < 1)
                 {
                     data.timeBoostFactor = 0f;
