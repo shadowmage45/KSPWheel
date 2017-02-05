@@ -74,6 +74,8 @@ namespace KSPWheel
         private float colorUpdateTime = 1f;
         private float colorUpdateTimer = 0f;
 
+        private float dustPower = 1f;
+
         private bool setupEmitters = false;
         private GameObject[] dustObjects;//one emitter per wheel collider on the part; so that tracks/compound parts still throw up dust on a per-wheel basis
         private ParticleEmitter[] dustEmitters;
@@ -84,6 +86,7 @@ namespace KSPWheel
             base.OnStart(state);
             GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
             GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
+            dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
         }
 
         public override void OnDestroy()
@@ -195,11 +198,11 @@ namespace KSPWheel
                     dustObjects[i].transform.rotation = wheel.transform.rotation;
                     dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
                     dustEmitters[i].minEmission = dustMinEmission;
-                    dustEmitters[i].maxEmission = dustMaxEmission * mult;
+                    dustEmitters[i].maxEmission = dustMaxEmission * mult * dustPower;
                     dustEmitters[i].minEnergy = dustMinEnergy;
                     dustEmitters[i].maxEnergy = dustMaxEnergy * mult;
                     dustEmitters[i].minSize = dustMinSize;
-                    dustEmitters[i].maxSize = dustMaxSize * mult;
+                    dustEmitters[i].maxSize = dustMaxSize * mult * dustPower;
                     dustEmitters[i].Emit();
                 }
             }
