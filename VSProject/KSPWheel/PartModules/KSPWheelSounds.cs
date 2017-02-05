@@ -50,45 +50,65 @@ namespace KSPWheel
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
+            float runPower = 0f;
+            float motorPower = 0f;
+            float longSlipPower = 0f;
+            float latSlipPower = 0f;
+            if (controller.wheelState == KSPWheelState.DEPLOYED)
+            {
+                if (!string.IsNullOrEmpty(runningEffect))
+                {
+                    float velocity = Mathf.Abs(wheel.wheelLocalVelocity.z);
+                    float max = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
+                    runPower = velocity > max ? 1 : velocity / max;
+                }
+
+                if (!string.IsNullOrEmpty(motorEffect) && motor != null)
+                {
+                    motorPower = Mathf.Abs(motor.torqueOut) / motor.gearRatio / motor.maxMotorTorque;
+                }
+
+                if (!string.IsNullOrEmpty(longSlipEffect))
+                {
+                    float range = longSlipPeak - longSlipStart;
+                    float val = (wheel.longitudinalSlip - longSlipStart) / range;
+                    val = val < 0 ? 0 : val > 1 ? 1 : val;
+                    longSlipPower = val;
+                }
+
+                if (!string.IsNullOrEmpty(latSlipEffect))
+                {
+                    float velocity = Mathf.Abs(wheel.wheelLocalVelocity.x);
+                    float slip = wheel.lateralSlip;
+                    if (velocity > latSlipStartVelocity && slip > latSlipStart)
+                    {
+                        float div = 1 / (latSlipPeak - latSlipStart);//range
+                        float slipFactor = (slip - latSlipStart) * div;
+                        slipFactor = Mathf.Clamp01(slipFactor);
+                        div = 1 / (latSlipPeakVelocity - latSlipStartVelocity);
+                        float velocityFactor = (velocity - latSlipStartVelocity) * div;
+                        velocityFactor = Mathf.Clamp01(velocityFactor);
+                        float gFactor = (float)vessel.gravityForPos.magnitude / 9.81f;
+                        latSlipPower = slipFactor * velocityFactor * gFactor;
+                    }
+                }
+            }
 
             if (!string.IsNullOrEmpty(runningEffect))
             {
-                float velocity = Mathf.Abs(wheel.wheelLocalVelocity.z);
-                float max = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
-                float power = velocity > max ? 1 : velocity / max;
-                part.Effect(runningEffect, power);
+                part.Effect(runningEffect, runPower);
             }
-
             if (!string.IsNullOrEmpty(motorEffect) && motor != null)
             {
-                float power = Mathf.Abs(wheel.motorTorque) / motor.gearRatio / motor.maxMotorTorque;
-                part.Effect(motorEffect, power);
+                part.Effect(motorEffect, motorPower);
             }
-
             if (!string.IsNullOrEmpty(longSlipEffect))
             {
-                float range = longSlipPeak - longSlipStart;
-                float val = (wheel.longitudinalSlip - longSlipStart) / range;
-                val = val < 0 ? 0 : val > 1 ? 1 : val;
-                part.Effect(longSlipEffect, val);
+                part.Effect(longSlipEffect, longSlipPower);
             }
-
             if (!string.IsNullOrEmpty(latSlipEffect))
             {
-                float power = 0;
-                float velocity = Mathf.Abs(wheel.wheelLocalVelocity.x);
-                float slip = wheel.lateralSlip;
-                if (velocity > latSlipStartVelocity && slip > latSlipStart)
-                {
-                    float div = 1 / (latSlipPeak - latSlipStart);//range
-                    float slipFactor = (slip - latSlipStart) * div;
-                    slipFactor = Mathf.Clamp01(slipFactor);
-                    div = 1 / (latSlipPeakVelocity - latSlipStartVelocity);
-                    float velocityFactor = (velocity - latSlipStartVelocity) * div;
-                    velocityFactor = Mathf.Clamp01(velocityFactor);
-                    power = slipFactor * velocityFactor;
-                }
-                part.Effect(latSlipEffect, power);
+                part.Effect(latSlipEffect, latSlipPower);
             }
         }
 
