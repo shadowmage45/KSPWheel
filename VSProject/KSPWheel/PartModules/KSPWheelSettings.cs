@@ -48,8 +48,8 @@
         [GameParameters.CustomFloatParameterUI("Wheel Mass Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel mass is scaled when scaling up or down")]
         public float wheelMassScalingPower = 3f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Max Speed Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel max safe speed is scaled when scaling up or down")]
-        public float wheelMaxSpeedScalingPower = 1f;
+        [GameParameters.CustomFloatParameterUI("Wheel Max Speed Scale Power", minValue = 0, maxValue = 4, stepCount = 15, displayFormat = "F2", toolTip = "Sets the exponent to which wheel max safe speed is scaled when scaling up or down")]
+        public float wheelMaxSpeedScalingPower = 0f;
 
         [GameParameters.CustomFloatParameterUI("Wheel Max Load Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel min/max load are scaled when scaling up or down")]
         public float wheelMaxLoadScalingPower = 3f;
