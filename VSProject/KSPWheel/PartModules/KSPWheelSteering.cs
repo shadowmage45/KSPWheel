@@ -159,8 +159,8 @@ namespace KSPWheel
             if (rI < -1) { rI = -1; }
             if (useSteeringCurve)
             {
-                float scalar = Mathf.Pow(controller.scale * part.rescaleFactor, HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>().wheelMaxSpeedScalingPower);
-                float perc = Mathf.Abs(wheel.wheelLocalVelocity.z) / (controller.maxSpeed * scalar);
+                float perc = Mathf.Abs(wheel.wheelLocalVelocity.z) / (controller.maxSpeed * controller.wheelMaxSpeedScalingFactor);
+                perc = Mathf.Clamp01(perc);
                 float mult = steeringCurve.Evaluate(perc);
                 rI *= mult;
             }
