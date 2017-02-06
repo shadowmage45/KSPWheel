@@ -16,7 +16,7 @@
         public bool wheelDustCamera = true;
 
         [GameParameters.CustomFloatParameterUI("Wheel Dust Power", minValue = 0, maxValue = 4, stepCount = 15, displayFormat = "F2", toolTip = "Increases or decreases dust emission rate. 1=standard, 0=off")]
-        public float wheelDustPower = 0f;
+        public float wheelDustPower = 1f;
 
         [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "Wear and damage model.\nNone = No wheel wear or breakage.\nSimple = Stock equivalent, break on impact/over-stress.\nAdvanced = Time, speed, load, heat, and impact based wheel wear + breakage.")]
         public KSPWheelWearType wearType = KSPWheelWearType.SIMPLE;
