@@ -38,6 +38,9 @@ namespace KSPWheel
         public float energyUse = 1f;
 
         [KSPField]
+        public float maxHeight = 5f;
+
+        [KSPField]
         public float animSpeed = 0.1f;
 
         [KSPField]
@@ -159,7 +162,7 @@ namespace KSPWheel
                 curLen = Mathf.MoveTowards(curLen, repulsorHeight, 0.5f * Time.fixedDeltaTime);
             }
             if (gimbaled && gimbalTransform!=null) { gimbalTransform.LookAt(vessel.mainBody.transform.position); }
-            wheel.length = curLen * 5f;
+            wheel.length = curLen * maxHeight;
             wheel.useSuspensionNormal = suspensionNormal;
             wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
 
