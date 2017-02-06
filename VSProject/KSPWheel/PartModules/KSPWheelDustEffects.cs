@@ -187,22 +187,21 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 wheel = controller.wheelData[i].wheel;
-                if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
+                if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed && dustPower > 0)
                 {
-                    springForce = wheel.compressionDistance / wheel.length;
+                    springForce = wheel.springForce * 0.1f * dustForceMult;
                     speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
                     slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
-                    //TODO -- should use different mult calcs for emission, energy, size, speed
-                    mult = Mathf.Sqrt(springForce * springForce * dustForceMult + speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult) * controller.scale;                    
+                    mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
                     dustObjects[i].transform.position = wheel.worldHitPos;
                     dustObjects[i].transform.rotation = wheel.transform.rotation;
                     dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
                     dustEmitters[i].minEmission = dustMinEmission;
                     dustEmitters[i].maxEmission = dustMaxEmission * mult * dustPower;
                     dustEmitters[i].minEnergy = dustMinEnergy;
-                    dustEmitters[i].maxEnergy = dustMaxEnergy * mult;
+                    dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
                     dustEmitters[i].minSize = dustMinSize;
-                    dustEmitters[i].maxSize = dustMaxSize * mult * dustPower;
+                    dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
                     dustEmitters[i].Emit();
                 }
             }
