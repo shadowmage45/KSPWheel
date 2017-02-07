@@ -18,6 +18,13 @@ namespace KSPWheel
         public float motorEfficiency = 0.85f;
 
         /// <summary>
+        /// This is the ratio of no-load power draw to max-torque power draw.  E.g. at 0.05, if a motor draws 1kw at stall, it will draw 0.05kw at no-load max rpm.
+        /// This value determines the location of the efficiency peak; closer to zero and the peak approaches max RPM, closer to 0.50 and the peak approaches 50% max RPM.
+        /// </summary>
+        [KSPField]
+        public float motorPowerFactor = 0.05f;
+
+        /// <summary>
         /// Motor stall torque; e.g. motor torque output at zero rpm
         /// </summary>
         [KSPField]
@@ -29,9 +36,9 @@ namespace KSPWheel
         [KSPField]
         public float maxRPM = 2500f;
 
-        [KSPField]
-        public float motorPower = 1f;
-
+        /// <summary>
+        /// User-selectable motor output limiter
+        /// </summary>
         [KSPField(guiName = "Motor Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f)]
         public float motorOutput = 100f;
@@ -50,6 +57,9 @@ namespace KSPWheel
          UI_Toggle(enabledText = "Locked", disabledText = "Free", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public bool motorLocked;
 
+        /// <summary>
+        /// Tank-steering main toggle; only configurable through config.
+        /// </summary>
         [KSPField]
         public bool tankSteering = false;
 
@@ -69,6 +79,9 @@ namespace KSPWheel
          UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.25f, maxValue = 20f, incrementSlide = 0.05f, incrementLarge = 1f, incrementSmall = 0.25f, sigFigs = 2)]
         public float gearRatio = 4f;
 
+        /// <summary>
+        /// GUI display values below here
+        /// </summary>
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Max Drive Speed", guiUnits = "m/s")]
         public float maxDrivenSpeed = 0f;
 
@@ -87,13 +100,21 @@ namespace KSPWheel
         [KSPField]
         public bool useTorqueCurve = true;
 
+        /// <summary>
+        /// Should this part auto-invert the steering and motor setups when used in symmetry in the editor?  Disable for parts with properly setup left/right counterparts.
+        /// </summary>
         [KSPField]
         public bool invertMirror = true;
 
+        /// <summary>
+        /// The motor output torque curve.  Defaults to linear (ideal brushless DC motor).
+        /// </summary>
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
 
         public float torqueOutput;
+
+        private float powerCorrection = 4f;
 
         public void onMotorInvert(BaseField field, System.Object obj)
         {
@@ -198,6 +219,7 @@ namespace KSPWheel
                     invertSteering = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertSteering;
                 }
             }
+            powerCorrection = MotorPFCurve.sample(motorPowerFactor, motorEfficiency);
         }
 
         public override string GetInfo()
@@ -325,6 +347,20 @@ namespace KSPWheel
             return minPower + percent * diff;
         }
 
+        /// <summary>
+        /// A bit of data;
+        /// A Tesla model-S has a 270kW/362hp motor rated for 440 Nm of torque.  What is the input power for that output power?
+        /// </summary>
+        /// <param name="pctMaxRpm"></param>
+        protected void calcPower(float pctMaxRpm)
+        {
+            float pwrUse = (1 - pctMaxRpm) * (1 - motorPowerFactor) + motorPowerFactor;
+            float peakWattsOutput = 0f;//TODO -- rpm * torque, in watts -- seems to give ridiculous values
+            //power calced in watts, converted to KW before return
+            float midPower = 1 / motorEfficiency * peakWattsOutput;
+            float pwrInput = pwrUse * midPower * powerCorrection;
+        }
+
         private static float rpmToRad = 0.104719755f;
         private static float radToRPM = 1 / 0.104719755f;
 
@@ -405,5 +441,60 @@ namespace KSPWheel
         //    outRpm = wheelRPMIntegration(dRpm, wheelMass, dTorque, time);
         //}
 
+    }
+
+    /// <summary>
+    /// Returns a 'magic number' used to fix the power input calculation min/mid/max values.
+    /// </summary>
+    public static class MotorPFCurve
+    {
+        public static float[] inputPoints = new float[10];
+        public static float[] outputPoints = new float[10];
+
+        static MotorPFCurve()
+        {
+            //TODO populate sampling arrays
+        }
+
+        public static float sample(float pf, float ef)
+        {
+            //zero PF is a special degenerate case where each efficiency value has its own corrector value
+            if (pf == 0)
+            {
+                return ef * 4;
+            }
+            //else if PF > 0, all efficiency values use the same
+
+            int startIndex=0;
+            float start, end, startVal, endVal, point;
+
+            int len = inputPoints.Length;
+            for (int i = 0; i < len; i++)
+            {
+                if (pf > inputPoints[i])
+                {
+                    startIndex = i;
+                    break;
+                }
+            }
+            start = inputPoints[startIndex];
+            end = start;
+            startVal = outputPoints[startIndex];
+            endVal = startVal;
+            if (startIndex < len - 1)
+            {
+                end = inputPoints[startIndex + 1];
+                endVal = outputPoints[startIndex + 1];
+            }
+            else//its off the end of the scale, return val directly, log error.
+            {
+                MonoBehaviour.print("ERROR: Input value was outside of the defined data set: " + pf + " ending val: " + inputPoints[len - 1]+" make sure your input value is less than the ending value");
+                return endVal;
+            }
+            float range = end - start;
+            float pointVal = pf - start;
+            point = pointVal / range;
+            return Mathf.Lerp(startVal, endVal, point);
+        }
     }
 }
