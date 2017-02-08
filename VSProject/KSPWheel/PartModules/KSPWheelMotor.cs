@@ -88,6 +88,9 @@ namespace KSPWheel
         public bool useTorqueCurve = true;
 
         [KSPField]
+        public bool invertMirror = true;
+
+        [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
 
         public float torqueOutput;
@@ -184,9 +187,16 @@ namespace KSPWheel
                 torqueCurve.Add(0, 1, 0, 0);
                 torqueCurve.Add(1, 0, 0, 0);
             }
-            if (HighLogic.LoadedSceneIsEditor && part.isClone && part.symmetryCounterparts!=null && part.symmetryCounterparts.Count>0)
+            if (HighLogic.LoadedSceneIsEditor && part.isClone && part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
             {
-                invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
+                if (invertMirror)
+                {
+                    invertMotor = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertMotor;
+                }
+                else
+                {
+                    invertSteering = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertSteering;
+                }
             }
         }
 

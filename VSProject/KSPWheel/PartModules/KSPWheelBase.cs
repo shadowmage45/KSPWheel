@@ -86,7 +86,7 @@ namespace KSPWheel
         public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
-        UI_FloatRange(minValue = 0.05f, maxValue = 2, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+        UI_FloatRange(minValue = 0.35f, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
         public float dampRatio = 0.65f;
 
         [KSPField(guiName = "Wheel Group", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -109,14 +109,20 @@ namespace KSPWheel
         public float groundHeightOffset = 0f;
 
         [KSPField]
+        public bool allowScaling = true;
+
+        [KSPField]
         public float minScale = 0.1f;
 
         [KSPField]
-        public float maxScale = 40f;
+        public float maxScale = 10f;
 
         [KSPField(guiName = "Scale", guiActive = false, guiActiveEditor = true, isPersistant = true, guiUnits = "x"),
-         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 40f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
+         UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.1f, maxValue = 10f, incrementLarge = 1f, incrementSmall = 0.25f, incrementSlide = 0.01f, sigFigs = 2)]
         public float scale = 1f;
+
+        [KSPField]
+        public string scalingTransform = string.Empty;
 
         #endregion
 
@@ -148,13 +154,17 @@ namespace KSPWheel
             get { return currentWheelState; }
         }
 
+        //TODO -- there has to be a better way to fix the lack of OnLoad for root parts in editor than this, but I can't find one
+        //TODO - might still have problems in other places, as that is where the [Persistent] tag for config-node data came from
+        //Serialized to allow the state to be loaded from config data in prefab and persisted to in-editor/etc.
+        [SerializeField]
         private KSPWheelState currentWheelState = KSPWheelState.DEPLOYED;
 
         public float springEaseMult = 1f;
 
         public float wheelRepairTimer = 1f;
 
-        public float deployAnimationTime = 0f;
+        public float deployAnimationTime = 1f;
 
         internal float partMassScaleFactor = 1;
         internal float partCostScaleFactor = 1;
@@ -241,14 +251,32 @@ namespace KSPWheel
 
         private void setScale(float newScale, bool userInput)
         {
-            this.scale = newScale;
-            Vector3 scale = new Vector3(newScale, newScale, newScale);
-            Transform modelRoot = part.transform.FindRecursive("model");
-            foreach (Transform child in modelRoot)
+            scale = newScale;
+            if (allowScaling)
             {
-                child.localScale = scale;
+                Vector3 scale = new Vector3(newScale, newScale, newScale);
+                Transform modelRoot = part.transform.FindRecursive("model");
+                if (!string.IsNullOrEmpty(scalingTransform))
+                {
+                    Transform scalar = modelRoot.FindRecursive(scalingTransform);
+                    if (scalar != null)
+                    {
+                        scalar.localScale = scale;
+                    }
+                }
+                else
+                {
+                    foreach (Transform child in modelRoot)
+                    {
+                        child.localScale = scale;
+                    }
+                }
+                Utils.updateAttachNodes(part, prevScale, newScale, userInput);
             }
-            Utils.updateAttachNodes(part, prevScale, newScale, userInput);
+            else
+            {
+                scale = newScale = 1f;
+            }
             prevScale = newScale;
             onScaleUpdated();
         }
@@ -265,7 +293,6 @@ namespace KSPWheel
                 configNodeData = node.ToString();
             }
             currentWheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-            initializeScaling();
         }
 
         public override void OnSave(ConfigNode node)
@@ -372,8 +399,13 @@ namespace KSPWheel
             field = Fields[nameof(maxLoadRating)];
             field.guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
 
-            Fields[nameof(scale)].uiControlEditor.onFieldChanged = onScaleAdjusted;
             Fields[nameof(springRating)].uiControlFlight.onFieldChanged = onLoadUpdated;
+
+            Fields[nameof(scale)].uiControlEditor.onFieldChanged = onScaleAdjusted;
+            Fields[nameof(scale)].guiActiveEditor = allowScaling;
+            UI_FloatEdit ufe = (UI_FloatEdit)Fields[nameof(scale)].uiControlEditor;
+            ufe.minValue = minScale;
+            ufe.maxValue = maxScale;
 
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
@@ -448,8 +480,15 @@ namespace KSPWheel
             }
             if (!initializedWheels)
             {
-                Rigidbody rb = part.GetComponent<Rigidbody>();
-                if (useParentRigidbody && part.parent != null) { rb = part.parent.GetComponent<Rigidbody>(); }
+                Rigidbody rb = null;
+                if (useParentRigidbody && part.parent != null)
+                {
+                    rb = Utils.locateRigidbodyUpwards(part);
+                }
+                else
+                {
+                    rb = part.GetComponent<Rigidbody>();
+                }
                 if (rb == null)
                 {
                     return;
@@ -603,7 +642,7 @@ namespace KSPWheel
             {
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
-                lengthCorrectedMass = vesselMass / data.wheel.length;
+                lengthCorrectedMass = vesselMass / data.wheel.length * data.loadShare;
                 if (wheelRepairTimer < 1)
                 {
                     data.timeBoostFactor = 0f;
@@ -716,6 +755,12 @@ namespace KSPWheel
                 {
                     if (wheelData[i].bumpStopCollider == null) { break; }//if one is not present, none will be, as something is not initialized yet;
                     wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
+                    if (newState != KSPWheelState.DEPLOYED && wheelData[i].wheel != null)
+                    {
+                        wheelData[i].wheel.angularVelocity = 0f;
+                        wheelData[i].wheel.motorTorque = 0f;
+                        wheelData[i].wheel.brakeTorque = 0f;
+                    }
                 }
             }
         }
@@ -860,6 +905,7 @@ namespace KSPWheel
             public readonly float suspensionTravel;
             public readonly float loadShare;
             public readonly float offset;
+            public readonly int indexInDuplicates;
             public KSPWheelCollider wheel;
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
@@ -878,11 +924,12 @@ namespace KSPWheel
                 suspensionTravel = node.GetFloatValue("travel", 0.25f);
                 loadShare = node.GetFloatValue("load", 1f);
                 offset = node.GetFloatValue("offset");
+                indexInDuplicates = node.GetIntValue("indexInDuplicates");
             }
 
             public void locateTransform(Transform root)
             {
-                wheelTransform = root.FindRecursive(wheelColliderName);
+                wheelTransform = root.FindChildren(wheelColliderName)[indexInDuplicates];
                 WheelCollider wc = wheelTransform.GetComponent<WheelCollider>();
                 GameObject.Destroy(wc);
             }

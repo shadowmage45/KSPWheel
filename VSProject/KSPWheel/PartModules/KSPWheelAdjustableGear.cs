@@ -194,6 +194,22 @@ namespace KSPWheel
             updateDeploymentState(true);
         }
 
+        [KSPEvent(guiName = "Align Wheel To Ground", guiActiveEditor = true, guiActive = false)]
+        public void alignToGround()
+        {
+            this.symmetryUpdate(m =>
+            {
+                Vector3 target = Vector3.up + m.carriageTransform.position;//one unit above the transform, in world-space in the editor
+                Vector3 localTarget = m.carriageTransform.InverseTransformPoint(target);//one unit above the transform, as seen in local space
+                //rotating around the local Z axis, so we only care about the x and y offsets
+                //erm.. feed this into Mathf.Atan2 as a slope, to get the returned angle
+                float angle = -Mathf.Atan2(localTarget.x, localTarget.y) * Mathf.Rad2Deg;
+                m.wheelRotation = Mathf.Clamp(m.wheelRotation + angle, -m.wheelRotationMax, m.wheelRotationMax);//clamp it to the current wheel angle limits
+                m.carriageTransform.localRotation = m.wheelDefaultRotation;
+                m.carriageTransform.Rotate(0, 0, m.wheelRotation, Space.Self);
+            });
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
@@ -243,6 +259,13 @@ namespace KSPWheel
             {
                 rearDoorRotatorTransform.localRotation = rearDoorRotatorDefaultRotation;
                 rearDoorRotatorTransform.Rotate(0, 0, rot, Space.Self);
+            }
+            if (controller.wheelState == KSPWheelState.DEPLOYED)
+            {
+                strutRotatorTransform.localRotation = strutRotatorDefaultRotation;
+                carriageTransform.localRotation = wheelDefaultRotation;
+                strutRotatorTransform.Rotate(0, 0, strutRotation, Space.Self);
+                carriageTransform.Rotate(0, 0, wheelRotation, Space.Self);
             }
         }
 
@@ -299,9 +322,12 @@ namespace KSPWheel
             suspensionModule = part.GetComponent<KSPWheelSuspension>();
             if (HighLogic.LoadedSceneIsFlight)
             {
+                Quaternion rot = strutTransform.localRotation;
+                strutTransform.localRotation = strutDefaultRotation;
                 GameObject colObj = new GameObject("ALGStandInCollider");
                 colObj.transform.parent = strutTransform;
                 colObj.transform.position = wheel.transform.position;
+                colObj.transform.localPosition += new Vector3(0, -suspensionLength * suspensionAdjustmentRange, 0);
                 colObj.transform.localRotation = Quaternion.identity;
                 standInCollider = colObj.AddComponent<CapsuleCollider>();
                 standInCollider.radius = wheel.radius;
@@ -309,6 +335,7 @@ namespace KSPWheel
                 standInCollider.center = new Vector3(0, -standInCollider.height * 0.5f, 0);
                 standInCollider.enabled = false;
                 CollisionManager.IgnoreCollidersOnVessel(vessel, standInCollider);
+                strutTransform.localRotation = rot;
             }
             updateDeploymentState(false);
             wheelDefaultPos = wheelTransform.localPosition;//TODO -- this will have problems when cloned in the editor; the position will have already been moved
@@ -345,6 +372,10 @@ namespace KSPWheel
             {
                 wheelTransform.localPosition = wheelDefaultPos;
                 wheelTransform.position += -wheelTransform.up * suspensionLength * suspensionAdjustmentRange * part.rescaleFactor * controller.scale;
+                if (wheelData != null && wheelData.bumpStopCollider != null)
+                {
+                    wheelData.bumpStopCollider.transform.position = wheelTransform.position;
+                }
             }
         }
 
@@ -394,6 +425,8 @@ namespace KSPWheel
         private void updateAnimation(float speed)
         {
             mainAnimTime += Time.deltaTime * speed;
+            mainAnimTime = Mathf.Clamp01(mainAnimTime);
+            controller.deployAnimationTime = mainAnimTime;
             float doorRot = 0f;
             float rearDoorRot = 0f;
             float strutRotX = 0f;
@@ -401,6 +434,7 @@ namespace KSPWheel
             float wheelRotX = 0f;
             float wheelRotZ = 0f;
             float wheelSecRot = 0f;
+            float offsetTime = 0f;
             if (mainAnimTime <= 0)//full retracted
             {
                 doorRot = 0f;
@@ -428,22 +462,22 @@ namespace KSPWheel
                 float lerp = (mainAnimTime - 0.15f) / 0.35f;
                 doorRot = 90;
                 rearDoorRot = 90;
-                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp * 0.5f);
+                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp);
                 strutRotZ = 0f;
-                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp * 0.5f);
+                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp);
                 wheelRotZ = 0f;
-                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp * 0.5f);
+                wheelSecRot = wheelRotatorRotationRetracted;
             }
             else if (mainAnimTime < 0.85f)//main, secondary (0.50 - 0.85)
             {
                 float lerp = (mainAnimTime - 0.50f) / 0.35f;
                 rearDoorRot = 90;
                 doorRot = 90;
-                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                strutRotX = 0;
                 strutRotZ = Mathf.Lerp(0, strutRotation, lerp);
-                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                wheelRotX = 0;
                 wheelRotZ = Mathf.Lerp(0, wheelRotation, lerp);
-                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp);
             }
             else if (mainAnimTime < 1f)//doors2 (0.85 - 1)
             {
@@ -455,9 +489,11 @@ namespace KSPWheel
                 wheelRotX = 0f;
                 wheelRotZ = wheelRotation;
                 wheelSecRot = 0f;
+                offsetTime = lerp;
             }
             else //if (mainAnimTime >= 1f) // fully deployed
             {
+                offsetTime = 1f;
                 doorRot = 0;
                 rearDoorRot = 90;
                 strutRotX = 0f;
@@ -495,6 +531,12 @@ namespace KSPWheel
             {
                 rearDoorRotatorTransform.localRotation = rearDoorRotatorDefaultRotation;
                 rearDoorRotatorTransform.Rotate(0, 0, 180, Space.Self);
+            }
+            if (suspensionModule != null)
+            {
+                float offset = (1f - Vector3.Dot(carriageTransform.up, strutTransform.up)) * -suspensionOffsetDistance;
+                offset += suspensionLength * suspensionAdjustmentRange;
+                suspensionModule.suspensionOffset = offset * offsetTime;
             }
         }
 

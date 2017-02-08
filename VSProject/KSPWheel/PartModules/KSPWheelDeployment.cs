@@ -189,7 +189,10 @@ namespace KSPWheel
             {
                 vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, controller.wheelState == KSPWheelState.DEPLOYED);
             }
-            tempColliderTransform = part.transform.FindRecursive(tempColliderName);
+            if (!string.IsNullOrEmpty(tempColliderName))
+            {
+                tempColliderTransform = part.transform.FindChildren(tempColliderName)[wheelData.indexInDuplicates];
+            }
         }
 
         internal override void postWheelCreated()

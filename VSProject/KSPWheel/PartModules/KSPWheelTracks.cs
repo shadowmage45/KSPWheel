@@ -44,7 +44,7 @@ namespace KSPWheel
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            if (mat != null)
+            if (mat != null && controller.wheelState==KSPWheelState.DEPLOYED)
             {
                 offset.x += (-trackVelocity * Time.deltaTime * trackDir) / (trackLength * part.rescaleFactor * controller.scale); ;
                 mat.SetTextureOffset("_MainTex", offset);
