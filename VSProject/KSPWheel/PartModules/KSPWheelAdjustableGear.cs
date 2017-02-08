@@ -194,6 +194,22 @@ namespace KSPWheel
             updateDeploymentState(true);
         }
 
+        [KSPEvent(guiName = "Align Wheel To Ground", guiActiveEditor = true, guiActive = false)]
+        public void alignToGround()
+        {
+            this.symmetryUpdate(m =>
+            {
+                Vector3 target = Vector3.up + m.carriageTransform.position;//one unit above the transform, in world-space in the editor
+                Vector3 localTarget = m.carriageTransform.InverseTransformPoint(target);//one unit above the transform, as seen in local space
+                //rotating around the local Z axis, so we only care about the x and y offsets
+                //erm.. feed this into Mathf.Atan2 as a slope, to get the returned angle
+                float angle = -Mathf.Atan2(localTarget.x, localTarget.y) * Mathf.Rad2Deg;
+                m.wheelRotation = Mathf.Clamp(m.wheelRotation + angle, -m.wheelRotationMax, m.wheelRotationMax);//clamp it to the current wheel angle limits
+                m.carriageTransform.localRotation = m.wheelDefaultRotation;
+                m.carriageTransform.Rotate(0, 0, m.wheelRotation, Space.Self);
+            });
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
@@ -446,22 +462,22 @@ namespace KSPWheel
                 float lerp = (mainAnimTime - 0.15f) / 0.35f;
                 doorRot = 90;
                 rearDoorRot = 90;
-                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp * 0.5f);
+                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp);
                 strutRotZ = 0f;
-                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp * 0.5f);
+                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp);
                 wheelRotZ = 0f;
-                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp * 0.5f);
+                wheelSecRot = wheelRotatorRotationRetracted;
             }
             else if (mainAnimTime < 0.85f)//main, secondary (0.50 - 0.85)
             {
                 float lerp = (mainAnimTime - 0.50f) / 0.35f;
                 rearDoorRot = 90;
                 doorRot = 90;
-                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                strutRotX = 0;
                 strutRotZ = Mathf.Lerp(0, strutRotation, lerp);
-                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                wheelRotX = 0;
                 wheelRotZ = Mathf.Lerp(0, wheelRotation, lerp);
-                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp * 0.5f + 0.5f);
+                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp);
             }
             else if (mainAnimTime < 1f)//doors2 (0.85 - 1)
             {

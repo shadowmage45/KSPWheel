@@ -30,10 +30,10 @@ namespace KSPWheel
         private Quaternion defaultRotation;
         private Transform bogeyTransform;
 
-        public override void OnStart(StartState state)
+        internal override void postControllerSetup()
         {
-            base.OnStart(state);
-            bogeyTransform = part.transform.FindRecursive(bogeyName);
+            base.postControllerSetup();
+            bogeyTransform = part.transform.FindChildren(bogeyName)[wheelData.indexInDuplicates];
             if (bogeyTransform == null)
             {
                 MonoBehaviour.print("ERROR: Could not locate bogey for name: " + bogeyName);

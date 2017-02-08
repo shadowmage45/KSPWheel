@@ -30,8 +30,8 @@ namespace KSPWheel
 
         private float invulnerableTime = 0f;
         
-        private Transform wheelMesh;
-        private Transform bustedWheelMesh;
+        private Transform[] wheelMeshes;
+        private Transform[] bustedWheelMeshes;
         
         [KSPEvent(guiName = "Repair Wheel/Gear", guiActive = false, guiActiveEditor = false, guiActiveUnfocused = false, externalToEVAOnly = true, unfocusedRange = 8f)]
         public void repairWheel()
@@ -68,8 +68,14 @@ namespace KSPWheel
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
-            if (!String.IsNullOrEmpty(wheelName)) { wheelMesh = part.transform.FindRecursive(wheelName); }
-            if (!String.IsNullOrEmpty(bustedWheelName)) { bustedWheelMesh = part.transform.FindRecursive(bustedWheelName); }
+            if (!String.IsNullOrEmpty(wheelName))
+            {
+                wheelMeshes = part.transform.FindChildren(wheelName);
+            }
+            if (!String.IsNullOrEmpty(bustedWheelName))
+            {
+                bustedWheelMeshes = part.transform.FindChildren(bustedWheelName);
+            }
             updateWheelMeshes();
             updateDisplayState();
         }
@@ -115,7 +121,8 @@ namespace KSPWheel
             loadStress = load / maxLoad;
             if (load > maxLoad)
             {
-                stressTime += Time.fixedDeltaTime * (load - maxLoad) * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().stressDamageMultiplier * 0.25f;
+                float overStress = (load / maxLoad) - 1f;
+                stressTime += Time.fixedDeltaTime * overStress * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().stressDamageMultiplier * 0.25f;
             }
 
             float maxSpeed = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
@@ -151,10 +158,21 @@ namespace KSPWheel
             KSPWheelState wheelState = controller.wheelState;
             if (wheelState == KSPWheelState.BROKEN)
             {
-                if (bustedWheelMesh != null)
+                if (bustedWheelMeshes != null)
                 {
-                    if (wheelMesh != null) { wheelMesh.gameObject.SetActive(false); }
-                    bustedWheelMesh.gameObject.SetActive(true);
+                    int len = bustedWheelMeshes.Length;
+                    for (int i = 0; i < len; i++)
+                    {
+                        bustedWheelMeshes[i].gameObject.SetActive(true);
+                    }
+                    if (wheelMeshes != null)
+                    {
+                        len = wheelMeshes.Length;
+                        for (int i = 0; i < len; i++)
+                        {
+                            wheelMeshes[i].gameObject.SetActive(false);
+                        }
+                    }
                 }
                 if (wheel != null)
                 {
@@ -169,8 +187,22 @@ namespace KSPWheel
             }
             else
             {
-                if (wheelMesh != null) { wheelMesh.gameObject.SetActive(true); }
-                if (bustedWheelMesh != null) { bustedWheelMesh.gameObject.SetActive(false); }
+                if (bustedWheelMeshes != null)
+                {
+                    int len = bustedWheelMeshes.Length;
+                    for (int i = 0; i < len; i++)
+                    {
+                        bustedWheelMeshes[i].gameObject.SetActive(false);
+                    }
+                }
+                if (wheelMeshes != null)
+                {
+                    int len = wheelMeshes.Length;
+                    for (int i = 0; i < len; i++)
+                    {
+                        wheelMeshes[i].gameObject.SetActive(true);
+                    }
+                }
             }
         }
 

@@ -86,7 +86,7 @@ namespace KSPWheel
         public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
-        UI_FloatRange(minValue = 0.05f, maxValue = 2, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+        UI_FloatRange(minValue = 0.35f, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
         public float dampRatio = 0.65f;
 
         [KSPField(guiName = "Wheel Group", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -293,7 +293,6 @@ namespace KSPWheel
                 configNodeData = node.ToString();
             }
             currentWheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-            initializeScaling();
         }
 
         public override void OnSave(ConfigNode node)
@@ -484,8 +483,15 @@ namespace KSPWheel
             }
             if (!initializedWheels)
             {
-                Rigidbody rb = part.GetComponent<Rigidbody>();
-                if (useParentRigidbody && part.parent != null) { rb = part.parent.GetComponent<Rigidbody>(); }
+                Rigidbody rb = null;
+                if (useParentRigidbody && part.parent != null)
+                {
+                    rb = Utils.locateRigidbodyUpwards(part);
+                }
+                else
+                {
+                    rb = part.GetComponent<Rigidbody>();
+                }
                 if (rb == null)
                 {
                     return;
@@ -642,23 +648,8 @@ namespace KSPWheel
             {
                 data = wheelData[i];
                 compression = data.wheel.compressionDistance / data.wheel.length;
-                lengthCorrectedMass = vesselMass / data.wheel.length;
-                data.wheel.externalSpringForce = data.colliderData.collisionForce;
-                if (data.wheel.contactColliderHit != null)
-                {
-                    PhysicMaterial pm = data.wheel.contactColliderHit.sharedMaterial;
-                    if (pm == null)
-                    {
-                        pm = new PhysicMaterial();
-                    }
-                    pm.frictionCombine = PhysicMaterialCombine.Multiply;
-                    data.wheel.contactColliderHit.material = pm;
-                }
-                if (springRating == 0)
-                {
-                    spring = damper = 0f;
-                }
-                else if (wheelRepairTimer < 1)
+                lengthCorrectedMass = vesselMass / data.wheel.length * data.loadShare;
+                if (wheelRepairTimer < 1)
                 {
                     data.timeBoostFactor = 0f;
                     spring = lengthCorrectedMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
@@ -943,6 +934,7 @@ namespace KSPWheel
             public readonly float suspensionTravel;
             public readonly float loadShare;
             public readonly float offset;
+            public readonly int indexInDuplicates;
             public KSPWheelCollider wheel;
             public KSPWheelCollisionData colliderData;
             public Transform wheelTransform;
@@ -965,11 +957,12 @@ namespace KSPWheel
                 suspensionTravel = node.GetFloatValue("travel", 0.25f);
                 loadShare = node.GetFloatValue("load", 1f);
                 offset = node.GetFloatValue("offset");
+                indexInDuplicates = node.GetIntValue("indexInDuplicates");
             }
 
             public void locateTransform(Transform root)
             {
-                wheelTransform = root.FindRecursive(wheelColliderName);
+                wheelTransform = root.FindChildren(wheelColliderName)[indexInDuplicates];
                 WheelCollider wc = wheelTransform.GetComponent<WheelCollider>();
                 GameObject.Destroy(wc);
             }

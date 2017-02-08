@@ -481,6 +481,18 @@ namespace KSPWheel
             }
         }
 
+        public static Rigidbody locateRigidbodyUpwards(Part part)
+        {
+            Rigidbody rb = null;
+            while (rb == null)
+            {
+                if (part.parent == null) { break; }
+                part = part.parent;
+                rb = part.GetComponent<Rigidbody>();
+            }
+            return rb;
+        }
+
         public class PIDController
         {
 

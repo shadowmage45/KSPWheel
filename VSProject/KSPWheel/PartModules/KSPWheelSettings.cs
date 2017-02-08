@@ -15,6 +15,9 @@
         [GameParameters.CustomParameterUI("Wheel Dust Camera", toolTip = "If enabled the dust system will use real-time camera rendering data to determine dust colors.  If disabled dust colors will fall-back to the pre-defined lookup map.")]
         public bool wheelDustCamera = true;
 
+        [GameParameters.CustomFloatParameterUI("Wheel Dust Power", minValue = 0, maxValue = 4, stepCount = 15, displayFormat = "F2", toolTip = "Increases or decreases dust emission rate. 1=standard, 0=off")]
+        public float wheelDustPower = 1f;
+
         [GameParameters.CustomParameterUI("Wear and Damage", toolTip = "Wear and damage model.\nNone = No wheel wear or breakage.\nSimple = Stock equivalent, break on impact/over-stress.\nAdvanced = Time, speed, load, heat, and impact based wheel wear + breakage.")]
         public KSPWheelWearType wearType = KSPWheelWearType.SIMPLE;
 
@@ -45,7 +48,7 @@
         [GameParameters.CustomFloatParameterUI("Wheel Mass Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel mass is scaled when scaling up or down")]
         public float wheelMassScalingPower = 3f;
 
-        [GameParameters.CustomFloatParameterUI("Wheel Max Speed Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel max safe speed is scaled when scaling up or down")]
+        [GameParameters.CustomFloatParameterUI("Wheel Max Speed Scale Power", minValue = 0, maxValue = 4, stepCount = 15, displayFormat = "F2", toolTip = "Sets the exponent to which wheel max safe speed is scaled when scaling up or down")]
         public float wheelMaxSpeedScalingPower = 1f;
 
         [GameParameters.CustomFloatParameterUI("Wheel Max Load Scale Power", minValue = 1, maxValue = 4, stepCount = 11, displayFormat = "F2", toolTip = "Sets the exponent to which wheel min/max load are scaled when scaling up or down")]
