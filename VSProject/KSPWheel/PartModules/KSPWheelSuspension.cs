@@ -85,7 +85,7 @@ namespace KSPWheel
             base.postControllerSetup();
             if (suspensionTransform == null)
             {
-                suspensionTransform = part.transform.FindRecursive(suspensionName);
+                suspensionTransform = part.transform.FindChildren(suspensionName)[wheelData.indexInDuplicates];
                 if (suspensionTransform == null)
                 {
                     MonoBehaviour.print("ERROR: Suspension transform was null for name: " + suspensionName);

@@ -119,7 +119,7 @@ namespace KSPWheel
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
-            steeringTransform = part.transform.FindRecursive(steeringName);
+            steeringTransform = part.transform.FindChildren(steeringName)[wheelData.indexInDuplicates];
             defaultRotation = steeringTransform.localRotation;
             if (steeringCurve == null || steeringCurve.Curve.length == 0)
             {
