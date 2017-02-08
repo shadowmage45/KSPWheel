@@ -905,6 +905,7 @@ namespace KSPWheel
             public readonly float suspensionTravel;
             public readonly float loadShare;
             public readonly float offset;
+            public readonly int indexInDuplicates;
             public KSPWheelCollider wheel;
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
@@ -923,11 +924,12 @@ namespace KSPWheel
                 suspensionTravel = node.GetFloatValue("travel", 0.25f);
                 loadShare = node.GetFloatValue("load", 1f);
                 offset = node.GetFloatValue("offset");
+                indexInDuplicates = node.GetIntValue("indexInDuplicates");
             }
 
             public void locateTransform(Transform root)
             {
-                wheelTransform = root.FindRecursive(wheelColliderName);
+                wheelTransform = root.FindChildren(wheelColliderName)[indexInDuplicates];
                 WheelCollider wc = wheelTransform.GetComponent<WheelCollider>();
                 GameObject.Destroy(wc);
             }
