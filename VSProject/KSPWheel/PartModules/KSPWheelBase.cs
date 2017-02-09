@@ -424,10 +424,11 @@ namespace KSPWheel
             //destroy bounds collider, if specified and present (KF wheels)
             if (!string.IsNullOrEmpty(boundsColliderName))
             {
-                Transform boundsCollider = part.transform.FindRecursive(boundsColliderName);
-                if (boundsCollider != null)
+                Transform[] boundsColliders = part.transform.FindChildren(boundsColliderName);
+                int len = boundsColliders.Length;
+                for (int i = 0; i < len; i++)
                 {
-                    GameObject.DestroyImmediate(boundsCollider.gameObject);
+                    GameObject.DestroyImmediate(boundsColliders[i].gameObject);
                 }
             }
 
