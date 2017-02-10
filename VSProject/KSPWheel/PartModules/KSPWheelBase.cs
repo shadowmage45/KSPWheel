@@ -196,6 +196,8 @@ namespace KSPWheel
 
         private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
 
+        private PhysicMaterial customMat;
+
         #endregion
 
         #region REGION - GUI Handling methods
@@ -559,6 +561,13 @@ namespace KSPWheel
                     wheel = wheelData[i].wheel;
                     wheel.gravityVector = vessel.gravityForPos;
                     wheel.updateWheel();
+                    if (wheel.contactColliderHit != null)
+                    {
+                        //TODO -- does grabbing a physics material result in a per-tick allocation like rendering materials does?
+                        PhysicMaterial pm = wheel.contactColliderHit.material;
+                        if (pm == null) { wheel.contactColliderHit.material = customMat; }
+                        pm.frictionCombine = PhysicMaterialCombine.Multiply;
+                    }
                 }
                 for (int i = 0; i < subLen; i++)
                 {
@@ -631,8 +640,6 @@ namespace KSPWheel
             initializedScaling = true;
             setScale(scale, false);
         }
-
-        private PhysicMaterial customMat;
 
         private void updateSuspension()
         {
@@ -954,8 +961,6 @@ namespace KSPWheel
             public float loadTarget;
             public float timeBoostFactor;
             public float prevComp;
-            public Collider prevHit;
-            public PhysicMaterial prevMat;
 
             public KSPWheelData(ConfigNode node)
             {
