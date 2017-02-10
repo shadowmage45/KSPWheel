@@ -124,6 +124,12 @@ namespace KSPWheel
         [KSPField]
         public string scalingTransform = string.Empty;
 
+        [KSPField]
+        public float forwardFriction = 1f;
+
+        [KSPField]
+        public float sidewaysFriction = 1f;
+
         #endregion
 
         #region REGION - Persistent data
@@ -453,6 +459,8 @@ namespace KSPWheel
                     wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
                 }
                 wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
+                wheelData[i].wheel.forwardFrictionCoefficient = forwardFriction;
+                wheelData[i].wheel.sideFrictionCoefficient = sidewaysFriction;
                 wheelData[i].wheel.rollingResistance = rollingResistance;
                 wheelData[i].wheel.rotationalResistance = rotationalResistance;
                 if (!string.IsNullOrEmpty(persistentData))
