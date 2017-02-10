@@ -127,7 +127,6 @@ namespace KSPWheel
         private float peakOutputPower = 0f;
         private float peakInputPower = 0f;
         private float minInputPower = 0f;
-        //private float deltaInputPower = 0f;
 
         public void onMotorInvert(BaseField field, System.Object obj)
         {
@@ -387,7 +386,7 @@ namespace KSPWheel
             minInputPower = motorPowerFactor * powerMidpoint * powerCorrection;
 
             powerOutKW = peakOutputPower;
-            powerInKW = peakInputPower / 65f;
+            powerInKW = peakInputPower;
         }
 
         private static float rpmToRad = 0.104719755f;
