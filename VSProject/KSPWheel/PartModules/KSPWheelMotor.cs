@@ -127,7 +127,6 @@ namespace KSPWheel
         private float peakOutputPower = 0f;
         private float peakInputPower = 0f;
         private float minInputPower = 0f;
-        private float deltaInputPower = 0f;
 
         public void onMotorInvert(BaseField field, System.Object obj)
         {
@@ -360,7 +359,9 @@ namespace KSPWheel
             motorRPM = Mathf.Abs(motorRPM);            
             if (motorRPM > scaledMaxRPM) { motorRPM = scaledMaxRPM; }
             float torquePercent = 1 - (motorRPM / maxRPM);
-            return minInputPower + (deltaInputPower * Mathf.Abs(fI) * torquePercent);
+            float lostPower = (1 - torquePercent) * minInputPower;
+            float usedPower = torquePercent * peakInputPower;
+            return (lostPower + usedPower) * Mathf.Abs(fI) / 65f;//65 is the stock electrical to mechanical conversion factor (1ec=1kj, but does the work of 65kj)
         }
 
         /// <summary>
@@ -383,7 +384,6 @@ namespace KSPWheel
 
             peakInputPower = 1 * powerMidpoint * powerCorrection;
             minInputPower = motorPowerFactor * powerMidpoint * powerCorrection;
-            deltaInputPower = peakInputPower - minInputPower;
 
             powerOutKW = peakOutputPower;
             powerInKW = peakInputPower;
@@ -511,13 +511,12 @@ namespace KSPWheel
             //zero PF is a special degenerate case where each efficiency value has its own corrector value
             if (pf == 0)
             {
-                MonoBehaviour.print("POwer factor zero, returning correcto based on efficiency alone.");
                 return ef * 4;
             }
             //else if PF > 0, all efficiency values use the same
 
             int startIndex=0;
-            float start, end, startVal, endVal, point;
+            float start, end, startVal, endVal, lerp;
 
             int len = inputPoints.Length;
             for (int i = len-1; i >=0; i--)
@@ -544,10 +543,8 @@ namespace KSPWheel
             }
             float range = end - start;
             float pointVal = pf - start;
-            point = pointVal / range;
-            float v = Mathf.Lerp(startVal, endVal, point);
-            MonoBehaviour.print("Calced output point of: " + v + " for inputs: " + pf + "::" + ef);
-            return v;
+            lerp = pointVal / range;
+            return Mathf.Lerp(startVal, endVal, lerp);
         }
     }
 
