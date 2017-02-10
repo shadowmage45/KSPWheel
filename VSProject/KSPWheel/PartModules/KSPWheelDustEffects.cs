@@ -16,6 +16,12 @@ namespace KSPWheel
         public string dustParticleEffect = "Effects/fx_smokeTrail_light";
 
         /// <summary>
+        /// The name of the particle effect to use for water-spray creation
+        /// </summary>
+        [KSPField]
+        public string waterParticleEffect = "Effects/fx_smokeTrail_light";
+
+        /// <summary>
         /// Below this value of linear speed no contribution to emission will come from wheel speed/rpm
         /// </summary>
         [KSPField]
@@ -63,23 +69,26 @@ namespace KSPWheel
         [KSPField]
         public float dustMaxEnergy = 3f;
 
-        public bool waterMode = false;
-
         private bool gamePaused = false;
 
-        private Color[] colArr = new Color[5];
+        private float dustPower = 1f;
+
+        private Color[] dustColorArray = new Color[5] { Color.clear, Color.clear, Color.clear, Color.clear, Color.clear };
         private string prevBody = string.Empty;
         private string prevBiome = string.Empty;
 
+        private Color[] waterColorArray = new Color[5] { Color.clear, Color.clear, Color.clear, Color.clear, Color.clear };
+
         private float colorUpdateTime = 1f;
         private float colorUpdateTimer = 0f;
-
-        private float dustPower = 1f;
 
         private bool setupEmitters = false;
         private GameObject[] dustObjects;//one emitter per wheel collider on the part; so that tracks/compound parts still throw up dust on a per-wheel basis
         private ParticleEmitter[] dustEmitters;
         private ParticleAnimator[] dustAnimators;//no clue if these will even work in modern Unity versions, will investigate ParticleSystem instead...
+        private GameObject[] waterObjects;
+        private ParticleEmitter[] waterEmitters;
+        private ParticleAnimator[] waterAnimators;
 
         public override void OnStart(StartState state)
         {
@@ -130,7 +139,7 @@ namespace KSPWheel
         private void setupDustEmitters()
         {
             setupEmitters = true;
-            //one emitter per collider ..
+            //one dust and one water effect emitter per wheel collider ..
             int len = controller.wheelData.Length;
             dustObjects = new GameObject[len];
             dustEmitters = new ParticleEmitter[len];
@@ -145,11 +154,20 @@ namespace KSPWheel
                 dustObjects[i].transform.rotation = wheel.transform.rotation;
                 dustEmitters[i] = dustObjects[i].GetComponent<ParticleEmitter>();
                 dustAnimators[i] = dustEmitters[i].GetComponent<ParticleAnimator>();
-                dustAnimators[i].colorAnimation = new Color[] { Color.white, Color.white, Color.white, Color.white, Color.white };
+                dustAnimators[i].colorAnimation = dustColorArray;
                 dustEmitters[i].useWorldSpace = true;
                 dustEmitters[i].localVelocity = Vector3.zero;
                 dustEmitters[i].emit = false;
-                //energy, emission, size, speed all updated per-frame
+
+                waterObjects[i] = (GameObject)GameObject.Instantiate(Resources.Load(waterParticleEffect));
+                waterObjects[i].transform.position = wheel.transform.position;
+                waterObjects[i].transform.rotation = wheel.transform.rotation;
+                waterEmitters[i] = waterObjects[i].GetComponent<ParticleEmitter>();
+                waterAnimators[i] = waterEmitters[i].GetComponent<ParticleAnimator>();
+                waterAnimators[i].colorAnimation = waterColorArray;
+                waterEmitters[i].useWorldSpace = true;
+                waterEmitters[i].localVelocity = Vector3.zero;
+                waterEmitters[i].emit = false;
             }
         }
 
@@ -179,15 +197,28 @@ namespace KSPWheel
                 }
                 colorUpdateTimer -= Time.deltaTime;
             }
+            if (dustPower <= 0)
+            {
+                //early out, no need to compute anything, dust is effectively disabled
+                return;
+            }
             KSPWheelCollider wheel;
+            KSPWheelBase.KSPWheelData data;
             float springForce = 1f;
             float speedForce = 1f;
             float slipForce = 1f;
             float mult = 0f;
             for (int i = 0; i < len; i++)
             {
-                wheel = controller.wheelData[i].wheel;
-                if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed && dustPower > 0)
+                data = controller.wheelData[i];
+                wheel = data.wheel;
+                if (data.waterMode)
+                {
+                    //TODO -- how to handle emission power
+                    //should be mostly based on vessel speed, with a secondary term for wheel velocity
+                    //but this needs to be handled a bit differently for repulsors
+                }
+                else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
                 {
                     springForce = wheel.springForce * 0.1f * dustForceMult;
                     speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
@@ -216,22 +247,15 @@ namespace KSPWheel
         private void updateColorArray(Color inputColor)
         {
             Color color = inputColor;
-            if (waterMode)
-            {
-                color.r *= 2;
-                color.g *= 2;
-                color.b *= 2;
-                color.a *= 4;
-            }
-            colArr[0] = color;
-            colArr[1] = color;
-            colArr[2] = color;
-            colArr[3] = color;
-            colArr[4] = color;
+            dustColorArray[0] = color;
+            dustColorArray[1] = color;
+            dustColorArray[2] = color;
+            dustColorArray[3] = color;
+            dustColorArray[4] = color;
             int len = dustAnimators.Length;
             for (int i = 0; i < len; i++)
             {
-                dustAnimators[i].colorAnimation = colArr;
+                dustAnimators[i].colorAnimation = dustColorArray;
             }
         }
     }

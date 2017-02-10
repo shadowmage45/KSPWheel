@@ -58,8 +58,6 @@ namespace KSPWheel
         [KSPField]
         public string repulsorSoundEffect = String.Empty;
 
-        private KSPWheelDustEffects dustModule;
-
         private Transform gimbalTransform;
 
         private Material gridMaterial;
@@ -115,8 +113,9 @@ namespace KSPWheel
         {
             base.postWheelCreated();
             if (HighLogic.LoadedSceneIsEditor) { return; }
-            dustModule = part.GetComponent<KSPWheelDustEffects>();
-            if (dustModule != null) { dustModule.minDustSpeed = 0.0f; }
+            //TODO adjust configs in dust module on repulsors to set min-speed to 0
+            //dustModule = part.GetComponent<KSPWheelDustEffects>();
+            //if (dustModule != null) { dustModule.minDustSpeed = 0.0f; }
         }
 
         internal override void preWheelFrameUpdate()
@@ -148,7 +147,7 @@ namespace KSPWheel
         {
             base.preWheelSuspensionCalc();
             //update repulsor 'length' stats
-            if (dustModule != null) { dustModule.waterMode = false; }
+            wheelData.waterMode = false;
             if (!repulsorEnabled)
             {
                 curLen = Mathf.MoveTowards(curLen, 0.001f, 0.25f * Time.fixedDeltaTime);
@@ -195,7 +194,7 @@ namespace KSPWheel
                     wheel.useExternalHit = true;
                     wheel.externalHitPoint = oceanHitPos;
                     wheel.externalHitNormal = surfaceNormal;
-                    if (dustModule != null) { dustModule.waterMode = true; }
+                    wheelData.waterMode = true;
                     return;
                 }
 
@@ -233,14 +232,14 @@ namespace KSPWheel
                         wheel.useExternalHit = true;
                         wheel.externalHitPoint = oceanHitPos;
                         wheel.externalHitNormal = surfaceNormal;
-                        if (dustModule != null) { dustModule.waterMode = true; }
+                        wheelData.waterMode = true;
                     }
                     else//use the surface of the ocean itself for the hit position
                     {
                         wheel.useExternalHit = true;
                         wheel.externalHitPoint = oceanHitPos;
                         wheel.externalHitNormal = surfaceNormal;
-                        if (dustModule != null) { dustModule.waterMode = true; }
+                        wheelData.waterMode = true;
                     }
                 }
             }
