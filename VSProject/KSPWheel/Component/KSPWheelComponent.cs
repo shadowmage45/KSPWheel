@@ -254,7 +254,6 @@ namespace KSPWheel
                 wheelCollider.mass = wheelMass;
                 wheelCollider.length = suspensionLength;
                 wheelCollider.spring = spring;
-                wheelCollider.springCurve = springCurve;
                 wheelCollider.damper = damper;
                 wheelCollider.motorTorque = maxMotorTorque;
                 wheelCollider.brakeTorque = maxBrakeTorque;
@@ -270,11 +269,6 @@ namespace KSPWheel
                 bumpStopCollider.transform.parent = gameObject.transform;
                 bumpStopCollider.transform.localPosition = Vector3.zero;
             }
-        }
-
-        public void LateUpdate()
-        {
-            wheelCollider.drawDebug();
         }
 
         /// <summary>
