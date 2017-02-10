@@ -196,11 +196,11 @@ namespace KSPWheel
                     dustObjects[i].transform.position = wheel.worldHitPos;
                     dustObjects[i].transform.rotation = wheel.transform.rotation;
                     dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
-                    dustEmitters[i].minEmission = dustMinEmission;
+                    dustEmitters[i].minEmission = dustMinEmission * dustPower;
                     dustEmitters[i].maxEmission = dustMaxEmission * mult * dustPower;
-                    dustEmitters[i].minEnergy = dustMinEnergy;
+                    dustEmitters[i].minEnergy = dustMinEnergy * dustPower;
                     dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-                    dustEmitters[i].minSize = dustMinSize;
+                    dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
                     dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
                     dustEmitters[i].Emit();
                 }
