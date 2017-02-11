@@ -55,13 +55,13 @@ namespace KSPWheel
         public float dustMinSize = 0.1f;
 
         [KSPField]
-        public float dustMaxSize = 3.5f;
+        public float dustMaxSize = 1f;
 
         [KSPField]
-        public float dustMinEmission = 0.1f;
+        public float dustMinEmission = 1f;
 
         [KSPField]
-        public float dustMaxEmission = 20f;
+        public float dustMaxEmission = 10f;
 
         [KSPField]
         public float dustMinEnergy = 0.1f;
@@ -198,7 +198,7 @@ namespace KSPWheel
                 dustEmitters[i] = dustObjects[i].GetComponent<ParticleEmitter>();
                 dustAnimators[i] = dustEmitters[i].GetComponent<ParticleAnimator>();
                 dustAnimators[i].colorAnimation = dustColorArray;
-                dustAnimators[i].sizeGrow = 1f;
+                dustAnimators[i].sizeGrow = 0.5f;
                 dustEmitters[i].useWorldSpace = true;
                 dustEmitters[i].localVelocity = Vector3.zero;
                 dustEmitters[i].emit = false;
@@ -210,14 +210,15 @@ namespace KSPWheel
                 waterAnimators[i] = waterEmitters[i].GetComponent<ParticleAnimator>();
                 waterAnimators[i].colorAnimation = waterColorArray;
                 waterAnimators[i].doesAnimateColor = true;
+                waterAnimators[i].sizeGrow = 0.5f;
                 waterEmitters[i].useWorldSpace = true;
                 waterEmitters[i].localVelocity = Vector3.zero;
                 waterEmitters[i].emit = false;
             }
             for (int i = 0; i < 5; i++)
             {
-                float percent = (1f - ((float)i / 5f)) * 0.0125f;
-                waterColorArray[i] = new Color(0.75f, 0.75f, 0.80f, percent);
+                float percent = (1f - ((float)i / 5f));
+                waterColorArray[i] = new Color(0.75f*percent, 0.75f*percent, 0.80f*percent, percent * 0.0125f);
             }
         }
 
@@ -275,11 +276,11 @@ namespace KSPWheel
                     waterObjects[i].transform.rotation = wheel.transform.rotation;
                     waterEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
                     waterEmitters[i].minEmission = dustMinEmission * dustPower;
-                    waterEmitters[i].maxEmission = dustMaxEmission * mult * dustPower;
+                    waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
                     waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
                     waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-                    waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
-                    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+                    waterEmitters[i].minSize = dustMinSize * springForce * dustPower * 2f;
+                    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower * 2f;
                     waterEmitters[i].Emit();
                 }
                 else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
@@ -292,7 +293,7 @@ namespace KSPWheel
                     dustObjects[i].transform.rotation = wheel.transform.rotation;
                     dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
                     dustEmitters[i].minEmission = dustMinEmission * dustPower;
-                    dustEmitters[i].maxEmission = dustMaxEmission * mult * dustPower;
+                    dustEmitters[i].maxEmission = dustMaxEmission * dustPower;
                     dustEmitters[i].minEnergy = dustMinEnergy * dustPower;
                     dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
                     dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
