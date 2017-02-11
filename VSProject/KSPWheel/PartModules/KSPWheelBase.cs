@@ -82,11 +82,11 @@ namespace KSPWheel
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.0f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0.0f, maxValue = 1.0f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
-        UI_FloatRange(minValue = 0.35f, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+        UI_FloatRange(minValue = 0.35f, maxValue = 1.0f, stepIncrement = 0.025f, suppressEditorShipModified = true)]
         public float dampRatio = 0.65f;
 
         [KSPField(guiName = "Wheel Group", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -444,8 +444,11 @@ namespace KSPWheel
             }
             initializeScaling();
 
-            customMat = new PhysicMaterial("SlideMaterial");
-            customMat.frictionCombine = PhysicMaterialCombine.Multiply;
+            if (customMat == null)
+            {
+                customMat = new PhysicMaterial("SlideMaterial");
+                customMat.frictionCombine = PhysicMaterialCombine.Multiply;
+            }
         }
 
         public void Start()
@@ -632,7 +635,7 @@ namespace KSPWheel
             setScale(scale, false);
         }
 
-        private PhysicMaterial customMat;
+        private static PhysicMaterial customMat;
 
         private void updateSuspension()
         {
@@ -678,7 +681,7 @@ namespace KSPWheel
                     }
                     data.timeBoostFactor = Mathf.MoveTowards(data.timeBoostFactor, target, Time.fixedDeltaTime * rate);
                     data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, -1, 1);
-                    spring = lengthCorrectedMass * calculateSpring(compression, data.timeBoostFactor) * springRating * g;
+                    spring = lengthCorrectedMass * springRating * g;
                     if (spring > 0)
                     {
                         springLoad = spring * data.wheel.length * 0.5f * 1 / g;//target load for damper calc is spring at half compression
@@ -693,6 +696,8 @@ namespace KSPWheel
                 }
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
+                data.wheel.externalSpringForce = data.colliderData.collisionForce;
+                if (data.wheel.contactColliderHit != null) { data.wheel.contactColliderHit.material = customMat; }
             }
             if (wheelRepairTimer < 1)
             {
