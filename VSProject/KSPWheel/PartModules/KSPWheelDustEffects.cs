@@ -95,6 +95,7 @@ namespace KSPWheel
             base.OnStart(state);
             GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
             GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
+            //GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
             dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
         }
 
@@ -105,14 +106,21 @@ namespace KSPWheel
             {
                 dustEmitters = null;
                 dustAnimators = null;
+                waterEmitters = null;
+                waterAnimators = null;
                 int len = dustObjects.Length;
                 for (int i = 0; i < len; i++)
                 {
                     GameObject.Destroy(dustObjects[i]);
                 }
+                for (int i = 0; i < len; i++)
+                {
+                    GameObject.Destroy(waterObjects[i]);
+                }
             }
             GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
             GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
+            //GameEvents.onFloatingOriginShift.Remove(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
         }
 
         private void onGamePause()
@@ -123,6 +131,33 @@ namespace KSPWheel
         private void onGameUnpause()
         {
             gamePaused = false;
+        }
+
+        private void onOriginShift(Vector3d o, Vector3d n)
+        {
+            if (dustEmitters == null) { return; }
+            Vector3 d = n - o;
+            MonoBehaviour.print("origin shift: " + o + " :: " + n + " :: " + d);
+            Vector3 pos;
+            int len = dustEmitters.Length;
+            int len2;
+            for (int i = 0; i < len; i++)
+            {
+                len2 = dustEmitters[i].particles.Length;
+                for (int k = 0; k < len2; k++)
+                {
+                    pos = dustEmitters[i].particles[k].position;
+                    pos = pos + d;
+                    dustEmitters[i].particles[k].position = pos;
+                }
+                len2 = waterEmitters[i].particles.Length;
+                for (int k = 0; k < len2; k++)
+                {
+                    pos = waterEmitters[i].particles[k].position;
+                    pos = pos + d;
+                    waterEmitters[i].particles[k].position = pos;
+                }
+            }
         }
 
         internal override void preWheelFrameUpdate()
@@ -174,7 +209,7 @@ namespace KSPWheel
             }
             for (int i = 0; i < 5; i++)
             {
-                float percent = (1f - ((float)i / 5f)) * 0.05f;
+                float percent = (1f - ((float)i / 5f)) * 0.025f;
                 waterColorArray[i] = new Color(0.8f, 0.8f, 0.95f, percent);
             }
         }
