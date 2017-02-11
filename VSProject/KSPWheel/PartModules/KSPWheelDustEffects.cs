@@ -217,6 +217,16 @@ namespace KSPWheel
                     //TODO -- how to handle emission power
                     //should be mostly based on vessel speed, with a secondary term for wheel velocity
                     //but this needs to be handled a bit differently for repulsors
+                    waterObjects[i].transform.position = wheel.worldHitPos;
+                    waterObjects[i].transform.rotation = wheel.transform.rotation;
+                    waterEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
+                    waterEmitters[i].minEmission = dustMinEmission * dustPower;
+                    waterEmitters[i].maxEmission = dustMaxEmission * mult * dustPower;
+                    waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
+                    waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
+                    waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
+                    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+                    waterEmitters[i].Emit();
                 }
                 else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
                 {
