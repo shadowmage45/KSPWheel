@@ -85,6 +85,9 @@ namespace KSPWheel
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Max Drive Speed", guiUnits = "m/s")]
         public float maxDrivenSpeed = 0f;
 
+        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Motor RPM")]
+        public float motorCurRPM = 0f;
+
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Torque To Wheel", guiUnits = "kN/M")]
         public float torqueOut = 0f;
 
@@ -94,7 +97,7 @@ namespace KSPWheel
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Elec. Input", guiUnits = "kW")]
         public float powerInKW = 0f;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Efficiency", guiUnits = "kW")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Efficiency", guiUnits = "%")]
         public float powerEff = 0f;
 
         [KSPField(guiActive = true, guiName = "Motor EC Use", guiUnits = "ec/s")]
@@ -146,7 +149,6 @@ namespace KSPWheel
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
                 m.gearRatio = gearRatio;
-                
                 float scale = m.part.rescaleFactor * m.controller.scale;
                 float radius = m.wheelData.scaledRadius(scale);
                 float rpm = maxRPM / m.gearRatio;
@@ -210,8 +212,8 @@ namespace KSPWheel
             Fields[nameof(halfTrackSteering)].uiControlEditor.onFieldChanged = Fields[nameof(halfTrackSteering)].uiControlFlight.onFieldChanged = onHalftrackToggle;
             if (torqueCurve.Curve.length == 0)
             {
-                torqueCurve.Add(0, 1, 0, 0);
-                torqueCurve.Add(1, 0, 0, 0);
+                torqueCurve.Add(0, 1, -1, -1);
+                torqueCurve.Add(1, 0, -1, -1);
             }
             if (HighLogic.LoadedSceneIsEditor && part.isClone && part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
             {
@@ -224,7 +226,7 @@ namespace KSPWheel
                     invertSteering = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertSteering;
                 }
             }
-            ConfigNode config = GameDatabase.Instance.GetConfigNodes("KSPWheelConfig")[0];
+            ConfigNode config = GameDatabase.Instance.GetConfigNodes("KSPWHEELCONFIG")[0];
             powerConversion = config.GetFloatValue("powerConversion", 65f);
             calcPowerStats();
         }
@@ -290,9 +292,11 @@ namespace KSPWheel
             //integrateMotorEuler(fI, motorRPM);
             integrateMotorEulerSub(fI, motorRPM, 5);
             //integrateMotorRK4(fI, motorRPM, wheel.mass);
-            powerOutKW = motorRPM * rpmToRad * torqueOut;
+
+            motorCurRPM = Mathf.Abs(motorRPM);
+            powerOutKW = motorCurRPM * Mathf.Abs(torqueOutput) * rpmToRad;
             powerInKW = guiResourceUse * powerConversion;
-            motorEfficiency = powerOutKW / powerInKW;
+            powerEff = (powerInKW <= 0 ? 0 : powerOutKW / powerInKW)*100f;
         }
 
         protected void integrateMotorEuler(float fI, float motorRPM)
@@ -338,17 +342,12 @@ namespace KSPWheel
         {
             motorRPM = Mathf.Abs(motorRPM);
             float maxRPM = this.maxRPM * controller.motorMaxRPMScalingFactor;
-            if (motorRPM > maxRPM) { motorRPM = maxRPM; }
+            motorRPM = Mathf.Clamp(motorRPM, 0, maxRPM);
             float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
             float outputTorque = curveOut * maxMotorTorque * fI * controller.motorTorqueScalingFactor;
             return outputTorque;
         }
 
-        /// <summary>
-        /// A bit of data;
-        /// A Tesla model-S has a 270kW/362hp motor rated for 440 Nm of torque.  What is the input power for that output power?  And is that torque at the wheels, or at the motor (pre-gearing)?
-        /// However this data reveals that the motors in KSP will have fairly 'insane' power draws.  Hundreds of EC/s for even 1knm of torque.
-        /// </summary>
         protected float calcECUse(float fI, float motorRPM)
         {
             fI = Mathf.Abs(fI);
@@ -358,11 +357,11 @@ namespace KSPWheel
             float torquePercent = 1 - (motorRPM / maxRPM);
             float lostPower = (1 - torquePercent) * minInputPower;
             float usedPower = torquePercent * peakInputPower;
-            return (lostPower + usedPower) * Mathf.Abs(fI) / 65f;//65 is the stock electrical to mechanical conversion factor (1ec=1kj, but does the work of 65kj)
+            return (lostPower + usedPower) * Mathf.Abs(fI) / powerConversion;//65 is the stock electrical to mechanical conversion factor (1ec=1kj, but does the work of 65kj)
         }
 
         /// <summary>
-        /// Seriously... don't ask where this math came from....
+        /// Seriously... don't ask where this math came from.... (days of spreadsheet work)
         /// </summary>
         private void calcPowerStats()
         {
@@ -476,7 +475,6 @@ namespace KSPWheel
 
         static MotorPFCurve()
         {
-            //TODO populate sampling arrays
             inputPoints[0] = 0.001f;
             inputPoints[1] = 0.050f;
             inputPoints[2] = 0.100f;
