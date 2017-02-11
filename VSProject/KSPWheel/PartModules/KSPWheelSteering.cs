@@ -142,8 +142,8 @@ namespace KSPWheel
             if (steeringCurve == null || steeringCurve.Curve.length == 0)
             {
                 steeringCurve = new FloatCurve();
-                steeringCurve.Add(0, 1f, 0, 0);
-                steeringCurve.Add(1, 0.1f, 0, 0);
+                steeringCurve.Add(0, 1f, -0.9f, -0.9f);
+                steeringCurve.Add(1, 0.1f, -0.9f, -0.9f);
             }
         }
 
@@ -153,14 +153,13 @@ namespace KSPWheel
             float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
             if (steeringLocked) { rI = 0; }
             if (invertSteering) { rI = -rI; }
-            float bias = steeringBias;
             if (rI < 0)
             {
-                rI = rI * (1 - bias);
+                rI = rI * (1 - steeringBias);
             }
             if (rI > 0)
             {
-                rI = rI * (1 + bias);
+                rI = rI * (1 + steeringBias);
             }
             rI = Mathf.Clamp(rI, -1, 1);
             rotInput = Mathf.MoveTowards(rotInput, rI, steeringResponse);
