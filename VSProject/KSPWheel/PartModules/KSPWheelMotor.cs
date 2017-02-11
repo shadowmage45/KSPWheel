@@ -85,20 +85,17 @@ namespace KSPWheel
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Max Drive Speed", guiUnits = "m/s")]
         public float maxDrivenSpeed = 0f;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Stall Power Output", guiUnits = "kN")]
-        public float maxPowerOutput = 0f;
-
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Torque To Wheel", guiUnits = "kN/M")]
         public float torqueOut = 0f;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Pre-Slip Power", guiUnits = "kN")]
-        public float powerOut = 0f;
-
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Peak-Output Power", guiUnits = "kW")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Mech. Output", guiUnits = "kW")]
         public float powerOutKW = 0f;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Peak-Input Power", guiUnits = "kW")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Elec. Input", guiUnits = "kW")]
         public float powerInKW = 0f;
+
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Efficiency", guiUnits = "kW")]
+        public float powerEff = 0f;
 
         [KSPField(guiActive = true, guiName = "Motor EC Use", guiUnits = "ec/s")]
         public float guiResourceUse = 0f;
@@ -127,6 +124,7 @@ namespace KSPWheel
         private float peakOutputPower = 0f;
         private float peakInputPower = 0f;
         private float minInputPower = 0f;
+        private float powerConversion = 65f;
 
         public void onMotorInvert(BaseField field, System.Object obj)
         {
@@ -148,14 +146,9 @@ namespace KSPWheel
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
                 m.gearRatio = gearRatio;
-
-                float maxRPM = m.maxRPM * m.controller.motorMaxRPMScalingFactor;
+                
                 float scale = m.part.rescaleFactor * m.controller.scale;
                 float radius = m.wheelData.scaledRadius(scale);
-                float torque = m.maxMotorTorque * m.controller.motorTorqueScalingFactor;
-                float force = torque * m.gearRatio / radius;
-                m.maxPowerOutput = force;
-
                 float rpm = maxRPM / m.gearRatio;
                 float rps = rpm / 60;
                 float circ = radius * 2 * Mathf.PI;
@@ -231,6 +224,8 @@ namespace KSPWheel
                     invertSteering = !part.symmetryCounterparts[0].GetComponent<KSPWheelMotor>().invertSteering;
                 }
             }
+            ConfigNode config = GameDatabase.Instance.GetConfigNodes("KSPWheelConfig")[0];
+            powerConversion = config.GetFloatValue("powerConversion", 65f);
             calcPowerStats();
         }
 
@@ -269,7 +264,6 @@ namespace KSPWheel
         {
             base.preWheelPhysicsUpdate();
             updateMotor();
-            powerOut = Mathf.Abs(wheel.motorTorque) / wheel.radius;
         }
 
         protected virtual void updateMotor()
@@ -296,6 +290,9 @@ namespace KSPWheel
             //integrateMotorEuler(fI, motorRPM);
             integrateMotorEulerSub(fI, motorRPM, 5);
             //integrateMotorRK4(fI, motorRPM, wheel.mass);
+            powerOutKW = motorRPM * rpmToRad * torqueOut;
+            powerInKW = guiResourceUse * powerConversion;
+            motorEfficiency = powerOutKW / powerInKW;
         }
 
         protected void integrateMotorEuler(float fI, float motorRPM)
@@ -384,9 +381,6 @@ namespace KSPWheel
 
             peakInputPower = 1 * powerMidpoint * powerCorrection;
             minInputPower = motorPowerFactor * powerMidpoint * powerCorrection;
-
-            powerOutKW = peakOutputPower;
-            powerInKW = peakInputPower;
         }
 
         private static float rpmToRad = 0.104719755f;
