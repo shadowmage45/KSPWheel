@@ -33,12 +33,20 @@ namespace KSPWheel
          UI_Toggle(enabledText = "Inverted", disabledText = "Normal", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public bool invertSteering = false;
 
-        [KSPField(guiName = "Steering Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
+        [KSPField(guiName = "Steering Limit Low", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringLimit = 1f;
 
+        [KSPField(guiName = "Steering Limit High", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
+        public float steeringLimitHigh = 1f;
+
+        [KSPField(guiName = "Steering Response", guiActive = true, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
+        public float steeringResponse = 1f;
+
         [KSPField(guiName = "Steering Bias", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringBias = 0f;
         
         /// <summary>
@@ -75,10 +83,16 @@ namespace KSPWheel
 
         private void onSteeringLimitUpdated(BaseField field, System.Object obj)
         {
+            MonoBehaviour.print("Steering limit updated");
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
+                MonoBehaviour.print("Updated wheel in group");
                 m.steeringLimit = steeringLimit;
-                m.updateUIFloatEditControl(nameof(m.steeringLimit), m.steeringLimit);
+                m.steeringLimitHigh = steeringLimitHigh;
+                m.steeringResponse = steeringResponse;
+                //m.updateUIFloatEditControl(nameof(m.steeringLimit), m.steeringLimit);
+                //m.updateUIFloatEditControl(nameof(m.steeringLimitHigh), m.steeringLimitHigh);
+                //m.updateUIFloatEditControl(nameof(m.steeringResponse), m.steeringResponse);
             });
         }
 
@@ -97,6 +111,8 @@ namespace KSPWheel
             Fields[nameof(steeringLocked)].uiControlFlight.onFieldChanged = onSteeringLocked;
             Fields[nameof(invertSteering)].uiControlFlight.onFieldChanged = onSteeringInverted;
             Fields[nameof(steeringLimit)].uiControlFlight.onFieldChanged = onSteeringLimitUpdated;
+            Fields[nameof(steeringLimitHigh)].uiControlFlight.onFieldChanged = onSteeringLimitUpdated;
+            Fields[nameof(steeringResponse)].uiControlFlight.onFieldChanged = onSteeringLimitUpdated;
             Fields[nameof(steeringBias)].uiControlFlight.onFieldChanged = onSteeringBiasUpdated;
         }
 
@@ -113,6 +129,8 @@ namespace KSPWheel
             Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = show;
             Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = show;
             Fields[nameof(steeringLimit)].guiActive = Fields[nameof(steeringLimit)].guiActiveEditor = show;
+            Fields[nameof(steeringLimitHigh)].guiActive = Fields[nameof(steeringLimitHigh)].guiActiveEditor = show;
+            Fields[nameof(steeringResponse)].guiActiveEditor = Fields[nameof(steeringResponse)].guiActiveEditor = show;
             Fields[nameof(steeringBias)].guiActive = Fields[nameof(steeringBias)].guiActiveEditor = show;
         }
 
@@ -124,19 +142,8 @@ namespace KSPWheel
             if (steeringCurve == null || steeringCurve.Curve.length == 0)
             {
                 steeringCurve = new FloatCurve();
-                steeringCurve.Add(0, 1f, 0, 0);
-                steeringCurve.Add(1, 0.1f, 0, 0);
-            }
-
-            //this actually needs to be in an 'onPartAdded' editor event callback
-            if (!controller.initializedEditor && HighLogic.LoadedSceneIsEditor)
-            {
-                //find location relative to vessel or craft COM
-                //set steering invert dependant on if in front or behind com as viewed from control reference
-                //how to handle instances of misaligned control, e.g. VAB craft with wheels?
-                Vector3 pos = Vector3.zero;
-                Vector3 com = Vector3.zero;
-                Vector3 ctrl = Vector3.forward;
+                steeringCurve.Add(0, 1f, -0.9f, -0.9f);
+                steeringCurve.Add(1, 0.1f, -0.9f, -0.9f);
             }
         }
 
@@ -146,26 +153,23 @@ namespace KSPWheel
             float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
             if (steeringLocked) { rI = 0; }
             if (invertSteering) { rI = -rI; }
-            float bias = steeringBias;
             if (rI < 0)
             {
-                rI = rI * (1 - bias);
+                rI = rI * (1 - steeringBias);
             }
             if (rI > 0)
             {
-                rI = rI * (1 + bias);
+                rI = rI * (1 + steeringBias);
             }
-            if (rI > 1) { rI = 1; }
-            if (rI < -1) { rI = -1; }
+            rI = Mathf.Clamp(rI, -1, 1);
+            rotInput = Mathf.MoveTowards(rotInput, rI, steeringResponse);
+            float perc = Mathf.Clamp01(Mathf.Abs(wheel.wheelLocalVelocity.z) / (controller.maxSpeed * controller.wheelMaxSpeedScalingFactor));
+            float limit = ((1 - perc) * steeringLimit) + (perc * steeringLimitHigh);
             if (useSteeringCurve)
             {
-                float perc = Mathf.Abs(wheel.wheelLocalVelocity.z) / (controller.maxSpeed * controller.wheelMaxSpeedScalingFactor);
-                perc = Mathf.Clamp01(perc);
-                float mult = steeringCurve.Evaluate(perc);
-                rI *= mult;
+                limit *= steeringCurve.Evaluate(perc);
             }
-            rotInput = rI;
-            wheel.steeringAngle = maxSteeringAngle * rotInput * steeringLimit;
+            wheel.steeringAngle = maxSteeringAngle * rotInput * limit;
         }
 
         public void Update()

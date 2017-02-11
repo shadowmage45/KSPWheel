@@ -124,6 +124,12 @@ namespace KSPWheel
         [KSPField]
         public string scalingTransform = string.Empty;
 
+        [KSPField]
+        public float forwardFriction = 1f;
+
+        [KSPField]
+        public float sidewaysFriction = 1f;
+
         #endregion
 
         #region REGION - Persistent data
@@ -424,10 +430,11 @@ namespace KSPWheel
             //destroy bounds collider, if specified and present (KF wheels)
             if (!string.IsNullOrEmpty(boundsColliderName))
             {
-                Transform boundsCollider = part.transform.FindRecursive(boundsColliderName);
-                if (boundsCollider != null)
+                Transform[] boundsColliders = part.transform.FindChildren(boundsColliderName);
+                int len = boundsColliders.Length;
+                for (int i = 0; i < len; i++)
                 {
-                    GameObject.DestroyImmediate(boundsCollider.gameObject);
+                    GameObject.DestroyImmediate(boundsColliders[i].gameObject);
                 }
             }
 
@@ -455,6 +462,8 @@ namespace KSPWheel
                     wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
                 }
                 wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
+                wheelData[i].wheel.forwardFrictionCoefficient = forwardFriction;
+                wheelData[i].wheel.sideFrictionCoefficient = sidewaysFriction;
                 wheelData[i].wheel.rollingResistance = rollingResistance;
                 wheelData[i].wheel.rotationalResistance = rotationalResistance;
                 if (!string.IsNullOrEmpty(persistentData))
@@ -947,6 +956,7 @@ namespace KSPWheel
             public float prevComp;
             public Collider prevHit;
             public PhysicMaterial prevMat;
+            public bool waterMode;
 
             public KSPWheelData(ConfigNode node)
             {

@@ -95,7 +95,7 @@ namespace KSPWheel
             get { return rigidBody; }
             set { rigidBody = value; }
         }
-        
+
         /// <summary>
         /// Get/Set the current spring stiffness value.  This is the configurable value that influences the 'springForce' used in suspension calculations
         /// </summary>
@@ -272,7 +272,7 @@ namespace KSPWheel
             get { return gravity; }
             set { gravity = value; gNorm = gravity.normalized; }
         }
-        
+
         /// <summary>
         /// Get/Set the suspension sweep type -- Raycast, Spherecast, or Capsulecast (enum value)
         /// </summary>
@@ -376,7 +376,7 @@ namespace KSPWheel
         {
             get { return currentSuspensionCompression; }
         }
-        
+
         /// <summary>
         /// Get/Set the current raycast layer mask to be used by the wheel-collider ray/sphere-casting.<para/>
         /// This determines which colliders will be checked against for suspension positioning/spring force calculation.
@@ -525,7 +525,7 @@ namespace KSPWheel
         {
             get { return wheel.transform.position - wheel.transform.up * (suspensionLength - currentSuspensionCompression + wheelRadius); }
         }
-        
+
         #endregion ENDREGION - Public accessible methods, API get/set methods
 
         #region REGION - Update methods -- internal, external
@@ -568,7 +568,7 @@ namespace KSPWheel
                 wF = wheelForward - hitNormal * Vector3.Dot(wheelForward, hitNormal);
                 wR = Vector3.Cross(hitNormal, wF);
                 //wR = wheelRight - hitNormal * Vector3.Dot(wheelRight, hitNormal);
-                
+
 
                 //no idea if this is 'proper' for transforming velocity from world-space to wheel-space; but it seems to return the right results
                 //the 'other' way to do it would be to construct a quaternion for the wheel-space rotation transform and multiple
@@ -641,7 +641,7 @@ namespace KSPWheel
                 forcePoint = hitPoint + wheel.transform.up * (suspensionForceOffset * offsetDist);
             }
             rigidBody.AddForceAtPosition(calculatedForces, forcePoint, ForceMode.Force);
-            if (hitCollider!=null && hitCollider.attachedRigidbody != null && !hitCollider.attachedRigidbody.isKinematic)
+            if (hitCollider != null && hitCollider.attachedRigidbody != null && !hitCollider.attachedRigidbody.isKinematic)
             {
                 hitCollider.attachedRigidbody.AddForceAtPosition(-calculatedForces, forcePoint, ForceMode.Force);
             }
@@ -707,7 +707,7 @@ namespace KSPWheel
                 currentAngularVelocity -= wBrake;
             }
         }
-        
+
         /// <summary>
         /// Uses either ray- or sphere-cast to check for suspension contact with the ground, calculates current suspension compression, and caches the world-velocity at the contact point
         /// </summary>
@@ -754,7 +754,7 @@ namespace KSPWheel
                 return true;
             }
             grounded = false;
-            return false;            
+            return false;
         }
 
         /// <summary>
@@ -876,7 +876,7 @@ namespace KSPWheel
         private float calcLongSlip(float vLong, float vWheel)
         {
             float sLong = 0;
-            if(vLong==0 && vWheel == 0) { return 0f; }//no slip present
+            if (vLong == 0 && vWheel == 0) { return 0f; }//no slip present
             float a = Mathf.Max(vLong, vWheel);
             float b = Mathf.Min(vLong, vWheel);
             sLong = (a - b) / Mathf.Abs(a);
@@ -947,7 +947,7 @@ namespace KSPWheel
             currentAngularVelocity += wBrake * -Mathf.Sign(currentAngularVelocity);
             // this is the remaining brake angular acceleration/torque that can be used to counteract wheel acceleration caused by traction friction
             float wBrakeDelta = wBrakeMax - wBrake;
-            
+
             vWheel = currentAngularVelocity * wheelRadius;
             sLong = calcLongSlip(localVelocity.z, vWheel);
             sLat = calcLatSlip(localVelocity.z, localVelocity.x);
@@ -1057,7 +1057,7 @@ namespace KSPWheel
         public void drawDebug()
         {
             if (!grounded) { return; }
-            
+
             Vector3 rayStart, rayEnd;
             Vector3 vOffset = rigidBody.velocity * Time.fixedDeltaTime;
 
