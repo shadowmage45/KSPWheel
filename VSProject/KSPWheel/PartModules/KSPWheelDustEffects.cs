@@ -144,6 +144,9 @@ namespace KSPWheel
             dustObjects = new GameObject[len];
             dustEmitters = new ParticleEmitter[len];
             dustAnimators = new ParticleAnimator[len];
+            waterObjects = new GameObject[len];
+            waterEmitters = new ParticleEmitter[len];
+            waterAnimators = new ParticleAnimator[len];
             KSPWheelCollider wheel;
             for (int i = 0; i < len; i++)
             {
@@ -168,6 +171,11 @@ namespace KSPWheel
                 waterEmitters[i].useWorldSpace = true;
                 waterEmitters[i].localVelocity = Vector3.zero;
                 waterEmitters[i].emit = false;
+            }
+            for (int i = 0; i < 5; i++)
+            {
+                float percent = (1f - ((float)i / 5f)) * 0.05f;
+                waterColorArray[i] = new Color(0.8f, 0.8f, 0.95f, percent);
             }
         }
 
@@ -216,7 +224,11 @@ namespace KSPWheel
                 {
                     //TODO -- how to handle emission power
                     //should be mostly based on vessel speed, with a secondary term for wheel velocity
-                    //but this needs to be handled a bit differently for repulsors
+                    //but this needs to be handled a bit differently for repulsors, as they still need spring force
+                    springForce = wheel.springForce * 0.1f * dustForceMult * 2f;
+                    speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
+                    slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
+                    mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
                     waterObjects[i].transform.position = wheel.worldHitPos;
                     waterObjects[i].transform.rotation = wheel.transform.rotation;
                     waterEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
@@ -266,6 +278,7 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 dustAnimators[i].colorAnimation = dustColorArray;
+                waterAnimators[i].colorAnimation = waterColorArray;
             }
         }
     }
