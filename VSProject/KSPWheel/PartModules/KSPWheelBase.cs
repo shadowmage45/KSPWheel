@@ -923,6 +923,7 @@ namespace KSPWheel
             public float loadTarget;
             public float timeBoostFactor;
             public float prevComp;
+            public bool waterMode;
 
             public KSPWheelData(ConfigNode node)
             {

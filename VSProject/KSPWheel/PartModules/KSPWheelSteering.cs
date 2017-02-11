@@ -34,19 +34,19 @@ namespace KSPWheel
         public bool invertSteering = false;
 
         [KSPField(guiName = "Steering Limit Low", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringLimit = 1f;
 
         [KSPField(guiName = "Steering Limit High", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringLimitHigh = 1f;
 
         [KSPField(guiName = "Steering Response", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringResponse = 1f;
 
         [KSPField(guiName = "Steering Bias", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringBias = 0f;
         
         /// <summary>
@@ -83,14 +83,16 @@ namespace KSPWheel
 
         private void onSteeringLimitUpdated(BaseField field, System.Object obj)
         {
+            MonoBehaviour.print("Steering limit updated");
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
+                MonoBehaviour.print("Updated wheel in group");
                 m.steeringLimit = steeringLimit;
                 m.steeringLimitHigh = steeringLimitHigh;
                 m.steeringResponse = steeringResponse;
-                m.updateUIFloatEditControl(nameof(m.steeringLimit), m.steeringLimit);
-                m.updateUIFloatEditControl(nameof(m.steeringLimitHigh), m.steeringLimitHigh);
-                m.updateUIFloatEditControl(nameof(m.steeringResponse), m.steeringResponse);
+                //m.updateUIFloatEditControl(nameof(m.steeringLimit), m.steeringLimit);
+                //m.updateUIFloatEditControl(nameof(m.steeringLimitHigh), m.steeringLimitHigh);
+                //m.updateUIFloatEditControl(nameof(m.steeringResponse), m.steeringResponse);
             });
         }
 
