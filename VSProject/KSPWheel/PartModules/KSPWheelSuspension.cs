@@ -179,7 +179,7 @@ namespace KSPWheel
             if (newState == KSPWheelState.RETRACTING && oldState == KSPWheelState.DEPLOYED && wheel != null)
             {
                 float comp = wheel.length - wheel.compressionDistance;
-                deployedPosition = comp / wheel.length;
+                deployedPosition = wheel.length==0? 0 : comp / wheel.length;
             }
             else { deployedPosition = 1f; }
         }

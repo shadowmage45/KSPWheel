@@ -111,7 +111,7 @@ namespace KSPWheel
                 GUILayout.Label(wheel.motorTorque.ToString("0.##"), GUILayout.Width(w2));//motor torque
                 GUILayout.Label(wheel.brakeTorque.ToString("0.##"), GUILayout.Width(w2));//brake torque
                 GUILayout.Label(wheel.compressionDistance.ToString("0.##"), GUILayout.Width(w2));//compression
-                GUILayout.Label((wheel.compressionDistance / wheel.length).ToString("0.##"), GUILayout.Width(w2));//compression (percent of max)
+                GUILayout.Label(wheel.length<=0? "0" : (wheel.compressionDistance / wheel.length).ToString("0.##"), GUILayout.Width(w2));//compression (percent of max)
                 GUILayout.Label(wheels[i].wheelData.timeBoostFactor.ToString("0.##"), GUILayout.Width(w2));//time boost factor
                 GUILayout.Label(wheel.springForce.ToString("0.##"), GUILayout.Width(w2));//springForce
                 GUILayout.Label(wheel.longitudinalForce.ToString("0.##"), GUILayout.Width(w2));//longForce

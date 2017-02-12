@@ -659,7 +659,7 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 data = wheelData[i];
-                lengthCorrectedMass = vesselMass / data.wheel.length * data.loadShare;//allows for a wheel to support full vessel mass at full compression
+                lengthCorrectedMass = data.wheel.length <= 0 ? 0 : vesselMass / data.wheel.length * data.loadShare;//allows for a wheel to support full vessel mass at full compression
                 spring = lengthCorrectedMass * springRating * g * wheelRepairTimer * wheelRepairTimer;
                 if (spring > 0)
                 {
