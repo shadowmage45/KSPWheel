@@ -135,6 +135,9 @@ namespace KSPWheel
         #region REGION - Persistent data
 
         [KSPField(isPersistant = true)]
+        public string label = string.Empty;
+
+        [KSPField(isPersistant = true)]
         public string persistentState = KSPWheelState.DEPLOYED.ToString();
 
         [KSPField(isPersistant = true)]

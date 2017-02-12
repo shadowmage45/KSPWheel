@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using KSP.UI.Screens;
 
 namespace KSPWheel
 {
-
     public class KSPWheelVesselDebug : VesselModule
     {
         private int id = 0;
@@ -144,56 +142,5 @@ namespace KSPWheel
             this.wheelData = wheelData;
         }
     }
-
-    [KSPAddon(KSPAddon.Startup.FlightAndEditor, false)]
-    public class KSPWheelLauncher : MonoBehaviour
-    {
-        private ApplicationLauncherButton appButton;
-
-        public void Awake()
-        {
-            if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().debugMode)
-            {
-                Texture2D tex = GameDatabase.Instance.GetTexture("Squad/PartList/SimpleIcons/RDIcon_fuelSystems-highPerformance", false);
-                appButton = ApplicationLauncher.Instance.AddModApplication(GuiOn, GuiOff, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, tex);
-            }
-        }
-
-        private void GuiOn()
-        {
-            MonoBehaviour.print("GUI ON!!");
-            FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
-            if (fi == null || fi.Vessel==null)
-            {
-                return;
-            }
-            toggleGUI(fi.Vessel, true);
-        }
-
-        private void GuiOff()
-        {
-            MonoBehaviour.print("GUI OFF!!");
-            FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
-            if (fi == null || fi.Vessel == null)
-            {
-                return;
-            }
-            toggleGUI(fi.Vessel, false);
-        }
-
-        private void toggleGUI(Vessel vessel, bool active)
-        {
-            KSPWheelVesselDebug debug = (KSPWheelVesselDebug)vessel.vesselModules.Find(m => m.GetType() == typeof(KSPWheelVesselDebug));
-            if (debug != null) { debug.toggleGUI(active); }
-        }
-
-        public void OnDestroy()
-        {
-            if (appButton != null)
-            {
-                ApplicationLauncher.Instance.RemoveModApplication(appButton);
-            }
-        }
-    }
-
+    
 }
