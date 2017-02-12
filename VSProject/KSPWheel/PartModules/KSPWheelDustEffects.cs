@@ -55,13 +55,13 @@ namespace KSPWheel
         public float dustMinSize = 0.1f;
 
         [KSPField]
-        public float dustMaxSize = 3.5f;
+        public float dustMaxSize = 1f;
 
         [KSPField]
-        public float dustMinEmission = 0.1f;
+        public float dustMinEmission = 1f;
 
         [KSPField]
-        public float dustMaxEmission = 20f;
+        public float dustMaxEmission = 10f;
 
         [KSPField]
         public float dustMinEnergy = 0.1f;
@@ -95,6 +95,7 @@ namespace KSPWheel
             base.OnStart(state);
             GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
             GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
+            GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
             dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
         }
 
@@ -105,14 +106,21 @@ namespace KSPWheel
             {
                 dustEmitters = null;
                 dustAnimators = null;
+                waterEmitters = null;
+                waterAnimators = null;
                 int len = dustObjects.Length;
                 for (int i = 0; i < len; i++)
                 {
                     GameObject.Destroy(dustObjects[i]);
                 }
+                for (int i = 0; i < len; i++)
+                {
+                    GameObject.Destroy(waterObjects[i]);
+                }
             }
             GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
             GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
+            GameEvents.onFloatingOriginShift.Remove(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
         }
 
         private void onGamePause()
@@ -123,6 +131,38 @@ namespace KSPWheel
         private void onGameUnpause()
         {
             gamePaused = false;
+        }
+
+        private void onOriginShift(Vector3d o, Vector3d n)
+        {
+            if (dustEmitters == null) { return; }
+            Vector3 d = n - o;
+            Vector3 pos;
+            int len = dustEmitters.Length;
+            int len2;
+            Particle[] particles;
+            for (int i = 0; i < len; i++)
+            {
+                particles = dustEmitters[i].particles;
+                len2 = particles.Length;
+                for (int k = 0; k < len2; k++)
+                {
+                    pos = particles[k].position;
+                    pos = pos + d;
+                    particles[k].position = pos;
+                }
+                dustEmitters[i].particles = particles;
+
+                particles = waterEmitters[i].particles;
+                len2 = particles.Length;
+                for (int k = 0; k < len2; k++)
+                {
+                    pos = particles[k].position;
+                    pos = pos + d;
+                    particles[k].position = pos;
+                }
+                waterEmitters[i].particles = particles;
+            }
         }
 
         internal override void preWheelFrameUpdate()
@@ -158,6 +198,7 @@ namespace KSPWheel
                 dustEmitters[i] = dustObjects[i].GetComponent<ParticleEmitter>();
                 dustAnimators[i] = dustEmitters[i].GetComponent<ParticleAnimator>();
                 dustAnimators[i].colorAnimation = dustColorArray;
+                dustAnimators[i].sizeGrow = 0.5f;
                 dustEmitters[i].useWorldSpace = true;
                 dustEmitters[i].localVelocity = Vector3.zero;
                 dustEmitters[i].emit = false;
@@ -168,14 +209,16 @@ namespace KSPWheel
                 waterEmitters[i] = waterObjects[i].GetComponent<ParticleEmitter>();
                 waterAnimators[i] = waterEmitters[i].GetComponent<ParticleAnimator>();
                 waterAnimators[i].colorAnimation = waterColorArray;
+                waterAnimators[i].doesAnimateColor = true;
+                waterAnimators[i].sizeGrow = 0.5f;
                 waterEmitters[i].useWorldSpace = true;
                 waterEmitters[i].localVelocity = Vector3.zero;
                 waterEmitters[i].emit = false;
             }
             for (int i = 0; i < 5; i++)
             {
-                float percent = (1f - ((float)i / 5f)) * 0.05f;
-                waterColorArray[i] = new Color(0.8f, 0.8f, 0.95f, percent);
+                float percent = (1f - ((float)i / 5f));
+                waterColorArray[i] = new Color(0.75f*percent, 0.75f*percent, 0.80f*percent, percent * 0.0125f);
             }
         }
 
@@ -233,11 +276,11 @@ namespace KSPWheel
                     waterObjects[i].transform.rotation = wheel.transform.rotation;
                     waterEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
                     waterEmitters[i].minEmission = dustMinEmission * dustPower;
-                    waterEmitters[i].maxEmission = dustMaxEmission * mult * dustPower;
+                    waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
                     waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
                     waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-                    waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
-                    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+                    waterEmitters[i].minSize = dustMinSize * springForce * dustPower * 2f;
+                    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower * 2f;
                     waterEmitters[i].Emit();
                 }
                 else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
@@ -250,7 +293,7 @@ namespace KSPWheel
                     dustObjects[i].transform.rotation = wheel.transform.rotation;
                     dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
                     dustEmitters[i].minEmission = dustMinEmission * dustPower;
-                    dustEmitters[i].maxEmission = dustMaxEmission * mult * dustPower;
+                    dustEmitters[i].maxEmission = dustMaxEmission * dustPower;
                     dustEmitters[i].minEnergy = dustMinEnergy * dustPower;
                     dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
                     dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
