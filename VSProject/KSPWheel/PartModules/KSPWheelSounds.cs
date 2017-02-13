@@ -65,7 +65,7 @@ namespace KSPWheel
 
                 if (!string.IsNullOrEmpty(motorEffect) && motor != null)
                 {
-                    motorPower = Mathf.Abs(motor.torqueOut) / motor.gearRatio / motor.maxMotorTorque;
+                    motorPower = Mathf.Abs(motor.torqueOut) / motor.gearRatio / motor.maxMotorTorque*controller.motorTorqueScalingFactor;
                 }
 
                 if (!string.IsNullOrEmpty(longSlipEffect))

@@ -82,11 +82,11 @@ namespace KSPWheel
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.0f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0.0f, maxValue = 1.0f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
-        UI_FloatRange(minValue = 0.35f, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+        UI_FloatRange(minValue = 0.35f, maxValue = 1.0f, stepIncrement = 0.025f, suppressEditorShipModified = true)]
         public float dampRatio = 0.65f;
 
         [KSPField(guiName = "Wheel Group", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -195,8 +195,9 @@ namespace KSPWheel
         private bool prevGrounded = false;
 
         private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
-
-        private PhysicMaterial customMat;
+        
+        //custom physics material set to combine mode, used to create zero-friction bump-stop colliders
+        private static PhysicMaterial customCollisionMaterial;
 
         #endregion
 
@@ -446,8 +447,11 @@ namespace KSPWheel
             }
             initializeScaling();
 
-            customMat = new PhysicMaterial("SlideMaterial");
-            customMat.frictionCombine = PhysicMaterialCombine.Multiply;
+            if (customCollisionMaterial == null)
+            {
+                customCollisionMaterial = new PhysicMaterial("SlideMaterial");
+                customCollisionMaterial.frictionCombine = PhysicMaterialCombine.Multiply;
+            }
         }
 
         public void Start()
@@ -656,88 +660,34 @@ namespace KSPWheel
             }
             float g = (float)vessel.gravityForPos.magnitude;
             float spring, damper, springLoad, natFreq, criticalDamping;
-            float compression = 0;
             float lengthCorrectedMass;
             int len = wheelData.Length;
             KSPWheelData data;
             for (int i = 0; i < len; i++)
             {
                 data = wheelData[i];
-                compression = data.wheel.compressionDistance / data.wheel.length;
-                lengthCorrectedMass = vesselMass / data.wheel.length * data.loadShare;
-                if (wheelRepairTimer < 1)
+                lengthCorrectedMass = data.wheel.length <= 0 ? 0 : vesselMass / data.wheel.length * data.loadShare;//allows for a wheel to support full vessel mass at full compression
+                spring = lengthCorrectedMass * springRating * g * wheelRepairTimer * wheelRepairTimer;
+                if (spring > 0)
                 {
-                    data.timeBoostFactor = 0f;
-                    spring = lengthCorrectedMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
-                    springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
+                    springLoad = spring * data.wheel.length * 0.5f * 1 / g;//target load for damper calc is spring at half compression
                     natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
                     criticalDamping = 2 * springLoad * natFreq;//critical damping
-                    damper = criticalDamping * dampRatio * wheelRepairTimer;//add an -additional- reduction to damper based on repair timer, ensure it is essentially nil for the first tick after repaired
+                    damper = criticalDamping * dampRatio * wheelRepairTimer;
                 }
                 else
                 {
-                    float target = 0f;
-                    float rate = 0.1f;
-                    if (compression > 0.8f)
-                    {
-                        target = 1;
-                        rate = 0.25f;
-                    }
-                    data.timeBoostFactor = Mathf.MoveTowards(data.timeBoostFactor, target, Time.fixedDeltaTime * rate);
-                    data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, -1, 1);
-                    spring = lengthCorrectedMass * calculateSpring(compression, data.timeBoostFactor) * springRating * g;
-                    if (spring > 0)
-                    {
-                        springLoad = spring * data.wheel.length * 0.5f * 1 / g;//target load for damper calc is spring at half compression
-                        natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
-                        criticalDamping = 2 * springLoad * natFreq;//critical damping
-                        damper = criticalDamping * dampRatio;
-                    }
-                    else
-                    {
-                        damper = 0f;
-                    }
+                    damper = 0f;
                 }
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
+                data.wheel.externalSpringForce = data.colliderData.collisionForce;
+                if (data.wheel.contactColliderHit != null) { data.wheel.contactColliderHit.material = customCollisionMaterial; }
             }
             if (wheelRepairTimer < 1)
             {
                 wheelRepairTimer = Mathf.MoveTowards(wheelRepairTimer, 1, Time.fixedDeltaTime);
             }
-        }
-
-        /// <summary>
-        /// Comp = 0-1 compression
-        /// Time = 0-1 time factor, based on response to compression (1 means overcompressed or undercompressed for duration, 0 means no duration of over/under compression)
-        /// Lower = lower stability bounds, below this compression it is considered 'undercompressed' and spring value is lowered
-        /// Upper = upper stability bounds, above this compression it is considered 'overcompressed' and spring value is raised
-        /// </summary>
-        /// <returns></returns>
-        private float calculateSpring(float comp, float time)
-        {
-            if (comp <= 0) { return 0.0001f; }
-            float compFactor = 0;
-            float compPow = 3;
-            if (comp < 0.5)
-            {
-                if (comp < 0.2)
-                {
-                    float c5 = comp * 5;//brings it to a 0-1 range
-                    compFactor = Mathf.Pow((-1 + comp * 2), compPow) * c5 * c5;
-                }
-            }
-            else
-            {
-                compFactor = Mathf.Pow((-1 + comp * 2), compPow);// * compFactor * compFactor;
-            }
-            float timeFactor = time * time * time;
-            float combinedFactor = (2 + timeFactor + compFactor) * 0.5f;
-            float power = 3;
-            float curveOutput = Mathf.Pow(combinedFactor, power);
-            float output = curveOutput;
-            output = Mathf.Clamp(output, 0.0001f, 100f);
-            return output;
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)
@@ -921,24 +871,6 @@ namespace KSPWheel
             damper = cd * dampRatio;
         }
 
-        /// <summary>
-        /// Input load in tons, suspension length, target (0-1), and desired damp ratio (1 = critical)
-        /// and output spring and damper for that load and ratio
-        /// </summary>
-        private void calcSuspensionCurved(float load, float length, float target, float dampRatio, float curveFactor, out float spring, out float damper)
-        {
-            float targetCompression = target * length;
-            if (targetCompression <= 0) { targetCompression = 0.1f; }
-            //k = x / (y(ay+1))
-            float k = (load * 10) / (targetCompression * (curveFactor * targetCompression + 1));
-            float o = Mathf.Sqrt(k / load);//natural frequency
-            float cd = 2 * load * o;//critical damping coefficient
-            //critical damping factor = 2 * Mathf.Sqrt(k * load);
-            //damper output = 2 * Mathf.Sqrt(load * spring) * dampRatio;
-            spring = k;
-            damper = cd * dampRatio;
-        }
-
         #endregion
 
         public class KSPWheelData
@@ -961,6 +893,9 @@ namespace KSPWheel
             public float loadTarget;
             public float timeBoostFactor;
             public float prevComp;
+            public Collider prevHit;
+            public PhysicMaterial prevMat;
+            public bool waterMode;
 
             public KSPWheelData(ConfigNode node)
             {

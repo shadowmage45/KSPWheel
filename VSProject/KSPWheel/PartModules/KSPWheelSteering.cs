@@ -34,19 +34,19 @@ namespace KSPWheel
         public bool invertSteering = false;
 
         [KSPField(guiName = "Steering Limit Low", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringLimit = 1f;
 
         [KSPField(guiName = "Steering Limit High", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringLimitHigh = 1f;
 
         [KSPField(guiName = "Steering Response", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringResponse = 1f;
 
         [KSPField(guiName = "Steering Bias", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringBias = 0f;
         
         /// <summary>
@@ -83,14 +83,16 @@ namespace KSPWheel
 
         private void onSteeringLimitUpdated(BaseField field, System.Object obj)
         {
+            MonoBehaviour.print("Steering limit updated");
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
+                MonoBehaviour.print("Updated wheel in group");
                 m.steeringLimit = steeringLimit;
                 m.steeringLimitHigh = steeringLimitHigh;
                 m.steeringResponse = steeringResponse;
-                m.updateUIFloatEditControl(nameof(m.steeringLimit), m.steeringLimit);
-                m.updateUIFloatEditControl(nameof(m.steeringLimitHigh), m.steeringLimitHigh);
-                m.updateUIFloatEditControl(nameof(m.steeringResponse), m.steeringResponse);
+                //m.updateUIFloatEditControl(nameof(m.steeringLimit), m.steeringLimit);
+                //m.updateUIFloatEditControl(nameof(m.steeringLimitHigh), m.steeringLimitHigh);
+                //m.updateUIFloatEditControl(nameof(m.steeringResponse), m.steeringResponse);
             });
         }
 
@@ -128,7 +130,7 @@ namespace KSPWheel
             Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = show;
             Fields[nameof(steeringLimit)].guiActive = Fields[nameof(steeringLimit)].guiActiveEditor = show;
             Fields[nameof(steeringLimitHigh)].guiActive = Fields[nameof(steeringLimitHigh)].guiActiveEditor = show;
-            Fields[nameof(steeringResponse)].guiActiveEditor = Fields[nameof(steeringResponse)].guiActiveEditor = show;
+            Fields[nameof(steeringResponse)].guiActive = Fields[nameof(steeringResponse)].guiActiveEditor = show;
             Fields[nameof(steeringBias)].guiActive = Fields[nameof(steeringBias)].guiActiveEditor = show;
         }
 
@@ -140,8 +142,8 @@ namespace KSPWheel
             if (steeringCurve == null || steeringCurve.Curve.length == 0)
             {
                 steeringCurve = new FloatCurve();
-                steeringCurve.Add(0, 1f, 0, 0);
-                steeringCurve.Add(1, 0.1f, 0, 0);
+                steeringCurve.Add(0, 1f, -0.9f, -0.9f);
+                steeringCurve.Add(1, 0.1f, -0.9f, -0.9f);
             }
         }
 
@@ -151,14 +153,13 @@ namespace KSPWheel
             float rI = -(part.vessel.ctrlState.wheelSteer + part.vessel.ctrlState.wheelSteerTrim);
             if (steeringLocked) { rI = 0; }
             if (invertSteering) { rI = -rI; }
-            float bias = steeringBias;
             if (rI < 0)
             {
-                rI = rI * (1 - bias);
+                rI = rI * (1 - steeringBias);
             }
             if (rI > 0)
             {
-                rI = rI * (1 + bias);
+                rI = rI * (1 + steeringBias);
             }
             rI = Mathf.Clamp(rI, -1, 1);
             rotInput = Mathf.MoveTowards(rotInput, rI, steeringResponse);
