@@ -13,7 +13,7 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0.1f, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
         public float repulsorHeight = 1f;
 
-        [KSPField(guiName = "Repuslor Power", guiActiveEditor = false, guiActive = true),
+        [KSPField(guiName = "Repuslor Power", guiActiveEditor = false, guiActive = true, isPersistant = true),
          UI_Toggle(enabledText ="On", disabledText ="Off", suppressEditorShipModified = true)]
         public bool repulsorEnabled = true;
 
