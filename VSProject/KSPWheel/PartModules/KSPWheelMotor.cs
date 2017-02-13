@@ -160,7 +160,7 @@ namespace KSPWheel
             });
         }
 
-        private void onMotorLock(BaseField field, System.Object obj)
+        internal void onMotorLock(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
@@ -168,7 +168,7 @@ namespace KSPWheel
             });
         }
 
-        private void onSteeringLock(BaseField field, System.Object obj)
+        internal void onSteeringLock(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
@@ -176,7 +176,7 @@ namespace KSPWheel
             });
         }
 
-        private void onSteeringInvert(BaseField field, System.Object obj)
+        internal void onSteeringInvert(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
@@ -184,7 +184,7 @@ namespace KSPWheel
             });
         }
 
-        private void onMotorLimitUpdated(BaseField field, System.Object obj)
+        internal void onMotorLimitUpdated(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
@@ -192,7 +192,7 @@ namespace KSPWheel
             });
         }
 
-        private void onHalftrackToggle(BaseField field, System.Object obj)
+        internal void onHalftrackToggle(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
