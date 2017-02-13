@@ -10,6 +10,7 @@ namespace KSPWheel
         private Vector2 scrollPos;
         private bool guiOpen = false;
         private bool guiInitialized = false;
+        private bool debugRendering = false;
 
         private List<WheelDebugData> wheels = new List<WheelDebugData>();
 
@@ -130,16 +131,126 @@ namespace KSPWheel
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
+
+        private void drawDebugRendering()
+        {
+            int len = wheels.Count;
+            if (debugRendering)
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    if (wheels[i].debugLineRenderBase == null)
+                    {
+                        wheels[i].setupDebugRenderers();
+                        wheels[i].enableDebugRenderers();
+                    }
+                    wheels[i].updateDebugRenderers();
+                }
+            }
+        }
     }
 
     public struct WheelDebugData
     {
         public KSPWheelBase baseModule;
         public KSPWheelBase.KSPWheelData wheelData;
+
+        public GameObject debugLineRenderBase;//empty parent object, holder for the rest, manually positioned into wheel position and orientation
+        public GameObject debugLineRendererFwd;
+        public GameObject debugLineRendererSide;
+        public GameObject debugLineRendererUp;
+        public GameObject debugLineRendererWheel;
+
+        private LineRenderer fwd;
+        private LineRenderer side;
+        private LineRenderer up;
+        private LineRenderer wheel;
+
         public WheelDebugData(KSPWheelBase baseModule, KSPWheelBase.KSPWheelData wheelData)
         {
             this.baseModule = baseModule;
             this.wheelData = wheelData;
+            this.debugLineRenderBase = null;
+            this.debugLineRendererFwd = null;
+            this.debugLineRendererSide = null;
+            this.debugLineRendererUp = null;
+            this.debugLineRendererWheel = null;
+            this.fwd = null;
+            this.side = null;
+            this.up = null;
+            this.wheel = null;
+        }
+
+        /// <summary>
+        /// Set up the line renderers; fwd/side/up axis lines and wheel circle
+        /// </summary>
+        internal void setupDebugRenderers()
+        {
+            debugLineRenderBase = new GameObject("DebugLineRender");
+            debugLineRenderBase.transform.position = wheelData.wheel.transform.position;
+            debugLineRenderBase.transform.rotation = wheelData.wheel.transform.rotation;
+            debugLineRenderBase.SetActive(false);
+
+            debugLineRendererFwd = new GameObject("DebugLineRenderFwd");
+            debugLineRendererFwd.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererFwd.transform.localRotation = Quaternion.identity;
+            fwd = debugLineRendererFwd.AddComponent<LineRenderer>();
+
+            debugLineRendererSide = new GameObject("DebugLineRenderSide");
+            debugLineRendererSide.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererSide.transform.localRotation = Quaternion.identity;
+            side = debugLineRendererSide.AddComponent<LineRenderer>();
+
+            debugLineRendererUp = new GameObject("DebugLineRendererUp");
+            debugLineRendererUp.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererUp.transform.localRotation = Quaternion.identity;
+            up = debugLineRendererUp.AddComponent<LineRenderer>();
+
+            debugLineRendererWheel = new GameObject("DebugLineRendererWheel");
+            debugLineRendererWheel.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererWheel.transform.localRotation = Quaternion.identity;
+            wheel = debugLineRendererWheel.AddComponent<LineRenderer>();
+
+            fwd.useWorldSpace = false;
+            fwd.SetPositions(new Vector3[] { Vector3.zero, Vector3.forward });
+
+            side.useWorldSpace = false;
+            side.SetPositions(new Vector3[] { Vector3.zero, Vector3.right });
+
+            up.useWorldSpace = false;
+            up.SetPositions(new Vector3[] { Vector3.zero, Vector3.up });
+
+            int segments = 24;
+            Vector3[] points = new Vector3[segments + 1];
+            float radsPerSegment = (360f / (float)segments) * Mathf.Deg2Rad;
+            float y, z;
+            wheel.useWorldSpace = false;
+            for (int i = 0; i <= segments; i++)//uses <= in order to close the loop
+            {
+                z = wheelData.wheel.radius * Mathf.Cos(i * radsPerSegment);
+                y = wheelData.wheel.radius * Mathf.Sin(i * radsPerSegment);
+                points[i] = new Vector3(0, y, z);
+            }
+        }
+
+        /// <summary>
+        /// Update the position and orientation of the line renders to mimic the current wheel position (with suspension/hit position data) and orientation (with steering)
+        /// </summary>
+        internal void updateDebugRenderers()
+        {
+            debugLineRenderBase.transform.position = wheelData.wheel.transform.position - wheelData.wheel.transform.up * (wheelData.wheel.length - wheelData.wheel.compressionDistance);
+            debugLineRenderBase.transform.rotation = wheelData.wheel.transform.rotation;
+            debugLineRenderBase.transform.Rotate(0, wheelData.wheel.steeringAngle, 0, Space.Self);
+        }
+
+        internal void enableDebugRenderers()
+        {
+            debugLineRenderBase.SetActive(true);
+        }
+
+        internal void disableDebugRenderers()
+        {
+            debugLineRenderBase.SetActive(false);
         }
     }
     
