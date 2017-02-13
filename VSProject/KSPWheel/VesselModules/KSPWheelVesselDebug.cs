@@ -60,6 +60,12 @@ namespace KSPWheel
         {
             GUILayout.BeginVertical();
 
+            if (GUILayout.Button("Toggle Debug Rendering"))
+            {
+                debugRendering = !debugRendering;
+                enableDebugRendering(debugRendering);
+            }
+
             //per-wheel instance data view
             scrollPos = GUILayout.BeginScrollView(scrollPos);
 
@@ -67,14 +73,10 @@ namespace KSPWheel
             float w2 = 50;
             float w3 = 200;
 
-            if (GUILayout.Button("Toggle Debug Rendering"))
-            {
-                debugRendering = !debugRendering;
-            }
-
             //data column header row
             GUILayout.BeginHorizontal();
             GUILayout.Label("idx", GUILayout.Width(w1));//index
+            GUILayout.Label("name", GUILayout.Width(w2));//user-set base module label/name
             GUILayout.Label("grp", GUILayout.Width(w1));//group
             GUILayout.Label("rad", GUILayout.Width(w2));//radius
             GUILayout.Label("mass", GUILayout.Width(w2));//mass
@@ -103,7 +105,8 @@ namespace KSPWheel
             {
                 GUILayout.BeginHorizontal();
                 wheel = wheels[i].wheelData.wheel;
-                GUILayout.Label(i.ToString(), GUILayout.Width(w1));
+                GUILayout.Label(i.ToString(), GUILayout.Width(w1));//raw wheel index
+                GUILayout.Label(wheels[i].baseModule.label, GUILayout.Width(w2));//wheel name/label
                 GUILayout.Label(wheels[i].baseModule.wheelGroup.ToString(), GUILayout.Width(w2));//wheel group
                 GUILayout.Label(wheel.radius.ToString("0.##"), GUILayout.Width(w2));//radius
                 GUILayout.Label(wheel.mass.ToString("0.##"), GUILayout.Width(w2));//mass
@@ -141,31 +144,25 @@ namespace KSPWheel
         {
             if (debugRendering)
             {
-                drawDebugRendering();
-            }
-            else
-            {
-                disableDebugRendering();
-            }
-        }
-
-        private void drawDebugRendering()
-        {
-            int len = wheels.Count;
-            if (debugRendering)
-            {
+                int len = wheels.Count;
                 for (int i = 0; i < len; i++)
                 {
-                    wheels[i].enableDebugRenderers();
                     wheels[i].updateDebugRenderers();
                 }
             }
         }
 
-        private void disableDebugRendering()
+        private void enableDebugRendering(bool enable)
         {
             int len = wheels.Count;
-            if (debugRendering)
+            if (enable)
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    wheels[i].enableDebugRenderers();
+                }
+            }
+            else
             {
                 for (int i = 0; i < len; i++)
                 {
