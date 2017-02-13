@@ -15,7 +15,7 @@ namespace KSPWheel
             if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().debugMode && HighLogic.LoadedSceneIsFlight && debugAppButton==null)
             {
                 tex = GameDatabase.Instance.GetTexture("Squad/PartList/SimpleIcons/RDIcon_fuelSystems-highPerformance", false);
-                debugAppButton = ApplicationLauncher.Instance.AddModApplication(debugGuiEnable, debugGuiDisable, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, tex);
+                debugAppButton = ApplicationLauncher.Instance.AddModApplication(debugGuiEnable, debugGuiDisable, null, null, null, null, ApplicationLauncher.AppScenes.FLIGHT, tex);
             }
             if ((HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight) && controlsAppButton == null)
             {
@@ -40,7 +40,6 @@ namespace KSPWheel
 
         private void debugGuiEnable()
         {
-            MonoBehaviour.print("GUI ON!!");
             FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
             if (fi == null || fi.Vessel == null)
             {
@@ -51,7 +50,6 @@ namespace KSPWheel
 
         private void debugGuiDisable()
         {
-            MonoBehaviour.print("GUI OFF!!");
             FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
             if (fi == null || fi.Vessel == null)
             {
@@ -62,7 +60,7 @@ namespace KSPWheel
 
         private void toggleDebugGui(Vessel vessel, bool active)
         {
-            KSPWheelVesselDebug debug = (KSPWheelVesselDebug)vessel.vesselModules.Find(m => m.GetType() == typeof(KSPWheelVesselDebug));
+            KSPWheelVesselDebug debug = vessel.GetComponent<KSPWheelVesselDebug>();
             if (debug != null) { debug.toggleGUI(active); }
         }
 
@@ -74,8 +72,7 @@ namespace KSPWheel
                 return;
             }
             Vessel vessel = fi.Vessel;
-            KSPWheelVesselControl control = (KSPWheelVesselControl)vessel.vesselModules.Find(m => m.GetType() == typeof(KSPWheelVesselControl));
-            //control = vessel.GetComponent<KSPWheelVesselControl>();//TODO -- does this work?
+            KSPWheelVesselControl control = vessel.GetComponent<KSPWheelVesselControl>();//TODO -- does this work?
             if (control != null) { control.toggleGUI(); }
         }
 

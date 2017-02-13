@@ -197,7 +197,7 @@ namespace KSPWheel
 
         private bool prevGrounded = false;
 
-        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
+        internal List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
 
         #endregion
 
