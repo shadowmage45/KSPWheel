@@ -67,6 +67,11 @@ namespace KSPWheel
             float w2 = 50;
             float w3 = 200;
 
+            if (GUILayout.Button("Toggle Debug Rendering"))
+            {
+                debugRendering = !debugRendering;
+            }
+
             //data column header row
             GUILayout.BeginHorizontal();
             GUILayout.Label("idx", GUILayout.Width(w1));//index
@@ -132,6 +137,18 @@ namespace KSPWheel
             GUI.DragWindow();
         }
 
+        public void Update()
+        {
+            if (debugRendering)
+            {
+                drawDebugRendering();
+            }
+            else
+            {
+                disableDebugRendering();
+            }
+        }
+
         private void drawDebugRendering()
         {
             int len = wheels.Count;
@@ -139,12 +156,20 @@ namespace KSPWheel
             {
                 for (int i = 0; i < len; i++)
                 {
-                    if (wheels[i].debugLineRenderBase == null)
-                    {
-                        wheels[i].setupDebugRenderers();
-                        wheels[i].enableDebugRenderers();
-                    }
+                    wheels[i].enableDebugRenderers();
                     wheels[i].updateDebugRenderers();
+                }
+            }
+        }
+
+        private void disableDebugRendering()
+        {
+            int len = wheels.Count;
+            if (debugRendering)
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    wheels[i].disableDebugRenderers();
                 }
             }
         }
@@ -186,6 +211,7 @@ namespace KSPWheel
         /// </summary>
         internal void setupDebugRenderers()
         {
+            MonoBehaviour.print("Setting up debug renderers.");
             debugLineRenderBase = new GameObject("DebugLineRender");
             debugLineRenderBase.transform.position = wheelData.wheel.transform.position;
             debugLineRenderBase.transform.rotation = wheelData.wheel.transform.rotation;
@@ -245,12 +271,19 @@ namespace KSPWheel
 
         internal void enableDebugRenderers()
         {
-            debugLineRenderBase.SetActive(true);
+            if (debugLineRenderBase == null)
+            {
+                setupDebugRenderers();
+            }
         }
 
         internal void disableDebugRenderers()
         {
-            debugLineRenderBase.SetActive(false);
+            if (debugLineRenderBase != null)
+            {
+                GameObject.Destroy(debugLineRenderBase);
+            }
+            debugLineRenderBase = null;
         }
     }
     
