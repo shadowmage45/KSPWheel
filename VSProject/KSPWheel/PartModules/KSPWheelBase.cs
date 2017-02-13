@@ -135,6 +135,9 @@ namespace KSPWheel
         #region REGION - Persistent data
 
         [KSPField(isPersistant = true)]
+        public string label = string.Empty;
+
+        [KSPField(isPersistant = true)]
         public string persistentState = KSPWheelState.DEPLOYED.ToString();
 
         [KSPField(isPersistant = true)]
@@ -193,8 +196,8 @@ namespace KSPWheel
         private bool initializedScaling = false;
 
         private bool prevGrounded = false;
-
-        private List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
+        
+        internal List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
         
         //custom physics material set to combine mode, used to create zero-friction bump-stop colliders
         private static PhysicMaterial customCollisionMaterial;
@@ -569,7 +572,7 @@ namespace KSPWheel
                     {
                         //TODO -- does grabbing a physics material result in a per-tick allocation like rendering materials does?
                         PhysicMaterial pm = wheel.contactColliderHit.material;
-                        if (pm == null) { wheel.contactColliderHit.material = customMat; }
+                        if (pm == null) { wheel.contactColliderHit.material = customCollisionMaterial; }
                         pm.frictionCombine = PhysicMaterialCombine.Multiply;
                     }
                 }

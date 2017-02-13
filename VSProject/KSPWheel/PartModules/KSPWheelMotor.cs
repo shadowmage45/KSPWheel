@@ -39,7 +39,7 @@ namespace KSPWheel
         /// <summary>
         /// User-selectable motor output limiter
         /// </summary>
-        [KSPField(guiName = "Motor Limit", guiActive = true, guiActiveEditor = true, isPersistant = true),
+        [KSPField(guiName = "Motor Limit", guiActive = true, guiActiveEditor = true, isPersistant = true, guiUnits ="%"),
          UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f)]
         public float motorOutput = 100f;
 
@@ -288,6 +288,7 @@ namespace KSPWheel
                 fI += rI;
             }
             fI = Mathf.Clamp(fI, -1, 1);
+            fI *= motorOutput * 0.01f;//motor limiting...
             float motorRPM = wheel.rpm * gearRatio;
             //integrateMotorEuler(fI, motorRPM);
             integrateMotorEulerSub(fI, motorRPM, 5);

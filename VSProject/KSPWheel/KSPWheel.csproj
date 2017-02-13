@@ -81,9 +81,12 @@
     <Compile Include="PartModules\KSPWheelSuspension.cs" />
     <Compile Include="PartModules\KSPWheelTracks.cs" />
     <Compile Include="PartModules\KSPWheelTransformRemoval.cs" />
+    <Compile Include="PartModules\KSPWheelWaterPropulsion.cs" />
     <Compile Include="PartModules\Utils.cs" />
     <Compile Include="PartModules\WheelAnimationHandler.cs" />
+    <Compile Include="VesselModules\KSPWheelAppLauncher.cs" />
     <Compile Include="VesselModules\KSPWheelDustCamera.cs" />
+    <Compile Include="VesselModules\KSPWheelVesselControl.cs" />
     <Compile Include="VesselModules\KSPWheelVesselDebug.cs" />
   </ItemGroup>
   <ItemGroup>
