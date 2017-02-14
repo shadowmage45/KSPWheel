@@ -288,7 +288,6 @@ namespace KSPWheel
         {
             Collider[] cols = part.GetComponentsInChildren<Collider>();
             if (cols != null && cols.Length > 0) { part.collider = cols[0]; }
-            MonoBehaviour.print("Set part.collider to: " + part.collider);
         }
 
         public static bool rayPlaneIntersect(Vector3 rayStart, Vector3 rayDirection, Vector3 point, Vector3 normal, out Vector3 hit)
