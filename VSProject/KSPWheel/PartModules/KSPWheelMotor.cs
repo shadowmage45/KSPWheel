@@ -149,13 +149,7 @@ namespace KSPWheel
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
                 m.gearRatio = gearRatio;
-                float scale = m.part.rescaleFactor * m.controller.scale;
-                float radius = m.wheelData.scaledRadius(scale);
-                float rpm = maxRPM / m.gearRatio;
-                float rps = rpm / 60;
-                float circ = radius * 2 * Mathf.PI;
-                float ms = rps * circ;
-                m.maxDrivenSpeed = ms;
+                m.updateMotorStats();
                 m.updateUIFloatEditControl(nameof(m.gearRatio), m.gearRatio);
             });
         }
@@ -229,6 +223,7 @@ namespace KSPWheel
             ConfigNode config = GameDatabase.Instance.GetConfigNodes("KSPWHEELCONFIG")[0];
             powerConversion = config.GetFloatValue("powerConversion", 65f);
             calcPowerStats();
+            updateMotorStats();
         }
 
         public override string GetInfo()
@@ -258,8 +253,6 @@ namespace KSPWheel
             Fields[nameof(halfTrackSteering)].guiActive = Fields[nameof(halfTrackSteering)].guiActiveEditor = tankSteering && show;
 
             Fields[nameof(gearRatio)].guiActive = Fields[nameof(gearRatio)].guiActiveEditor = show && HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().manualGearing;
-
-            onGearUpdated(null, null);
         }
 
         internal override void preWheelPhysicsUpdate()
@@ -298,6 +291,17 @@ namespace KSPWheel
             powerOutKW = motorCurRPM * Mathf.Abs(torqueOutput) * rpmToRad;
             powerInKW = guiResourceUse * powerConversion;
             powerEff = (powerInKW <= 0 ? 0 : powerOutKW / powerInKW)*100f;
+        }
+
+        private void updateMotorStats()
+        {
+            float scale = part.rescaleFactor * controller.scale;
+            float radius = wheelData.scaledRadius(scale);
+            float rpm = maxRPM / gearRatio;
+            float rps = rpm / 60;
+            float circ = radius * 2 * Mathf.PI;
+            float ms = rps * circ;
+            maxDrivenSpeed = ms;
         }
 
         protected void integrateMotorEuler(float fI, float motorRPM)
