@@ -19,6 +19,7 @@ namespace KSPWheel
             guiOpen = active;
             if (guiOpen && !guiInitialized)
             {
+                MonoBehaviour.print("Initializing debug data instances");
                 wheels.Clear();
                 guiInitialized = true;
                 List<KSPWheelBase> baseModules = new List<KSPWheelBase>();
@@ -172,16 +173,16 @@ namespace KSPWheel
         }
     }
 
-    public struct WheelDebugData
+    public class WheelDebugData
     {
         public KSPWheelBase baseModule;
         public KSPWheelBase.KSPWheelData wheelData;
 
-        public GameObject debugLineRenderBase;//empty parent object, holder for the rest, manually positioned into wheel position and orientation
-        public GameObject debugLineRendererFwd;
-        public GameObject debugLineRendererSide;
-        public GameObject debugLineRendererUp;
-        public GameObject debugLineRendererWheel;
+        private GameObject debugLineRenderBase;//empty parent object, holder for the rest, manually positioned into wheel position and orientation
+        private GameObject debugLineRendererFwd;
+        private GameObject debugLineRendererSide;
+        private GameObject debugLineRendererUp;
+        private GameObject debugLineRendererWheel;
 
         private LineRenderer fwd;
         private LineRenderer side;
@@ -208,52 +209,70 @@ namespace KSPWheel
         /// </summary>
         internal void setupDebugRenderers()
         {
-            MonoBehaviour.print("Setting up debug renderers.");
-            debugLineRenderBase = new GameObject("DebugLineRender");
+            this.debugLineRenderBase = new GameObject("DebugLineRender");
             debugLineRenderBase.transform.position = wheelData.wheel.transform.position;
             debugLineRenderBase.transform.rotation = wheelData.wheel.transform.rotation;
-            debugLineRenderBase.SetActive(false);
 
             debugLineRendererFwd = new GameObject("DebugLineRenderFwd");
             debugLineRendererFwd.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererFwd.transform.localPosition = Vector3.zero;
             debugLineRendererFwd.transform.localRotation = Quaternion.identity;
             fwd = debugLineRendererFwd.AddComponent<LineRenderer>();
 
             debugLineRendererSide = new GameObject("DebugLineRenderSide");
             debugLineRendererSide.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererSide.transform.localPosition = Vector3.zero;
             debugLineRendererSide.transform.localRotation = Quaternion.identity;
             side = debugLineRendererSide.AddComponent<LineRenderer>();
 
             debugLineRendererUp = new GameObject("DebugLineRendererUp");
             debugLineRendererUp.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererUp.transform.localPosition = Vector3.zero;
             debugLineRendererUp.transform.localRotation = Quaternion.identity;
             up = debugLineRendererUp.AddComponent<LineRenderer>();
 
             debugLineRendererWheel = new GameObject("DebugLineRendererWheel");
             debugLineRendererWheel.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererWheel.transform.localPosition = Vector3.zero;
             debugLineRendererWheel.transform.localRotation = Quaternion.identity;
             wheel = debugLineRendererWheel.AddComponent<LineRenderer>();
 
+            Material lineRendererMaterial = new Material(Shader.Find("Particles/Additive"));
+
             fwd.useWorldSpace = false;
-            fwd.SetPositions(new Vector3[] { Vector3.zero, Vector3.forward });
+            fwd.SetPositions(new Vector3[] { Vector3.zero, Vector3.forward*5f });
+            fwd.material = lineRendererMaterial;
+            fwd.SetColors(Color.blue, Color.blue);
+            fwd.SetWidth(0.1f, 0.1f);
 
             side.useWorldSpace = false;
-            side.SetPositions(new Vector3[] { Vector3.zero, Vector3.right });
+            side.SetPositions(new Vector3[] { Vector3.zero, Vector3.right*5f });
+            side.material = lineRendererMaterial;
+            side.SetColors(Color.red, Color.red);
+            side.SetWidth(0.1f, 0.1f);
 
             up.useWorldSpace = false;
-            up.SetPositions(new Vector3[] { Vector3.zero, Vector3.up });
+            up.SetPositions(new Vector3[] { Vector3.zero, Vector3.up*5f });
+            up.material = lineRendererMaterial;
+            up.SetColors(Color.green, Color.green);
+            up.SetWidth(0.1f, 0.1f);
 
             int segments = 24;
             Vector3[] points = new Vector3[segments + 1];
             float radsPerSegment = (360f / (float)segments) * Mathf.Deg2Rad;
             float y, z;
             wheel.useWorldSpace = false;
+            wheel.material = lineRendererMaterial;
+            wheel.SetColors(Color.magenta, Color.magenta);
+            wheel.SetWidth(0.1f, 0.1f);
+            wheel.SetVertexCount(25);
             for (int i = 0; i <= segments; i++)//uses <= in order to close the loop
             {
-                z = wheelData.wheel.radius * Mathf.Cos(i * radsPerSegment);
                 y = wheelData.wheel.radius * Mathf.Sin(i * radsPerSegment);
+                z = wheelData.wheel.radius * Mathf.Cos(i * radsPerSegment);
                 points[i] = new Vector3(0, y, z);
             }
+            wheel.SetPositions(points);
         }
 
         /// <summary>
