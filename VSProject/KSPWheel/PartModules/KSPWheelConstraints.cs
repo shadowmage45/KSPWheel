@@ -17,6 +17,7 @@ namespace KSPWheel.PartModules
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
+            if (string.IsNullOrEmpty(configNodeData)) { configNodeData = node.ToString(); }
             initializeConstraints();
         }
 
@@ -33,12 +34,12 @@ namespace KSPWheel.PartModules
             initializeConstraints();
         }
 
-        public void initializeConstraints()
+        private void initializeConstraints()
         {
             if (initialized) { return;}
             initialized = true;
             ConfigNode root = ConfigNode.Parse(configNodeData).nodes[0];
-            ConfigNode[] constraintNodes = root.GetNodes("CONSTRAINT");            
+            ConfigNode[] constraintNodes = root.GetNodes("CONSTRAINT");
             int len = constraintNodes.Length;
             constraints = new ConstraintData[len];
             for (int i = 0; i < len; i++)
@@ -49,7 +50,7 @@ namespace KSPWheel.PartModules
             updateConstraints();
         }
 
-        public void Update()
+        private void Update()
         {
             updateConstraints();
         }
@@ -138,32 +139,44 @@ namespace KSPWheel.PartModules
 
         private void updateLookFree()
         {
-            //TODO -- adapt to use specified axis
             mover.LookAt(target, mover.up);
+            //TODO -- adapt to use specified main axis
+            //can be applied as a local rotation based on what axis it is.
+            //As unity uses default Z+ = look at
+            // X+ look-at would be a 90' rotation around Y
+            // Y+ look-at would be a 90' rotation around X
+            // ^^ ???
         }
 
         private void updateLookLocked()
         {
             //TODO -- may need to use the position difference and convert via direction to avoid scaling problems
             //TODO -- uhh..yah..something in here needs adjusted for the 'main axis'.
-            Vector3 targetPos = target.position;
-            Vector3 localDiff = mover.InverseTransformPoint(targetPos);//position of the target, in local space (origin=0,0,0)
-            Vector3 localRotation = Vector3.zero;
+            Vector3 localDiff = mover.InverseTransformPoint(target.position);//position of the target, in local space (origin=0,0,0)
             float rx = 0f, ry = 0f, rz = 0f;
             if (secAxis.x != 0)
             {
                 //use y and z
-                rx = Mathf.Atan2(localDiff.y, localDiff.z) * Mathf.Rad2Deg;
+                rx = -Mathf.Atan2(localDiff.y, localDiff.z) * Mathf.Rad2Deg;
+                if (mainAxis.y > 0) { rx += 90f; }
+                else if (mainAxis.y < 0) { rx -= 90f; }
+                else if (mainAxis.z < 0) { rx += 180f; }
             }
             else if (secAxis.y != 0)
             {
                 //use x and z
                 ry = Mathf.Atan2(localDiff.x, localDiff.z) * Mathf.Rad2Deg;
+                if (mainAxis.z < 0) { ry += 180f; }
+                else if (mainAxis.x > 0) { ry -= 90f; }
+                else if (mainAxis.x < 0) { ry += 90f; }
             }
             else if (secAxis.z != 0)
             {
                 //use x and y
-                rz = Mathf.Atan2(localDiff.x, localDiff.y) * Mathf.Rad2Deg;
+                rz = -Mathf.Atan2(localDiff.x, localDiff.y) * Mathf.Rad2Deg;
+                if (mainAxis.x > 0) { rz += 90f; }
+                else if (mainAxis.x < 0) { rz -= 90f; }
+                else if (mainAxis.y < 0) { rz += 180f; }
             }
             mover.Rotate(rx, ry, rz, Space.Self);
         }
