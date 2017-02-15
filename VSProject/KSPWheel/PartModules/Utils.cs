@@ -39,6 +39,44 @@ namespace KSPWheel
                 FindRecursiveMulti(child, name, addTo);
             }
         }
+
+        public static void LookAtLocked(this Transform transform, Vector3 worldPos, Vector3 lookAxis, Vector3 rotationAxis)
+        {
+            Vector3 localDiff = transform.InverseTransformPoint(worldPos);//position of the target, in local space (origin=0,0,0)
+            Vector3 localRotation = Vector3.zero;
+            float rx = 0f, ry = 0f, rz = 0f;
+            if (rotationAxis.x != 0)
+            {
+                //use y and z
+                rx = -Mathf.Atan2(localDiff.y, localDiff.z) * Mathf.Rad2Deg;
+                if (lookAxis.y > 0) { rx += 90f; }
+                else if (lookAxis.y < 0) { rx -= 90f; }
+                else if (lookAxis.z < 0) { rx += 180f; }
+            }
+            else if (rotationAxis.y != 0)
+            {
+                //use x and z
+                ry = Mathf.Atan2(localDiff.x, localDiff.z) * Mathf.Rad2Deg;
+                if (lookAxis.z < 0) { ry += 180f; }
+                else if (lookAxis.x > 0) { ry -= 90f; }
+                else if (lookAxis.x < 0) { ry += 90f; }
+            }
+            else if (rotationAxis.z != 0)
+            {
+                //use x and y
+                rz = -Mathf.Atan2(localDiff.x, localDiff.y) * Mathf.Rad2Deg;
+                if (lookAxis.x > 0) { rz += 90f; }
+                else if (lookAxis.x < 0) { rz -= 90f; }
+                else if (lookAxis.y < 0) { rz += 180f; }
+            }
+            transform.Rotate(rx, ry, rz, Space.Self);
+        }
+
+        public static void RotateFromDefault(this Transform transform, Quaternion def, float x, float y, float z, Space space = Space.Self)
+        {
+            transform.localRotation = def;
+            transform.Rotate(x, y, z, space);
+        }
         
         public static String[] GetStringValues(this ConfigNode node, String name)
         {

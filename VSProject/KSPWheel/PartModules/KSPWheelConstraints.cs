@@ -73,6 +73,7 @@ namespace KSPWheel.PartModules
         private ConstraintType type = ConstraintType.POSITION;
         private Vector3 mainAxis;
         private Vector3 secAxis;
+        private float rOff;
 
         public ConstraintData(Part part, ConfigNode node)
         {
@@ -103,6 +104,33 @@ namespace KSPWheel.PartModules
                 MonoBehaviour.print("Valid types are: POSITION, ROTATION, LOOKFREE, LOOKLOCK");
                 MonoBehaviour.print(e);
                 type = ConstraintType.POSITION;
+            }
+
+            mainAxis = node.GetVector3("mainAxis", Vector3.forward);
+            secAxis = node.GetVector3("secAxis", Vector3.right);
+            if (type == ConstraintType.LOOKLOCK)
+            {
+                if (secAxis.x != 0)
+                {
+                    //use y and z
+                    if (mainAxis.y > 0) { rOff += 90f; }
+                    else if (mainAxis.y < 0) { rOff -= 90f; }
+                    else if (mainAxis.z < 0) { rOff += 180f; }
+                }
+                else if (secAxis.y != 0)
+                {
+                    //use x and z
+                    if (mainAxis.z < 0) { rOff += 180f; }
+                    else if (mainAxis.x > 0) { rOff -= 90f; }
+                    else if (mainAxis.x < 0) { rOff += 90f; }
+                }
+                else if (secAxis.z != 0)
+                {
+                    //use x and y
+                    if (mainAxis.x > 0) { rOff += 90f; }
+                    else if (mainAxis.x < 0) { rOff -= 90f; }
+                    else if (mainAxis.y < 0) { rOff += 180f; }
+                }
             }
         }
 
@@ -150,34 +178,24 @@ namespace KSPWheel.PartModules
 
         private void updateLookLocked()
         {
-            //TODO -- may need to use the position difference and convert via direction to avoid scaling problems
-            //TODO -- uhh..yah..something in here needs adjusted for the 'main axis'.
             Vector3 localDiff = mover.InverseTransformPoint(target.position);//position of the target, in local space (origin=0,0,0)
             float rx = 0f, ry = 0f, rz = 0f;
             if (secAxis.x != 0)
             {
                 //use y and z
-                rx = -Mathf.Atan2(localDiff.y, localDiff.z) * Mathf.Rad2Deg;
-                if (mainAxis.y > 0) { rx += 90f; }
-                else if (mainAxis.y < 0) { rx -= 90f; }
-                else if (mainAxis.z < 0) { rx += 180f; }
+                rx = -Mathf.Atan2(localDiff.y, localDiff.z) * Mathf.Rad2Deg + rOff;
             }
             else if (secAxis.y != 0)
             {
                 //use x and z
-                ry = Mathf.Atan2(localDiff.x, localDiff.z) * Mathf.Rad2Deg;
-                if (mainAxis.z < 0) { ry += 180f; }
-                else if (mainAxis.x > 0) { ry -= 90f; }
-                else if (mainAxis.x < 0) { ry += 90f; }
+                ry = Mathf.Atan2(localDiff.x, localDiff.z) * Mathf.Rad2Deg + rOff;
             }
             else if (secAxis.z != 0)
             {
                 //use x and y
-                rz = -Mathf.Atan2(localDiff.x, localDiff.y) * Mathf.Rad2Deg;
-                if (mainAxis.x > 0) { rz += 90f; }
-                else if (mainAxis.x < 0) { rz -= 90f; }
-                else if (mainAxis.y < 0) { rz += 180f; }
+                rz = -Mathf.Atan2(localDiff.x, localDiff.y) * Mathf.Rad2Deg + rOff;
             }
+            //MonoBehaviour.print("Updating look locked constraint: " + mover + " :: " + target+" :: "+localDiff+" :: "+mainAxis+" :: "+secAxis+" :: "+rx+","+ry+","+rz);
             mover.Rotate(rx, ry, rz, Space.Self);
         }
 
