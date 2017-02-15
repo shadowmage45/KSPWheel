@@ -58,11 +58,9 @@ namespace KSPWheel
             statusLightModule = part.GetComponent<ModuleStatusLight>();
         }
 
-        public override string GetInfo()
+        internal override string getModuleInfo()
         {
-            String val = "Brakes\n";
-            val = val + "Brake Torque: " + maxBrakeTorque + "'\n";
-            return val;
+            return "Brake Torque: " + maxBrakeTorque;
         }
 
         internal override void onUIControlsUpdated(bool show)

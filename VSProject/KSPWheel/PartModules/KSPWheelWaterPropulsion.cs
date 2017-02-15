@@ -44,7 +44,7 @@ namespace KSPWheel
                 KSPWheelBase.KSPWheelData data;
                 KSPWheelCollider wheel;
                 Vector3 wheelPos, surfaceNormal, wheelSurfaceForward, wheelForward;
-                float radius, alt, depth;
+                float radius, alt, depth, inertiaTorque, inertiaForce;
                 for (int i = 0; i < len; i++)
                 {
                     data = controller.wheelData[i];
@@ -66,8 +66,20 @@ namespace KSPWheel
                     submergedPercent = submergedDepth / (radius * 2f);
                     depth = Mathf.Abs(alt);
                     forcePercent = 1 - (depth / radius);
-                    forceOutput = forceSpeedFactor * wheel.angularVelocity * forceRadiusFactor * radius;
 
+                    inertiaTorque = wheel.angularVelocity * wheel.momentOfInertia;//torque over one second needed to completely arrest wheel velocity
+                    inertiaForce = wheel.radius * inertiaTorque;//force over one second needed to completely arrest wheel velocity
+
+                    forceOutput = forceSpeedFactor * inertiaForce * forcePercent;
+
+                    //need to slow the wheel by forceOutput
+                    torque = forceOutput * radius;
+                    accel = (torque / wheel.momentOfInertia) * -Mathf.Sign(wheel.angularVelocity);
+                    accel *= Time.fixedDeltaTime;
+                    accel = Mathf.Clamp(accel, -wheel.angularVelocity, wheel.angularVelocity);//ensure it cannot drive the wheel backwards??
+                    wheel.angularVelocity += accel * Time.fixedDeltaTime;
+
+                    //calculate the point and direction of force application
                     surfaceNormal = vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
                     //wheel-local 'forward' direction, including the steering angle
                     wheelForward = Quaternion.AngleAxis(wheel.steeringAngle, wheel.transform.up) * wheel.transform.forward;
@@ -76,12 +88,6 @@ namespace KSPWheel
 
                     wheel.rigidbody.AddForceAtPosition(wheelSurfaceForward * forceOutput, wheelPos, ForceMode.Force);
 
-                    //need to slow the wheel by forceOutput
-                    torque = forceOutput * radius;
-                    accel = (torque / wheel.momentOfInertia) * -Mathf.Sign(wheel.angularVelocity);
-                    accel *= Time.fixedDeltaTime;
-                    accel = Mathf.Clamp(accel, -wheel.angularVelocity, wheel.angularVelocity);//ensure it cannot drive the wheel backwards??
-                    wheel.angularVelocity += accel * Time.fixedDeltaTime;
                 }
             }
         }

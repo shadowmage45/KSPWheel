@@ -132,6 +132,11 @@ namespace KSPWheel
 
         }
 
+        internal virtual string getModuleInfo()
+        {
+            return string.Empty;
+        }
+
         internal void changeWheelState(KSPWheelState newState, bool selfCallback = false)
         {
             if (controller != null)

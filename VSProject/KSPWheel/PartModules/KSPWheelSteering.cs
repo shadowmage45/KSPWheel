@@ -65,7 +65,7 @@ namespace KSPWheel
         private Quaternion defaultRotation;
         private float rotInput;
 
-        private void onSteeringLocked(BaseField field, System.Object obj)
+        internal void onSteeringLocked(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
@@ -73,7 +73,7 @@ namespace KSPWheel
             });
         }
 
-        private void onSteeringInverted(BaseField field, System.Object obj)
+        internal void onSteeringInverted(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
@@ -81,22 +81,17 @@ namespace KSPWheel
             });
         }
 
-        private void onSteeringLimitUpdated(BaseField field, System.Object obj)
+        internal void onSteeringLimitUpdated(BaseField field, System.Object obj)
         {
-            MonoBehaviour.print("Steering limit updated");
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
-                MonoBehaviour.print("Updated wheel in group");
                 m.steeringLimit = steeringLimit;
                 m.steeringLimitHigh = steeringLimitHigh;
                 m.steeringResponse = steeringResponse;
-                //m.updateUIFloatEditControl(nameof(m.steeringLimit), m.steeringLimit);
-                //m.updateUIFloatEditControl(nameof(m.steeringLimitHigh), m.steeringLimitHigh);
-                //m.updateUIFloatEditControl(nameof(m.steeringResponse), m.steeringResponse);
             });
         }
 
-        private void onSteeringBiasUpdated(BaseField field, System.Object obj)
+        internal void onSteeringBiasUpdated(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
@@ -116,11 +111,9 @@ namespace KSPWheel
             Fields[nameof(steeringBias)].uiControlFlight.onFieldChanged = onSteeringBiasUpdated;
         }
 
-        public override string GetInfo()
+        internal override string getModuleInfo()
         {
-            String val = "Steering\n";
-            val = val + "Max Deflection: " + maxSteeringAngle + "'\n";
-            return val;
+            return "Max Steering Deflection: " + maxSteeringAngle + " degrees";
         }
 
         internal override void onUIControlsUpdated(bool show)

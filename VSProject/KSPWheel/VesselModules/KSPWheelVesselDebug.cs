@@ -10,6 +10,7 @@ namespace KSPWheel
         private Vector2 scrollPos;
         private bool guiOpen = false;
         private bool guiInitialized = false;
+        private bool debugRendering = false;
 
         private List<WheelDebugData> wheels = new List<WheelDebugData>();
 
@@ -18,6 +19,7 @@ namespace KSPWheel
             guiOpen = active;
             if (guiOpen && !guiInitialized)
             {
+                MonoBehaviour.print("Initializing debug data instances");
                 wheels.Clear();
                 guiInitialized = true;
                 List<KSPWheelBase> baseModules = new List<KSPWheelBase>();
@@ -59,6 +61,12 @@ namespace KSPWheel
         {
             GUILayout.BeginVertical();
 
+            if (GUILayout.Button("Toggle Debug Rendering"))
+            {
+                debugRendering = !debugRendering;
+                enableDebugRendering(debugRendering);
+            }
+
             //per-wheel instance data view
             scrollPos = GUILayout.BeginScrollView(scrollPos);
 
@@ -69,6 +77,7 @@ namespace KSPWheel
             //data column header row
             GUILayout.BeginHorizontal();
             GUILayout.Label("idx", GUILayout.Width(w1));//index
+            GUILayout.Label("name", GUILayout.Width(w2));//user-set base module label/name
             GUILayout.Label("grp", GUILayout.Width(w1));//group
             GUILayout.Label("rad", GUILayout.Width(w2));//radius
             GUILayout.Label("mass", GUILayout.Width(w2));//mass
@@ -97,7 +106,8 @@ namespace KSPWheel
             {
                 GUILayout.BeginHorizontal();
                 wheel = wheels[i].wheelData.wheel;
-                GUILayout.Label(i.ToString(), GUILayout.Width(w1));
+                GUILayout.Label(i.ToString(), GUILayout.Width(w1));//raw wheel index
+                GUILayout.Label(wheels[i].baseModule.label, GUILayout.Width(w2));//wheel name/label
                 GUILayout.Label(wheels[i].baseModule.wheelGroup.ToString(), GUILayout.Width(w2));//wheel group
                 GUILayout.Label(wheel.radius.ToString("0.##"), GUILayout.Width(w2));//radius
                 GUILayout.Label(wheel.mass.ToString("0.##"), GUILayout.Width(w2));//mass
@@ -130,16 +140,166 @@ namespace KSPWheel
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
+
+        public void Update()
+        {
+            if (debugRendering)
+            {
+                int len = wheels.Count;
+                for (int i = 0; i < len; i++)
+                {
+                    wheels[i].updateDebugRenderers();
+                }
+            }
+        }
+
+        private void enableDebugRendering(bool enable)
+        {
+            int len = wheels.Count;
+            if (enable)
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    wheels[i].enableDebugRenderers();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    wheels[i].disableDebugRenderers();
+                }
+            }
+        }
     }
 
-    public struct WheelDebugData
+    public class WheelDebugData
     {
         public KSPWheelBase baseModule;
         public KSPWheelBase.KSPWheelData wheelData;
+
+        private GameObject debugLineRenderBase;//empty parent object, holder for the rest, manually positioned into wheel position and orientation
+        private GameObject debugLineRendererFwd;
+        private GameObject debugLineRendererSide;
+        private GameObject debugLineRendererUp;
+        private GameObject debugLineRendererWheel;
+
+        private LineRenderer fwd;
+        private LineRenderer side;
+        private LineRenderer up;
+        private LineRenderer wheel;
+
         public WheelDebugData(KSPWheelBase baseModule, KSPWheelBase.KSPWheelData wheelData)
         {
             this.baseModule = baseModule;
             this.wheelData = wheelData;
+            this.debugLineRenderBase = null;
+            this.debugLineRendererFwd = null;
+            this.debugLineRendererSide = null;
+            this.debugLineRendererUp = null;
+            this.debugLineRendererWheel = null;
+            this.fwd = null;
+            this.side = null;
+            this.up = null;
+            this.wheel = null;
+        }
+
+        /// <summary>
+        /// Set up the line renderers; fwd/side/up axis lines and wheel circle
+        /// </summary>
+        internal void setupDebugRenderers()
+        {
+            this.debugLineRenderBase = new GameObject("DebugLineRender");
+            debugLineRenderBase.transform.position = wheelData.wheel.transform.position;
+            debugLineRenderBase.transform.rotation = wheelData.wheel.transform.rotation;
+
+            debugLineRendererFwd = new GameObject("DebugLineRenderFwd");
+            debugLineRendererFwd.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererFwd.transform.localPosition = Vector3.zero;
+            debugLineRendererFwd.transform.localRotation = Quaternion.identity;
+            fwd = debugLineRendererFwd.AddComponent<LineRenderer>();
+
+            debugLineRendererSide = new GameObject("DebugLineRenderSide");
+            debugLineRendererSide.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererSide.transform.localPosition = Vector3.zero;
+            debugLineRendererSide.transform.localRotation = Quaternion.identity;
+            side = debugLineRendererSide.AddComponent<LineRenderer>();
+
+            debugLineRendererUp = new GameObject("DebugLineRendererUp");
+            debugLineRendererUp.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererUp.transform.localPosition = Vector3.zero;
+            debugLineRendererUp.transform.localRotation = Quaternion.identity;
+            up = debugLineRendererUp.AddComponent<LineRenderer>();
+
+            debugLineRendererWheel = new GameObject("DebugLineRendererWheel");
+            debugLineRendererWheel.transform.parent = debugLineRenderBase.transform;
+            debugLineRendererWheel.transform.localPosition = Vector3.zero;
+            debugLineRendererWheel.transform.localRotation = Quaternion.identity;
+            wheel = debugLineRendererWheel.AddComponent<LineRenderer>();
+
+            Material lineRendererMaterial = new Material(Shader.Find("Particles/Additive"));
+
+            fwd.useWorldSpace = false;
+            fwd.SetPositions(new Vector3[] { Vector3.zero, Vector3.forward*5f });
+            fwd.material = lineRendererMaterial;
+            fwd.SetColors(Color.blue, Color.blue);
+            fwd.SetWidth(0.1f, 0.1f);
+
+            side.useWorldSpace = false;
+            side.SetPositions(new Vector3[] { Vector3.zero, Vector3.right*5f });
+            side.material = lineRendererMaterial;
+            side.SetColors(Color.red, Color.red);
+            side.SetWidth(0.1f, 0.1f);
+
+            up.useWorldSpace = false;
+            up.SetPositions(new Vector3[] { Vector3.zero, Vector3.up*5f });
+            up.material = lineRendererMaterial;
+            up.SetColors(Color.green, Color.green);
+            up.SetWidth(0.1f, 0.1f);
+
+            int segments = 24;
+            Vector3[] points = new Vector3[segments + 1];
+            float radsPerSegment = (360f / (float)segments) * Mathf.Deg2Rad;
+            float y, z;
+            wheel.useWorldSpace = false;
+            wheel.material = lineRendererMaterial;
+            wheel.SetColors(Color.magenta, Color.magenta);
+            wheel.SetWidth(0.1f, 0.1f);
+            wheel.SetVertexCount(25);
+            for (int i = 0; i <= segments; i++)//uses <= in order to close the loop
+            {
+                y = wheelData.wheel.radius * Mathf.Sin(i * radsPerSegment);
+                z = wheelData.wheel.radius * Mathf.Cos(i * radsPerSegment);
+                points[i] = new Vector3(0, y, z);
+            }
+            wheel.SetPositions(points);
+        }
+
+        /// <summary>
+        /// Update the position and orientation of the line renders to mimic the current wheel position (with suspension/hit position data) and orientation (with steering)
+        /// </summary>
+        internal void updateDebugRenderers()
+        {
+            debugLineRenderBase.transform.position = wheelData.wheel.transform.position - wheelData.wheel.transform.up * (wheelData.wheel.length - wheelData.wheel.compressionDistance);
+            debugLineRenderBase.transform.rotation = wheelData.wheel.transform.rotation;
+            debugLineRenderBase.transform.Rotate(0, wheelData.wheel.steeringAngle, 0, Space.Self);
+        }
+
+        internal void enableDebugRenderers()
+        {
+            if (debugLineRenderBase == null)
+            {
+                setupDebugRenderers();
+            }
+        }
+
+        internal void disableDebugRenderers()
+        {
+            if (debugLineRenderBase != null)
+            {
+                GameObject.Destroy(debugLineRenderBase);
+            }
+            debugLineRenderBase = null;
         }
     }
     
