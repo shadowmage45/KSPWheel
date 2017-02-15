@@ -86,25 +86,24 @@ namespace KSPWheel
         /// </summary>
         [KSPField(guiName = "Strut Angle", guiActive = false, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = -30f, maxValue = 30f, stepIncrement = 0.1f, suppressEditorShipModified = true)]
-        public float currentPrimaryAngle = 0f;
+        public float strutRotation = 0f;
 
         /// <summary>
         /// Calculated secondary angle for wheel container to keep aligned with ground
         /// </summary>
         [KSPField(guiName = "Wheel Angle", guiActive = false, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0f, maxValue = 60f, stepIncrement = 0.1f, suppressEditorShipModified = true)]
-        public float currentSecondaryAngle = 0f;
+        public float wheelRotation = 0f;
 
         [KSPField(guiName = "Comp Test", guiActive = false, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float compTest = 1f;
 
-        /// <summary>
-        /// Has this part been marked as a clone?  Set during part symmetry setups.  Determines initial 'flipped' state if wheel can be flipped.
-        /// Also determines the direction of movement for the user-selectable 'angle' controls.
-        /// </summary>
         [KSPField(isPersistant = true)]
-        public bool isClone = false;
+        public float animationTime = 0f;
+
+        [KSPField]
+        public float animationSpeed = 1f;
 
         /// <summary>
         /// Has user selected flipped wheel or set automatically from cloned state.  Determines wheel angle offset direction, wheel spin direction, others...
@@ -142,9 +141,9 @@ namespace KSPWheel
         [SerializeField]
         private Quaternion secStrutDefaultRotation;
         [SerializeField]
-        private Quaternion wheelHousingDefaultRotation;
-        [SerializeField]
         private Vector3 secStrutDefaultPosition;
+        [SerializeField]
+        private Quaternion wheelHousingDefaultRotation;
 
         [SerializeField]
         private Quaternion leftDoorDefaultRotation;
@@ -154,9 +153,6 @@ namespace KSPWheel
         private Quaternion rearDoorDefaultRotation;
         [SerializeField]
         private Quaternion rearDoorFlipDefaultRotation;
-                
-        private float animationTime = 0f;
-        private float animationSpeed = 1f;
 
         [KSPEvent(guiName = "Toggle Gear", guiActive = true, guiActiveEditor = true)]
         public void deploy()
@@ -182,26 +178,51 @@ namespace KSPWheel
             }
         }
 
-        [KSPEvent(guiName = "Flip Gear", guiActive = true, guiActiveEditor = true)]
+        [KSPEvent(guiName = "Flip Gear", guiActive = false, guiActiveEditor = true)]
         public void flip()
         {
             isFlipped = !isFlipped;
+            this.symmetryUpdate(m =>
+            {
+                if (m != this)
+                {
+                    m.isFlipped = !this.isFlipped;
+                }
+            });
+        }
+
+        [KSPEvent(guiName = "Align Wheel To Ground", guiActive = false, guiActiveEditor = true)]
+        public void alignToGround()
+        {
+            this.symmetryUpdate(m =>
+            {
+                //Vector3 target = Vector3.up + m.carriageTransform.position;//one unit above the transform, in world-space in the editor
+                //Vector3 localTarget = m.carriageTransform.InverseTransformPoint(target);//one unit above the transform, as seen in local space
+                ////rotating around the local Z axis, so we only care about the x and y offsets
+                ////erm.. feed this into Mathf.Atan2 as a slope, to get the returned angle
+                //float angle = -Mathf.Atan2(localTarget.x, localTarget.y) * Mathf.Rad2Deg;
+                //m.wheelRotation = Mathf.Clamp(m.wheelRotation + angle, -m.wheelRotationMax, m.wheelRotationMax);//clamp it to the current wheel angle limits
+                //m.carriageTransform.localRotation = m.wheelDefaultRotation;
+                //m.carriageTransform.Rotate(0, 0, m.wheelRotation, Space.Self);
+            });
         }
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             locateTransforms();
+            if (canFlip && part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
+            {
+                //this must be a clone, or part is being reloaded
+                //the 'symmetry counterpart' that exists should be the original part
+                this.isFlipped = !part.symmetryCounterparts[0].GetComponent<KSPWheelAdjustableGear2>().isFlipped;
+            }
             updateAnimation(1.0f);
         }
 
-        internal override void postWheelCreated()
+        internal override void preWheelFrameUpdate()
         {
-            base.postWheelCreated();
-        }
-
-        public void Update()
-        {
+            base.preWheelFrameUpdate();
             if (controller.wheelState == KSPWheelState.DEPLOYING) { updateAnimation(Time.deltaTime * animationSpeed); }
             else if (controller.wheelState == KSPWheelState.RETRACTING) { updateAnimation(Time.deltaTime * -animationSpeed); }
             else if (controller.wheelState == KSPWheelState.DEPLOYED)
@@ -212,6 +233,9 @@ namespace KSPWheel
             }
         }
 
+        /// <summary>
+        /// Locates all of the relevant transforms for this module, and sets up their default orientation/location cached values
+        /// </summary>
         private void locateTransforms()
         {
             suspensionContainer1 = part.transform.FindRecursive(suspensionContainer1Name);
@@ -317,11 +341,11 @@ namespace KSPWheel
                 lrp = lerp(animationTime, 0.5f, 0.85f);
                 mainStrutRot = 0f;
                 secStrutRot = 0f;
-                strutAngleRot = currentPrimaryAngle * lrp;
-                wheelAngleRot = currentSecondaryAngle * lrp;
+                strutAngleRot = strutRotation * lrp;
+                wheelAngleRot = wheelRotation * lrp;
                 doorLeftRot = 90f;
                 doorRightRot = 90f;
-                doorRearRot = 90f + lrp * Mathf.Max(0, -currentPrimaryAngle);
+                doorRearRot = 90f + lrp * Mathf.Max(0, -strutRotation);
                 susTargetPos = lrp;
             }
             else if (animationTime < 1.0f)//last stage before fully deployed. close back end doors, lerp into user-configured positions
@@ -329,11 +353,11 @@ namespace KSPWheel
                 lrp = lerp(animationTime, 0.5f, 1f);
                 mainStrutRot = 0f;
                 secStrutRot = 0f;
-                strutAngleRot = currentPrimaryAngle;
-                wheelAngleRot = currentSecondaryAngle;
+                strutAngleRot = strutRotation;
+                wheelAngleRot = wheelRotation;
                 doorLeftRot = (1 - lrp) * 90f;
                 doorRightRot = (1 - lrp) * 90f;
-                doorRearRot = 90f + Mathf.Max(0, -currentPrimaryAngle);
+                doorRearRot = 90f + Mathf.Max(0, -strutRotation);
                 susTargetPos = 1f;
             }
             else if (animationTime >= 1.0f)//fully deployed
@@ -341,12 +365,34 @@ namespace KSPWheel
                 animationTime = 1.0f;
                 changeWheelState(KSPWheelState.DEPLOYED);
                 mainStrutRot = 0f;
-                strutAngleRot = currentPrimaryAngle;
-                wheelAngleRot = currentSecondaryAngle;
+                strutAngleRot = strutRotation;
+                wheelAngleRot = wheelRotation;
                 doorLeftRot = 0f;
                 doorRightRot = 0f;
-                doorRearRot = 90f + Mathf.Max(0, -currentPrimaryAngle);
+                doorRearRot = 90f + Mathf.Max(0, -strutRotation);
             }
+
+            //update ordering
+            //sc1 - 'strut-angle' if deployed
+            //suspension target - wheel compression if deployed
+            //sc2 - aim at target if deployed, else keep default rotation
+            //mainStrut - deploy angle if deploying, else 0
+            //secStrut - deploy angle if deploying, else aim at main strut
+            //wheelContainer - 'wheel-angle' if deployed
+            //wheelHousing - deploy angle if deploying, else match wheel container angle
+            /*            
+            hierarchy
+            0 doors
+            0 sc1
+            1 |--sc2
+            2 |  |---mainStrut
+            3 |      |---secStrut
+            4 |          |---wheelHousing
+            5 |              |---wheelMesh
+            1 |--wheelContainer
+            2    |---suspensionTarget
+            2    |---wheelCollider
+            */
 
             if (isFlipped)
             {
@@ -390,28 +436,6 @@ namespace KSPWheel
                 }
                 wheelHousing.Rotate(0, 0, wheelAngleRot, Space.Self);
             }
-
-            //update ordering
-            //sc1 - 'strut-angle' if deployed
-            //suspension target - wheel compression if deployed
-            //sc2 - aim at target if deployed, else keep default rotation
-            //mainStrut - deploy angle if deploying, else 0
-            //secStrut - deploy angle if deploying, else aim at main strut
-            //wheelContainer - 'wheel-angle' if deployed
-            //wheelHousing - deploy angle if deploying, else match wheel container angle
-            /*            
-            hierarchy
-            0 doors
-            0 sc1
-            1 |--sc2
-            2 |  |---mainStrut
-            3 |      |---secStrut
-            4 |          |---wheelHousing
-            5 |              |---wheelMesh
-            1 |--wheelContainer
-            2    |---suspensionTarget
-            2    |---wheelCollider
-            */
         }
 
         private float lerp(float time, float pStart, float pEnd)
@@ -421,52 +445,5 @@ namespace KSPWheel
             return p <= 0 ? 0 : t / p;
         }
 
-        /**
-         * Basic Overview of ALG rigging.
-         * Important Transforms:
-         * Suspension Upper Container
-         *   Used to effect main strut angle setup
-         * Wheel Container
-         *   Contains wheel collider and suspension lower container
-         *   Used to position wheel collider into its 'compressed' position.  Drives constraint handling for most of the rest of the transforms.
-         * Suspension Lower Container
-         *   Used by suspension module to position transforms according to wheel compression
-         * Main Strut Upper
-         *   Used to drive retract animation.  Most of the rest of the animation is handled through constraints
-         *   
-         * --------------------------------------------------------------------
-         * Animation handling:
-         * (Retract)
-         * 1. Lerp main strut towards straight-downward extended position
-         *    Lerp wheel alignment into straight-upwards extended position
-         * 2. Open the 'main doors' to allow for main strut to retract
-         * 3. Retract wheel extension from extended to retracted position
-         * 4. Rotate main wheel strut from extended to retracted position
-         *    Rotate wheel housing from extended to retracted position
-         * 5. Close all doors
-         * 
-         * (Deploy)
-         * 1.) Open all doors
-         * 2.) Rotate main wheel strut from retracted to extended position
-         *     Rotate wheel housing from retracted to extended position
-         * 3.) Close main doors
-         * 4.) Extend strut extension from retracted to user-set position
-         * 5.) Rotate wheel from extended to user-set configuration.
-         * 
-         * --------------------------------------------------------------------
-         * Full Time External Module Constraints:
-         * DragBraceUpper -> DragBraceLower (locked look)
-         * DragBraceLower -> DragBraceUpper (locked look)
-         * WheelContainer -> WheelTarget (position)
-         * SuspensionContainerLower -> SuspensionContainerUpper (locked look)
-         * SuspensionContainerUpper -> SuspensionContainerLower (locked look)
-         * 
-         * --------------------------------------------------------------------
-         * ALG Module Managed Constraints:
-         * WheelContainer -> UserSetRotation (rotation)
-         * SuspensionContainerLower -> compression from collider (position)
-         * WheelMesh -> rpm-based rotation from collider (rotation)
-         * 
-         **/
     }
 }
