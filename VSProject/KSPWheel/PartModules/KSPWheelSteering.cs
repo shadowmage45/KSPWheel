@@ -111,11 +111,9 @@ namespace KSPWheel
             Fields[nameof(steeringBias)].uiControlFlight.onFieldChanged = onSteeringBiasUpdated;
         }
 
-        public override string GetInfo()
+        internal override string getModuleInfo()
         {
-            String val = "Steering\n";
-            val = val + "Max Deflection: " + maxSteeringAngle + "'\n";
-            return val;
+            return "Max Steering Deflection: " + maxSteeringAngle + " degrees";
         }
 
         internal override void onUIControlsUpdated(bool show)

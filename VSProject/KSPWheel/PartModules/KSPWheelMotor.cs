@@ -226,12 +226,13 @@ namespace KSPWheel
             updateMotorStats();
         }
 
-        public override string GetInfo()
+        internal override string getModuleInfo()
         {
-            String val = "Motor\n";
-            val = val + "Max RPM: " + maxRPM + "\n";
-            val = val + "Torque : " + maxMotorTorque + "\n";
-            //val = val + "Max EC : " + motorPower + "\n";
+            string val = "Motor Torque: " + maxMotorTorque + "\n" + "Motor Max RPM: " + maxRPM + "\n" + "Motor Efficiency: "+motorEfficiency;
+            if (tankSteering)
+            {
+                val = val + "\n" + "Tank Steering Enabled";
+            }
             return val;
         }
 

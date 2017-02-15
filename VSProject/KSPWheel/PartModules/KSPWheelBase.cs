@@ -9,7 +9,7 @@ namespace KSPWheel
     /// A replacement for the stock wheel system that uses the KSPWheelCollider class for phsyics handling.
     /// Intended to be a fully-functional (but possibly not fully-equivalent) replacement for the stock wheel modules and U5 WheelCollider component
     /// </summary>
-    public class KSPWheelBase : PartModule, IPartCostModifier, IPartMassModifier
+    public class KSPWheelBase : PartModule, IPartCostModifier, IPartMassModifier, IModuleInfo
     {
 
         #region REGION - Basic config parameters
@@ -129,6 +129,12 @@ namespace KSPWheel
 
         [KSPField]
         public float sidewaysFriction = 1f;
+
+        /// <summary>
+        /// Used for in-editor part information display.  Sets the title of the module to this (rather than KSPWheelBase)
+        /// </summary>
+        [KSPField]
+        public string wheelType = "Wheel";
 
         #endregion
 
@@ -612,11 +618,38 @@ namespace KSPWheel
             return ModifierChangeWhen.FIXED;
         }
 
+        public string GetModuleTitle()
+        {
+            return wheelType;
+        }
+
+        public string GetPrimaryField()
+        {
+            return "Max Load: "+maxLoadRating;
+        }
+
+        public Callback<Rect> GetDrawModulePanelCallback()
+        {
+            return null;
+        }
+
         public override string GetInfo()
         {
-            String val = "Wheel\n";
-            val = val + "Max Speed: " + maxSpeed + "\n";
-            val = val + "Max Load : " + maxLoadRating + "\n";
+            String val = "Max Speed: " + maxSpeed + "\n";
+            val = val + "Max Load : " + maxLoadRating;
+            string moduleInfo = "";
+            if (subModules != null)
+            {
+                int len = subModules.Count;
+                for (int i = 0; i < len; i++)
+                {
+                    moduleInfo = subModules[i].getModuleInfo();
+                    if (!string.IsNullOrEmpty(moduleInfo))
+                    {
+                        val = val + "\n" + moduleInfo;
+                    }
+                }
+            }
             return val;
         }
 
