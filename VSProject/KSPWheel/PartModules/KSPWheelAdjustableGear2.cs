@@ -200,10 +200,6 @@ namespace KSPWheel
         [KSPAction(actionGroup = KSPActionGroup.Gear, guiName = "Toggle Gear", requireFullControl = false)]
         public void deployAction(KSPActionParam param)
         {
-            if (controller == null)
-            {
-                return;//unpossible
-            }
             if (param.type == KSPActionType.Activate)
             {
                 switch (controller.wheelState)
@@ -296,6 +292,11 @@ namespace KSPWheel
         {
             base.OnStart(state);
             locateTransforms();
+        }
+
+        internal override void postWheelCreated()
+        {
+            base.postWheelCreated();
             if (canFlip && part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
             {
                 //this must be a clone, or part is being reloaded
@@ -305,8 +306,7 @@ namespace KSPWheel
             updateAnimation(0f);//force update the animation based on current time
         }
 
-
-        internal override void preWheelFrameUpdate()
+        public void Update()
         {
             base.preWheelFrameUpdate();
             if (controller.wheelState == KSPWheelState.DEPLOYING) { updateAnimation(Time.deltaTime * animationSpeed); }
@@ -381,7 +381,6 @@ namespace KSPWheel
             float mainStrutRot = 0f;
             float secStrutRot = 0f;
             float strutAngleRot = 0f;
-            float wheelDeployRot = 0f;
             float wheelAngleRot = 0f;
             float doorLeftRot = 0f;
             float doorRightRot = 0f;
@@ -498,7 +497,7 @@ namespace KSPWheel
             //suspension container1
             //it is responsible for the user-selected 'strut-angle' rotation; it rotates all other transforms
             suspensionContainer1.Rotate(0, -strutAngleRot, 0, Space.Self);
-            
+
             if (deployed) //transforms managed by suspension parameters
             {
                 if (isFlipped)
