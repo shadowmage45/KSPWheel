@@ -964,7 +964,6 @@ namespace KSPWheel
             // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
             localForce.x = fLatMax;
             // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero
-            // TODO - may need to adjust the multiplier when arresting downward motion so as to not induce jitter, as at times it may be greater than the actual sprung mass
             if (localForce.x > Mathf.Abs(localVelocity.x) * downforce) { localForce.x = Mathf.Abs(localVelocity.x) * downforce; }
             // if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
             localForce.x *= -Mathf.Sign(localVelocity.x);// sign it opposite to the current vLat
