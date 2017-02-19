@@ -9,143 +9,221 @@ namespace KSPWheel
     public class KSPWheelAdjustableGear : KSPWheelSubmodule
     {
 
+        #region REGION - Standard Part Config File Fields
+
         [KSPField]
-        public string strutRotatorName = string.Empty;
+        public string suspensionContainer1Name = string.Empty;
+
         [KSPField]
-        public string strutName = string.Empty;
+        public string suspensionContainer2Name = string.Empty;
+
         [KSPField]
-        public string wheelName = string.Empty;
+        public string suspensionTargetName = string.Empty;
+
         [KSPField]
-        public string wheelRotatorName = string.Empty;
+        public string suspensionRotatorName = string.Empty;
+
         [KSPField]
-        public string leftDoorName = string.Empty;
+        public string wheelContainerName = string.Empty;
+
         [KSPField]
-        public string rightDoorName = string.Empty;
+        public string wheelMeshName = string.Empty;
+
+        [KSPField]
+        public string rearDoorFlipName = string.Empty;
+
         [KSPField]
         public string rearDoorName = string.Empty;
+
         [KSPField]
-        public string rearDoorRotatorName = string.Empty;
+        public string rightDoorName = string.Empty;
+
         [KSPField]
-        public float strutRotationMax = 30f;
+        public string leftDoorName = string.Empty;
+
         [KSPField]
-        public float wheelRotationMax = 30f;
+        public string deployEffect = "DeployEffect";
+
         [KSPField]
-        public float strutRotationRetracted = 88f;
+        public string deployedEffect = "DeployedEffect";
+
         [KSPField]
-        public float wheelRotationRetracted = 95f;
+        public string retractEffect = "RetractEffect";
+
         [KSPField]
-        public float wheelRotatorRotationRetracted = 0f;
-        [KSPField]
-        public float suspensionAdjustmentRange = 0.3f;
-        [KSPField]
-        public float suspensionOffsetDistance = 0.175f;
+        public string retractedEffect = "RetractedEffect";
+
         [KSPField]
         public bool allowFlip = false;
 
+        [KSPField]
+        public bool sideMode = false;
+
+        /// <summary>
+        /// User-selectable strut-extension.  Makes the entire gear 'longer'.
+        /// </summary>
+        [KSPField]
+        public float maxExtension = 0.5f;
+
+        /// <summary>
+        /// User-selectable strut angle min/max (negative value used for min)
+        /// </summary>
+        [KSPField]
+        public float minStrutAngle = -30f;
+
+        /// <summary>
+        /// User-selectable strut angle min/max (negative value used for min)
+        /// </summary>
+        [KSPField]
+        public float maxStrutAngle = 30f;
+
+        /// <summary>
+        /// User-selectable maximum wheel angle.  Minimum = 0
+        /// </summary>
+        [KSPField]
+        public float minWheelAngle = -60f;
+
+        /// <summary>
+        /// User-selectable maximum wheel angle.  Minimum = 0
+        /// </summary>
+        [KSPField]
+        public float maxWheelAngle = 60f;
+
+        [KSPField]
+        public float maxSteeringAngle = 25f;
+
+        /// <summary>
+        /// Angular rotation of the main strut during the retract animation;  this is around the horizontal (X) axis, and rotates the main strut upwards into the housing.
+        /// </summary>
+        [KSPField]
+        public float mainStrutRetractedAngle = 90f;
+
+        /// <summary>
+        /// Angular rotation of the secondary strut during retract animation; this is around the vertical (Y) axis, and rotates the wheel into the housing.
+        /// </summary>
+        [KSPField]
+        public float secStrutRetractedAngle = 90f;
+
+        /// <summary>
+        /// Angular rotation of the wheel bogey during retract animation.  TODO
+        /// </summary>
+        [KSPField]
+        public float wheelBogeyRetractedAngle = 0f;
+
+        /// <summary>
+        /// User-configured main strut angle in editor
+        /// </summary>
         [KSPField(guiName = "Strut Angle", guiActive = false, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = -30f, maxValue = 30f, stepIncrement = 0.1f, suppressEditorShipModified = true)]
         public float strutRotation = 0f;
-        
+
+        /// <summary>
+        /// User-set secondary angle for wheel container.  Determines the axis along which the suspension operates.
+        /// </summary>
         [KSPField(guiName = "Wheel Angle", guiActive = false, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = -30f, maxValue = 30f, stepIncrement = 0.1f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0f, maxValue = 60f, stepIncrement = 0.1f, suppressEditorShipModified = true)]
         public float wheelRotation = 0f;
 
-        [KSPField(guiName = "Suspension Length", guiActive = false, guiActiveEditor = true, isPersistant = true),
+        /// <summary>
+        /// User-set strut extension value.  Makes the landing leg longer or shorter.  Does not effect suspension travel range.
+        /// </summary>
+        [KSPField(guiName = "Strut Extension", guiActive = false, guiActiveEditor = true, isPersistant = true),
+         UI_FloatRange(minValue = 0f, maxValue = 1, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        public float strutExtension = 0f;
+
+        /// <summary>
+        /// Temporary testing compression value -- TODO remove once module is finished being developed
+        /// </summary>
+        [KSPField(guiName = "Comp Test", guiActive = false, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float suspensionLength = 0.25f;
+        public float compTest = 1f;
 
-        [KSPField(guiName = "Flip Wheel", guiActive = false, guiActiveEditor = true, isPersistant = true),
-         UI_Toggle(enabledText = "Left", disabledText = "Right")]
-        public bool flipWheel = false;
-
+        /// <summary>
+        /// Current animation state/time.  Stored independently of animation state (which is stored in the base module)
+        /// </summary>
         [KSPField(isPersistant = true)]
-        public int animationState = 0;
+        public float animationTime = 1f;
 
-        public Transform strutRotatorTransform;
-        public Transform strutTransform;
-        public Transform carriageTransform;
-        public Transform carriageRotatorTransform;
-        public Transform leftDoorTransform;
-        public Transform rightDoorTransform;
-        public Transform rearDoorTransform;
-        public Transform rearDoorRotatorTransform;
-        public Quaternion strutRotatorDefaultRotation;
-        public Quaternion strutDefaultRotation;
-        public Quaternion wheelDefaultRotation;
-        public Quaternion wheelRotatorDefaultRotation;
-        public Quaternion rightDoorDefaultRotation;
-        public Quaternion leftDoorDefaultRotation;
-        public Quaternion rearDoorDefaultRotation;
-        public Quaternion rearDoorRotatorDefaultRotation;
-        public Vector3 wheelDefaultPos;
+        /// <summary>
+        /// The speed of the animation. 1 = 1 second.  0.25 = 4 seconds. 0 = non-animated (infinite animation time). Lower values decrease playback speed; higher values increase it.
+        /// </summary>
+        [KSPField]
+        public float animationSpeed = 0.25f;
 
-        private CapsuleCollider standInCollider;
+        /// <summary>
+        /// Has user selected flipped wheel or set automatically from cloned state.  Determines wheel angle offset direction, wheel spin direction, door opening directions, others...
+        /// </summary>
+        [KSPField(isPersistant = true)]
+        public bool isFlipped = false;
 
-        private KSPWheelSuspension suspensionModule;
+        #endregion ENDREGION - Standard Part Config File Fields
 
-        private float mainAnimTime = 0f;
+        #region REGION - Private Working Variables
 
-        private bool initialized = false;
+        /// <summary>
+        /// Cached transforms for manipulation of the model
+        /// </summary>
+        private Transform suspensionContainer1;
+        private Transform suspensionContainer2;
+        private Transform suspensionTarget;
+        private Transform suspensionRotator;
+        private Transform wheelContainer;
+        private Transform wheelMesh;
 
-        private void suspensionLengthUpdated(BaseField field, System.Object obj)
-        {
-            this.symmetryUpdate(m =>
-            {
-                m.suspensionLength = suspensionLength;
-                m.updateSuspensionLength();
-            });
-        }
+        private Transform leftDoor;
+        private Transform rightDoor;
+        private Transform rearDoor;
+        private Transform rearDoorFlip;
 
-        private void toggleWheelFlip(BaseField field, System.Object obj)
-        {
-            this.symmetryUpdate(m => 
-            {
-                m.flipWheel = flipWheel;                
-                if (m.part.symMethod == SymmetryMethod.Mirror && m != this)
-                {
-                    m.flipWheel = !m.flipWheel;
-                }
-                m.setupFlippedState();
-            });
-        }
+        [SerializeField]
+        private SphereCollider tempCollider;
 
-        private void wheelAnglesUpdated(BaseField field, System.Object obj)
-        {
-            this.symmetryUpdate(m => 
-            {
-                m.strutRotation = strutRotation;
-                m.wheelRotation = wheelRotation;
-                if (m.part.symMethod == SymmetryMethod.Mirror && m != this)
-                {
-                    m.strutRotation = -m.strutRotation;
-                    if (!m.allowFlip || m.carriageRotatorTransform == null)
-                    {
-                        m.wheelRotation = -m.wheelRotation;
-                    }
-                }
-                if (m.controller.wheelState == KSPWheelState.DEPLOYED)
-                {
-                    m.strutRotatorTransform.localRotation = m.strutRotatorDefaultRotation;
-                    m.carriageTransform.localRotation = m.wheelDefaultRotation;
-                    m.strutRotatorTransform.Rotate(0, 0, m.strutRotation, Space.Self);
-                    m.carriageTransform.Rotate(0, 0, m.wheelRotation, Space.Self);
-                }
-            });
-        }
+        private KSPWheelSteering steering;
+        
+
+        /// <summary>
+        /// Cached default orientations and locations for the above transforms
+        /// Serialize these fields across parts (prefab -> editor; editor -> cloned)
+        /// Fixes problems of cloned models taking on new default orientations/locations from the part they were cloned from
+        /// </summary>
+        [SerializeField]
+        private bool initializedDefaultRotations;
+        [SerializeField]
+        private Quaternion sc1DefaultRotation;
+        [SerializeField]
+        private Quaternion sc2DefaultRotation;
+        [SerializeField]
+        private Quaternion wheelContainerDefaultRotation;
+        [SerializeField]
+        private Vector3 wheelContainerDefaultPosition;
+
+        [SerializeField]
+        private Quaternion leftDoorDefaultRotation;
+        [SerializeField]
+        private Quaternion rightDoorDefaultRotation;
+        [SerializeField]
+        private Quaternion rearDoorDefaultRotation;
+        [SerializeField]
+        private Quaternion rearDoorFlipDefaultRotation;
+
+        #endregion ENDREGION - Private Working Variables
+
+        #region REGION - GUI methods
 
         [KSPAction(actionGroup = KSPActionGroup.Gear, guiName = "Toggle Gear", requireFullControl = false)]
         public void deployAction(KSPActionParam param)
         {
-            if (controller == null) { return; }//unpossible
             if (param.type == KSPActionType.Activate)
             {
                 switch (controller.wheelState)
                 {
                     case KSPWheelState.RETRACTED:
                         changeWheelState(KSPWheelState.DEPLOYING);
+                        part.Effect(deployEffect, 1f);
                         break;
                     case KSPWheelState.RETRACTING:
                         changeWheelState(KSPWheelState.DEPLOYING);
+                        part.Effect(deployEffect, 1f);
                         break;
                     default:
                         break;
@@ -157,388 +235,359 @@ namespace KSPWheel
                 {
                     case KSPWheelState.DEPLOYED:
                         changeWheelState(KSPWheelState.RETRACTING);
+                        part.Effect(retractEffect, 1f);
                         break;
                     case KSPWheelState.DEPLOYING:
                         changeWheelState(KSPWheelState.RETRACTING);
+                        part.Effect(retractEffect, 1f);
                         break;
                     default:
                         break;
                 }
             }
-            updateDeploymentState(true);
         }
 
         [KSPEvent(guiName = "Toggle Gear", guiActive = true, guiActiveEditor = true)]
-        public void deployEvent()
-        {
-            if (controller == null) { return; }//unpossible
-            switch (controller.wheelState)
-            {
-                case KSPWheelState.RETRACTED:
-                    changeWheelState(KSPWheelState.DEPLOYING);
-                    break;
-                case KSPWheelState.RETRACTING:
-                    changeWheelState(KSPWheelState.DEPLOYING);
-                    break;
-                case KSPWheelState.DEPLOYED:
-                    changeWheelState(KSPWheelState.RETRACTING);
-                    break;
-                case KSPWheelState.DEPLOYING:
-                    changeWheelState(KSPWheelState.RETRACTING);
-                    break;
-                case KSPWheelState.BROKEN:
-                    break;
-                default:
-                    break;
-            }
-            updateDeploymentState(true);
-        }
-
-        [KSPEvent(guiName = "Align Wheel To Ground", guiActiveEditor = true, guiActive = false)]
-        public void alignToGround()
+        public void deploy()
         {
             this.symmetryUpdate(m =>
             {
-                Vector3 target = Vector3.up + m.carriageTransform.position;//one unit above the transform, in world-space in the editor
-                Vector3 localTarget = m.carriageTransform.InverseTransformPoint(target);//one unit above the transform, as seen in local space
-                //rotating around the local Z axis, so we only care about the x and y offsets
-                //erm.. feed this into Mathf.Atan2 as a slope, to get the returned angle
-                float angle = -Mathf.Atan2(localTarget.x, localTarget.y) * Mathf.Rad2Deg;
-                m.wheelRotation = Mathf.Clamp(m.wheelRotation + angle, -m.wheelRotationMax, m.wheelRotationMax);//clamp it to the current wheel angle limits
-                m.carriageTransform.localRotation = m.wheelDefaultRotation;
-                m.carriageTransform.Rotate(0, 0, m.wheelRotation, Space.Self);
+                switch (m.controller.wheelState)
+                {
+                    case KSPWheelState.RETRACTED:
+                        m.changeWheelState(KSPWheelState.DEPLOYING);
+                        part.Effect(deployEffect, 1f);
+                        break;
+                    case KSPWheelState.RETRACTING:
+                        m.changeWheelState(KSPWheelState.DEPLOYING);
+                        part.Effect(deployEffect, 1f);
+                        break;
+                    case KSPWheelState.DEPLOYED:
+                        m.changeWheelState(KSPWheelState.RETRACTING);
+                        part.Effect(retractEffect, 1f);
+                        break;
+                    case KSPWheelState.DEPLOYING:
+                        m.changeWheelState(KSPWheelState.RETRACTING);
+                        part.Effect(retractEffect, 1f);
+                        break;
+                    case KSPWheelState.BROKEN:
+                        break;
+                    default:
+                        break;
+                }
             });
         }
+
+        [KSPEvent(guiName = "Flip Gear", guiActive = false, guiActiveEditor = true)]
+        public void flip()
+        {
+            if (!allowFlip) { return; }
+            isFlipped = !isFlipped;
+            this.symmetryUpdate(m =>
+            {
+                if (m != this)
+                {
+                    m.isFlipped = !this.isFlipped;
+                }
+            });
+        }
+
+        [KSPEvent(guiName = "Align Wheel To Ground", guiActive = false, guiActiveEditor = true)]
+        public void alignToGround()
+        {
+            Vector3 target = wheelContainer.position + Vector3.up;//one unit above the transform, in world-space in the editor
+            Vector3 localTarget = wheelContainer.InverseTransformPoint(target);//one unit above the transform, as seen in local space
+            //rotating around the local Z axis, so we only care about the x and y offsets
+            //erm.. feed this into Mathf.Atan2 as a slope, to get the returned angle
+            float angle = -Mathf.Atan2(localTarget.x, localTarget.y) * Mathf.Rad2Deg;
+            if (isFlipped && sideMode) { angle = -angle; }
+            wheelRotation = Mathf.Clamp(wheelRotation + angle, 0, maxWheelAngle);//clamp it to the current wheel angle limits
+            this.symmetryUpdate(m =>
+            {
+                m.wheelRotation = wheelRotation;
+            });
+        }
+
+        #endregion ENDREGION - GUI Methods
+
+        #region REGION - Standard KSP/Unity Overrides
 
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            Fields[nameof(strutRotation)].uiControlEditor.onFieldChanged = wheelAnglesUpdated;
-            Fields[nameof(wheelRotation)].uiControlEditor.onFieldChanged = wheelAnglesUpdated;
-            Fields[nameof(flipWheel)].uiControlEditor.onFieldChanged = toggleWheelFlip;
-            Fields[nameof(suspensionLength)].uiControlEditor.onFieldChanged = suspensionLengthUpdated;
-            UI_FloatRange wdgt = (UI_FloatRange)Fields[nameof(strutRotation)].uiControlEditor;
-            if (wdgt != null)
-            {
-                wdgt.minValue = -strutRotationMax;
-                wdgt.maxValue = strutRotationMax;
-            }
-            wdgt = (UI_FloatRange)Fields[nameof(wheelRotation)].uiControlEditor;
-            if (wdgt != null)
-            {
-                wdgt.minValue = -wheelRotationMax;
-                wdgt.maxValue = wheelRotationMax;                
-            }
-            setupCloneState();
-            setupFlippedState();
-        }
-
-        private void setupCloneState()
-        {
-            if (part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
-            {
-                KSPWheelAdjustableGear g = part.symmetryCounterparts[0].GetComponent<KSPWheelAdjustableGear>();
-                flipWheel = !g.flipWheel;
-                strutRotation = -g.strutRotation;
-                if (!allowFlip || carriageRotatorTransform == null)//when flipping is allowed, wheel rotation handled by the carriage transform rotation
-                {
-                    wheelRotation = -g.wheelRotation;
-                }
-            }
-        }
-
-        private void setupFlippedState()
-        {
-            float rot = flipWheel ? 180 : 0;
-            if (carriageRotatorTransform != null)
-            {
-                carriageRotatorTransform.localRotation = wheelRotatorDefaultRotation;
-                carriageRotatorTransform.Rotate(0, 0, rot, Space.Self);
-            }
-            if (rearDoorRotatorTransform != null)
-            {
-                rearDoorRotatorTransform.localRotation = rearDoorRotatorDefaultRotation;
-                rearDoorRotatorTransform.Rotate(0, 0, rot, Space.Self);
-            }
-            if (controller.wheelState == KSPWheelState.DEPLOYED)
-            {
-                strutRotatorTransform.localRotation = strutRotatorDefaultRotation;
-                carriageTransform.localRotation = wheelDefaultRotation;
-                strutRotatorTransform.Rotate(0, 0, strutRotation, Space.Self);
-                carriageTransform.Rotate(0, 0, wheelRotation, Space.Self);
-            }
-        }
-
-        internal override void postControllerSetup()
-        {
-            base.postControllerSetup();
-            if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
-            {
-                initialized = true;
-                if (strutTransform == null)
-                {
-                    strutRotatorTransform = part.transform.FindRecursive(strutRotatorName);
-                    strutTransform = part.transform.FindRecursive(strutName);
-                    carriageTransform = part.transform.FindRecursive(wheelName);
-                    strutRotatorDefaultRotation = strutRotatorTransform.localRotation;
-                    strutDefaultRotation = strutTransform.localRotation;
-                    wheelDefaultRotation = carriageTransform.localRotation;
-                    if (!string.IsNullOrEmpty(wheelRotatorName))
-                    {
-                        carriageRotatorTransform = part.transform.FindRecursive(wheelRotatorName);
-                        wheelRotatorDefaultRotation = carriageRotatorTransform.localRotation;
-                    }
-                    leftDoorTransform = part.transform.FindRecursive(leftDoorName);
-                    rightDoorTransform = part.transform.FindRecursive(rightDoorName);
-                    rearDoorTransform = part.transform.FindRecursive(rearDoorName);
-                    leftDoorDefaultRotation = leftDoorTransform.localRotation;
-                    rightDoorDefaultRotation = rightDoorTransform.localRotation;
-                    rearDoorDefaultRotation = rearDoorTransform.localRotation;
-                    if (!string.IsNullOrEmpty(rearDoorRotatorName))
-                    {
-                        rearDoorRotatorTransform = part.transform.FindRecursive(rearDoorRotatorName);
-                        rearDoorRotatorDefaultRotation = rearDoorRotatorTransform.localRotation;
-                    }
-                }
-                if (controller.wheelState == KSPWheelState.BROKEN)
-                {
-                    mainAnimTime = 1f;
-                }
-                else if (controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING)
-                {
-                    mainAnimTime = 1f;
-                }
-                else//retracted
-                {
-                    mainAnimTime = 0f;
-                }
-                updateAnimation(0.0f);
-            }
+            locateTransforms();
+            Events[nameof(flip)].guiActiveEditor = allowFlip;
         }
 
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
-            suspensionModule = part.GetComponent<KSPWheelSuspension>();
-            if (HighLogic.LoadedSceneIsFlight)
+            if (part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
             {
-                Quaternion rot = strutTransform.localRotation;
-                strutTransform.localRotation = strutDefaultRotation;
-                GameObject colObj = new GameObject("ALGStandInCollider");
-                colObj.transform.parent = strutTransform;
-                colObj.transform.position = wheel.transform.position;
-                colObj.transform.localPosition += new Vector3(0, -suspensionLength * suspensionAdjustmentRange, 0);
-                colObj.transform.localRotation = Quaternion.identity;
-                standInCollider = colObj.AddComponent<CapsuleCollider>();
-                standInCollider.radius = wheel.radius;
-                standInCollider.height = wheel.radius * 2f + wheel.length;
-                standInCollider.center = new Vector3(0, -standInCollider.height * 0.5f, 0);
-                standInCollider.enabled = false;
-                CollisionManager.IgnoreCollidersOnVessel(vessel, standInCollider);
-                strutTransform.localRotation = rot;
+                //this must be a clone, or part is being reloaded
+                //the 'symmetry counterpart' that exists should be the original part
+                this.isFlipped = !part.symmetryCounterparts[0].GetComponent<KSPWheelAdjustableGear>().isFlipped;
             }
-            updateDeploymentState(false);
-            wheelDefaultPos = wheelTransform.localPosition;//TODO -- this will have problems when cloned in the editor; the position will have already been moved
-            updateSuspensionLength();
+            if (HighLogic.LoadedSceneIsFlight && tempCollider == null)
+            {
+                tempCollider = new GameObject("StandInCollider").AddComponent<SphereCollider>();
+                tempCollider.radius = wheel.radius;
+                tempCollider.gameObject.layer = 26;
+                tempCollider.transform.parent = suspensionTarget;
+                tempCollider.transform.position = wheel.transform.position;
+                tempCollider.gameObject.SetActive(HighLogic.LoadedSceneIsFlight && (controller.wheelState != KSPWheelState.DEPLOYED && controller.wheelState != KSPWheelState.BROKEN));
+                CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
+            }
+            steering = part.GetComponent<KSPWheelSteering>();
+            updateAnimation(0f);//force update the animation based on current time
         }
 
         public void Update()
         {
-            if (!initialized || controller == null) { return; }
-            KSPWheelState state = controller.wheelState;
-            switch (state)
+            base.preWheelFrameUpdate();
+            float animTime = 0f;
+            if (controller.wheelState == KSPWheelState.DEPLOYING)
             {
-                case KSPWheelState.RETRACTING:
-                    updateAnimation(-0.25f);
-                    break;
-                case KSPWheelState.DEPLOYING:
-                    updateAnimation(0.25f);
-                    break;
-                default:
-                    break;
+                animTime = Time.deltaTime * animationSpeed;
+                part.Effect(retractEffect, 0f);
             }
-            updateDeploymentState(false);
-        }
-
-        private void updateSuspensionLength()
-        {
-            if (suspensionModule != null)
+            else if (controller.wheelState == KSPWheelState.RETRACTING)
             {
-                float offset = (1f - Vector3.Dot(carriageTransform.up, strutTransform.up)) * -suspensionOffsetDistance;
-                offset += suspensionLength * suspensionAdjustmentRange;
-                suspensionModule.suspensionOffset = offset;
+                animTime = Time.deltaTime * -animationSpeed;
+                part.Effect(deployEffect, 0f);
             }
-            if (wheelTransform != null)
+            else if (controller.wheelState == KSPWheelState.DEPLOYED)
             {
-                wheelTransform.localPosition = wheelDefaultPos;
-                wheelTransform.position += -wheelTransform.up * suspensionLength * suspensionAdjustmentRange * part.rescaleFactor * controller.scale;
-                if (wheelData != null && wheelData.bumpStopCollider != null)
+                wheelMesh.Rotate(wheel.perFrameRotation, 0, 0, Space.Self);
+                part.Effect(deployEffect, 0f);
+                part.Effect(retractEffect, 0f);
+            }
+            else
+            {
+                part.Effect(deployEffect, 0f);
+                part.Effect(retractEffect, 0f);
+            }
+            updateAnimation(animTime);
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                tempCollider.gameObject.SetActive(controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING);
+                if (steering != null)
                 {
-                    wheelData.bumpStopCollider.transform.position = wheelTransform.position;
+                    steering.maxSteeringAngle = Mathf.Abs(wheelRotation) < 0.25f ? maxSteeringAngle : 0;
                 }
             }
         }
 
-        private void updateDeploymentState(bool setup)
+        #endregion ENDREGION - Standard KSP/Unity Overrides
+
+        #region REGION - Custom Update Methods
+
+        /// <summary>
+        /// Locates all of the relevant transforms for this module, and sets up their default orientation/location cached values
+        /// </summary>
+        private void locateTransforms()
         {
-            if (!HighLogic.LoadedSceneIsFlight || standInCollider == null) { return; }
-            switch (controller.wheelState)
+            suspensionContainer1 = part.transform.FindRecursive(suspensionContainer1Name);
+            suspensionContainer2 = part.transform.FindRecursive(suspensionContainer2Name);
+            suspensionTarget = part.transform.FindRecursive(suspensionTargetName);
+            suspensionRotator = part.transform.FindRecursive(suspensionRotatorName);
+            wheelContainer = part.transform.FindRecursive(wheelContainerName);
+            wheelMesh = part.transform.FindRecursive(wheelMeshName);
+
+            leftDoor = part.transform.FindRecursive(leftDoorName);
+            rightDoor = part.transform.FindRecursive(rightDoorName);
+            rearDoor = part.transform.FindRecursive(rearDoorName);
+            rearDoorFlip = part.transform.FindRecursive(rearDoorFlipName);
+
+            if (!initializedDefaultRotations)
             {
-                case KSPWheelState.RETRACTED:
-                    standInCollider.enabled = false;
-                    wheel.angularVelocity = 0f;
-                    break;
-                case KSPWheelState.RETRACTING:
-                    if (setup)
-                    {
-                        standInCollider.radius = wheel.radius;
-                        float h = wheel.radius * 2 + (wheel.length - wheel.compressionDistance);
-                        standInCollider.height = h;
-                        float o = -h * 0.5f + wheel.radius;
-                        standInCollider.center = new Vector3(0, o, 0);
-                    }
-                    wheel.angularVelocity = 0f;
-                    standInCollider.enabled = true;
-                    break;
-                case KSPWheelState.DEPLOYED:
-                    standInCollider.enabled = false;
-                    break;
-                case KSPWheelState.DEPLOYING:
-                    if (setup)
-                    {
-                        standInCollider.radius = wheel.radius;
-                        standInCollider.height = wheel.radius * 2f + wheel.length;
-                        standInCollider.center = new Vector3(0, -standInCollider.height * 0.5f + wheel.radius, 0);
-                    }
-                    wheel.angularVelocity = 0f;
-                    standInCollider.enabled = true;
-                    break;
-                case KSPWheelState.BROKEN:
-                    wheel.angularVelocity = 0f;
-                    standInCollider.enabled = false;
-                    break;
-                default:
-                    break;
+                initializedDefaultRotations = true;
+                sc1DefaultRotation = suspensionContainer1.localRotation;
+                sc2DefaultRotation = suspensionContainer2.localRotation;
+                wheelContainerDefaultRotation = wheelContainer.localRotation;
+                wheelContainerDefaultPosition = wheelContainer.localPosition;
+
+                leftDoorDefaultRotation = leftDoor.localRotation;
+                rightDoorDefaultRotation = rightDoor.localRotation;
+                rearDoorDefaultRotation = rearDoor.localRotation;
+                rearDoorFlipDefaultRotation = rearDoorFlip.localRotation;
             }
         }
 
-        private void updateAnimation(float speed)
+        private void updateAnimation(float dt)
         {
-            mainAnimTime += Time.deltaTime * speed;
-            mainAnimTime = Mathf.Clamp01(mainAnimTime);
-            controller.deployAnimationTime = mainAnimTime;
-            float doorRot = 0f;
-            float rearDoorRot = 0f;
-            float strutRotX = 0f;
-            float strutRotZ = 0f;
-            float wheelRotX = 0f;
-            float wheelRotZ = 0f;
-            float wheelSecRot = 0f;
-            float offsetTime = 0f;
-            if (mainAnimTime <= 0)//full retracted
-            {
-                doorRot = 0f;
-                rearDoorRot = 0f;
-                strutRotX = strutRotationRetracted;
-                strutRotZ = 0f;
-                wheelRotX = wheelRotationRetracted;
-                wheelRotZ = 0f;
-                wheelSecRot = wheelRotatorRotationRetracted;
-                changeWheelState(KSPWheelState.RETRACTED);
-            }
-            else if (mainAnimTime < 0.15f)//doors only (0 - 0.15)
-            {
-                float lerp = mainAnimTime / 0.15f;
-                doorRot = Mathf.Lerp(0, 90, lerp);
-                rearDoorRot = Mathf.Lerp(0, 90, lerp);
-                strutRotX = strutRotationRetracted;
-                strutRotZ = 0f;
-                wheelRotX = wheelRotationRetracted;
-                wheelRotZ = 0f;
-                wheelSecRot = wheelRotatorRotationRetracted;
-            }
-            else if (mainAnimTime < 0.50f)//main only (0.15 - 0.50)
-            {
-                float lerp = (mainAnimTime - 0.15f) / 0.35f;
-                doorRot = 90;
-                rearDoorRot = 90;
-                strutRotX = Mathf.Lerp(strutRotationRetracted, 0, lerp);
-                strutRotZ = 0f;
-                wheelRotX = Mathf.Lerp(wheelRotationRetracted, 0, lerp);
-                wheelRotZ = 0f;
-                wheelSecRot = wheelRotatorRotationRetracted;
-            }
-            else if (mainAnimTime < 0.85f)//main, secondary (0.50 - 0.85)
-            {
-                float lerp = (mainAnimTime - 0.50f) / 0.35f;
-                rearDoorRot = 90;
-                doorRot = 90;
-                strutRotX = 0;
-                strutRotZ = Mathf.Lerp(0, strutRotation, lerp);
-                wheelRotX = 0;
-                wheelRotZ = Mathf.Lerp(0, wheelRotation, lerp);
-                wheelSecRot = Mathf.Lerp(wheelRotatorRotationRetracted, 0, lerp);
-            }
-            else if (mainAnimTime < 1f)//doors2 (0.85 - 1)
-            {
-                float lerp = (mainAnimTime - 0.85f) / 0.15f;
-                rearDoorRot = 90;
-                doorRot = Mathf.Lerp(90, 0, lerp);
-                strutRotX = 0f;
-                strutRotZ = strutRotation;
-                wheelRotX = 0f;
-                wheelRotZ = wheelRotation;
-                wheelSecRot = 0f;
-                offsetTime = lerp;
-            }
-            else //if (mainAnimTime >= 1f) // fully deployed
-            {
-                offsetTime = 1f;
-                doorRot = 0;
-                rearDoorRot = 90;
-                strutRotX = 0f;
-                strutRotZ = strutRotation;
-                wheelRotX = 0f;
-                wheelRotZ = wheelRotation;
-                wheelSecRot = 0f;
-                changeWheelState(KSPWheelState.DEPLOYED);
-            }
+            animationTime += dt;
+            float lrp = 0f;
+            bool deployed = animationTime >= 1f;
 
-            strutRotatorTransform.localRotation = strutRotatorDefaultRotation;
-            strutTransform.localRotation = strutDefaultRotation;
-            carriageTransform.localRotation = wheelDefaultRotation;
-            rightDoorTransform.localRotation = rightDoorDefaultRotation;
-            leftDoorTransform.localRotation = leftDoorDefaultRotation;
-            rearDoorTransform.localRotation = rearDoorDefaultRotation;
-            strutRotatorTransform.Rotate(0, 0, strutRotZ, Space.Self);
-            strutTransform.Rotate(strutRotX, 0, 0, Space.Self);
-            carriageTransform.Rotate(0, 0, wheelRotZ, Space.Self);
-            carriageTransform.Rotate(wheelRotX, 0, 0, Space.Self);
-            rightDoorTransform.Rotate(doorRot, 0, 0, Space.Self);
-            leftDoorTransform.Rotate(doorRot, 0, 0, Space.Self);
-            rearDoorTransform.Rotate(rearDoorRot, 0, 0, Space.Self);
-            if (carriageRotatorTransform != null)
+            float mainStrutRot = 0f;
+            float secStrutRot = 0f;
+            float strutAngleRot = 0f;
+            float wheelAngleRot = 0f;
+            float doorLeftRot = 0f;
+            float doorRightRot = 0f;
+            float doorRearRot = 0f;
+            float doorFlipRot = isFlipped && allowFlip ? 180f : 0f;
+            float susTargetPos = 0f;
+            float bogeyAngleRot = 0f;
+            if (animationTime <= 0)//fully retracted, everything in retracted state
             {
-                carriageRotatorTransform.localRotation = wheelRotatorDefaultRotation;
-                if (flipWheel)
+                animationTime = 0f;
+                if (controller.wheelState != KSPWheelState.RETRACTED)
                 {
-                    wheelSecRot = -wheelSecRot;
-                    wheelSecRot += 180f;
+                    changeWheelState(KSPWheelState.RETRACTED);
+                    part.Effect(retractedEffect);
                 }
-                carriageRotatorTransform.Rotate(0, 0, wheelSecRot, Space.Self);
+                mainStrutRot = mainStrutRetractedAngle;
+                secStrutRot = secStrutRetractedAngle;
+                bogeyAngleRot = wheelBogeyRetractedAngle;
+                strutAngleRot = 0f;
+                wheelAngleRot = 0f;
+                doorLeftRot = 0f;
+                doorRightRot = 0f;
+                doorRearRot = 0f;
+                susTargetPos = 0f;
             }
-            if (rearDoorRotatorTransform != null && flipWheel)
+            else if (animationTime < 0.15f)//open doors
             {
-                rearDoorRotatorTransform.localRotation = rearDoorRotatorDefaultRotation;
-                rearDoorRotatorTransform.Rotate(0, 0, 180, Space.Self);
+                lrp = lerp(animationTime, 0, 0.15f);
+                mainStrutRot = mainStrutRetractedAngle;
+                secStrutRot = secStrutRetractedAngle;
+                bogeyAngleRot = wheelBogeyRetractedAngle;
+                strutAngleRot = 0f;
+                wheelAngleRot = 0f;
+                doorLeftRot = lrp * 90f;
+                doorRightRot = lrp * 90f;
+                doorRearRot = lrp * 90f;
+                susTargetPos = 0f;
             }
-            if (suspensionModule != null)
+            else if (animationTime < 0.4f)//main deploy animation for main strut and wheel rotation
             {
-                float offset = (1f - Vector3.Dot(carriageTransform.up, strutTransform.up)) * -suspensionOffsetDistance;
-                offset += suspensionLength * suspensionAdjustmentRange;
-                suspensionModule.suspensionOffset = offset * offsetTime;
+                lrp = lerp(animationTime, 0.15f, 0.4f);
+                mainStrutRot = (1f - lrp) * mainStrutRetractedAngle;
+                secStrutRot = secStrutRetractedAngle;
+                bogeyAngleRot = wheelBogeyRetractedAngle;
+                strutAngleRot = 0f;
+                wheelAngleRot = 0f;
+                doorLeftRot = 90f;
+                doorRightRot = 90f;
+                doorRearRot = 90f;
+                susTargetPos = 0f;
+            }
+            else if (animationTime < 0.6f)//main deploy animation for main strut and wheel rotation
+            {
+                lrp = lerp(animationTime, 0.4f, 0.6f);
+                mainStrutRot = 0;
+                secStrutRot = (1f - lrp) * secStrutRetractedAngle;
+                bogeyAngleRot = (1f - lrp) * wheelBogeyRetractedAngle;
+                strutAngleRot = 0f;
+                wheelAngleRot = 0f;
+                doorLeftRot = 90f;
+                doorRightRot = 90f;
+                doorRearRot = 90f;
+                susTargetPos = 0f;
+            }
+            else if (animationTime < 0.85f)//lerp into user-configured positions
+            {
+                lrp = lerp(animationTime, 0.6f, 0.85f);
+                mainStrutRot = 0f;
+                secStrutRot = 0f;
+                bogeyAngleRot = 0f;
+                strutAngleRot = strutRotation * lrp;
+                wheelAngleRot = wheelRotation * lrp;
+                doorLeftRot = (1 - lrp) * 90f;
+                doorRightRot = (1 - lrp) * 90f;
+                doorRearRot = 90f + (allowFlip ? lrp * Mathf.Max(0, -strutRotation) : 0);
+                susTargetPos = lrp;
+            }
+            else if (animationTime < 1.0f)//last stage before fully deployed. close back end doors, lerp into user-configured positions
+            {
+                lrp = lerp(animationTime, 0.85f, 1f);
+                mainStrutRot = 0f;
+                secStrutRot = 0f;
+                bogeyAngleRot = 0f;
+                strutAngleRot = strutRotation;
+                wheelAngleRot = wheelRotation;
+                doorLeftRot = 0f;
+                doorRightRot = 0f;
+                doorRearRot = 90f + (allowFlip ? Mathf.Max(0, -strutRotation) : 0);
+                susTargetPos = 1f;
+            }
+            else if (animationTime >= 1.0f)//fully deployed
+            {
+                animationTime = 1.0f;
+                if (controller.wheelState != KSPWheelState.DEPLOYED)
+                {
+                    changeWheelState(KSPWheelState.DEPLOYED);
+                    part.Effect(deployedEffect);
+                }
+                mainStrutRot = 0f;
+                secStrutRot = 0f;
+                bogeyAngleRot = 0f;
+                strutAngleRot = strutRotation;
+                wheelAngleRot = wheelRotation;
+                doorLeftRot = 0f;
+                doorRightRot = 0f;
+                doorRearRot = 90f + (allowFlip ? Mathf.Max(0, -strutRotation) : 0);
+                susTargetPos = 1f;
+            }
+
+            if (isFlipped && !sideMode)
+            {
+                strutAngleRot = -strutAngleRot;
+                secStrutRot = -secStrutRot;
+                bogeyAngleRot = -bogeyAngleRot;
+            }
+            if (sideMode && isFlipped)
+            {
+                wheelAngleRot = -wheelAngleRot;
+            }
+
+            leftDoor.localRotation = leftDoorDefaultRotation;
+            rightDoor.localRotation = rightDoorDefaultRotation;
+            rearDoor.localRotation = rearDoorDefaultRotation;
+            rearDoorFlip.localRotation = rearDoorFlipDefaultRotation;
+            //update door rotations from animation state
+            leftDoor.Rotate(doorLeftRot, 0, 0, Space.Self);
+            rightDoor.Rotate(doorRightRot, 0, 0, Space.Self);
+            rearDoor.Rotate(doorRearRot, 0, 0, Space.Self);
+            rearDoorFlip.Rotate(0, 0, doorFlipRot, Space.Self);
+
+            suspensionContainer1.localRotation = sc1DefaultRotation;//user strut angle setting
+            wheelContainer.localRotation = wheelContainerDefaultRotation;//user wheel angle setting
+            wheelContainer.localPosition = wheelContainerDefaultPosition;//user strut extension setting
+            wheelContainer.transform.position -= wheelContainer.up * controller.scale * strutExtension * maxExtension * susTargetPos;
+            suspensionContainer1.Rotate(strutAngleRot, 0, 0, Space.Self);//user strut angle setting
+            if (isFlipped)
+            {
+                wheelContainer.Rotate(0, 180, 0, Space.Self);
+            }
+            wheelContainer.Rotate(0, 0, wheelAngleRot, Space.Self);
+            wheelContainer.Rotate(0, secStrutRot + wheel.steeringAngle, 0, Space.Self);
+            Vector3 p2 = wheelContainer.position - wheelContainer.up * (HighLogic.LoadedSceneIsFlight ? (wheel.length - wheel.compressionDistance) : (wheel.length * (1 - compTest)));
+            suspensionTarget.position = Vector3.Lerp(wheelContainer.position, p2, susTargetPos);
+            suspensionTarget.rotation = wheelContainer.rotation;
+            suspensionTarget.RotateAround(suspensionContainer1.position, sideMode? suspensionContainer1.right: suspensionContainer1.up, mainStrutRot);
+            suspensionTarget.Rotate(-bogeyAngleRot, 0, 0, Space.Self);
+            suspensionRotator.rotation = suspensionTarget.rotation;
+            suspensionRotator.Rotate(bogeyAngleRot, 0, 0, Space.Self);
+            suspensionRotator.LookAtLocked(suspensionContainer1.position, Vector3.up, Vector3.forward);
+
+            suspensionContainer2.localRotation = sc2DefaultRotation;
+            if (susTargetPos > 0)
+            {
+                suspensionContainer2.LookAtLocked(suspensionTarget.position, Vector3.back, Vector3.right);
             }
         }
+
+        private float lerp(float time, float pStart, float pEnd)
+        {
+            float p = pEnd - pStart;
+            float t = time - pStart;
+            return p <= 0 ? 0 : t / p;
+        }
+
+        #endregion ENDREGION - Custom Update Methods
 
     }
 }
