@@ -317,6 +317,8 @@ namespace KSPWheel
             base.OnStart(state);
             locateTransforms();
             Events[nameof(flip)].guiActiveEditor = allowFlip;
+            this.updateUIFloatRangeControl(nameof(strutRotation), strutRotation, minStrutAngle, maxStrutAngle, 0.5f);
+            this.updateUIFloatRangeControl(nameof(wheelRotation), wheelRotation, minWheelAngle, maxWheelAngle, 0.5f);
         }
 
         internal override void postWheelCreated()
