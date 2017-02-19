@@ -957,15 +957,14 @@ namespace KSPWheel
             sLat = calcLatSlip(localVelocity.z, localVelocity.x);
             vWheelDelta = vWheel - localVelocity.z;
 
-            float fLongMax = fwdFrictionCurve.evaluate(sLong) * (localForce.y + extSpringForce) * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
-            float fLatMax = sideFrictionCurve.evaluate(sLat) * (localForce.y + extSpringForce) * currentSideFrictionCoef * currentSurfaceFrictionCoef;
+            float downforce = localForce.y + extSpringForce;
+            float fLongMax = fwdFrictionCurve.evaluate(sLong) * downforce * currentFwdFrictionCoef * currentSurfaceFrictionCoef;
+            float fLatMax = sideFrictionCurve.evaluate(sLat) * downforce * currentSideFrictionCoef * currentSurfaceFrictionCoef;
             // TODO - this should actually be limited by the amount of force necessary to arrest the velocity of this wheel in this frame
             // so limit max should be (abs(vLat) * sprungMass) / Time.fixedDeltaTime  (in newtons)
             localForce.x = fLatMax;
             // using current down-force as a 'sprung-mass' to attempt to limit overshoot when bringing the velocity to zero
-            // TODO - may need to adjust the multiplier when arresting downward motion so as to not induce jitter, as at times it may be greater than the actual sprung mass
-            float fMult = 1f;
-            if (localForce.x > Mathf.Abs(localVelocity.x) * (localForce.y + extSpringForce) * fMult) { localForce.x = Mathf.Abs(localVelocity.x) * (localForce.y + extSpringForce) * fMult; }
+            if (localForce.x > Mathf.Abs(localVelocity.x) * downforce) { localForce.x = Mathf.Abs(localVelocity.x) * downforce; }
             // if (fLat > sprungMass * Mathf.Abs(vLat) / Time.fixedDeltaTime) { fLat = sprungMass * Mathf.Abs(vLat) * Time.fixedDeltaTime; }
             localForce.x *= -Mathf.Sign(localVelocity.x);// sign it opposite to the current vLat
 
@@ -997,7 +996,7 @@ namespace KSPWheel
                 currentAngularVelocity = 0;
                 wBrakeDelta -= Mathf.Abs(currentAngularVelocity);
                 float fMax = Mathf.Max(0, Mathf.Abs(fLongMax) - Mathf.Abs(localForce.z));//remaining 'max' traction left
-                float fMax2 = Mathf.Max(0, (localForce.y + extSpringForce) * Mathf.Abs(localVelocity.z) - Mathf.Abs(localForce.z));
+                float fMax2 = Mathf.Max(0, downforce * Mathf.Abs(localVelocity.z) - Mathf.Abs(localForce.z));
                 float fBrakeMax = Mathf.Min(fMax, fMax2);
                 localForce.z += fBrakeMax * -Mathf.Sign(localVelocity.z);
             }
