@@ -576,6 +576,10 @@ namespace KSPWheel
                 // where vqWorld is a quaternion with a vector component of the world velocity and w==0
                 // the output being a quaternion with vector component of the local velocity and w==0
                 Vector3 worldVelocityAtHit = rigidBody.GetPointVelocity(hitPoint);
+                if (hitCollider != null && hitCollider.attachedRigidbody != null)
+                {
+                    worldVelocityAtHit -= hitCollider.attachedRigidbody.GetPointVelocity(hitPoint);
+                }
                 float mag = worldVelocityAtHit.magnitude;
                 localVelocity.z = Vector3.Dot(worldVelocityAtHit.normalized, wF) * mag;
                 localVelocity.x = Vector3.Dot(worldVelocityAtHit.normalized, wR) * mag;
