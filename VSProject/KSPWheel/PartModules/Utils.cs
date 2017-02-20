@@ -518,6 +518,32 @@ namespace KSPWheel
             }
         }
 
+        public static void updateUIFloatRangeControl(this PartModule module, string fieldName, float newValue, float min, float max, float inc)
+        {
+            UI_FloatRange widget = null;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                widget = (UI_FloatRange)module.Fields[fieldName].uiControlEditor;
+            }
+            else if (HighLogic.LoadedSceneIsFlight)
+            {
+                widget = (UI_FloatRange)module.Fields[fieldName].uiControlFlight;
+            }
+            else
+            {
+                return;
+            }
+            if (widget == null)
+            {
+                return;
+            }
+            BaseField field = module.Fields[fieldName];
+            field.SetValue(newValue, field.host);
+            widget.minValue = min;
+            widget.maxValue = max;
+            widget.stepIncrement = inc;
+        }
+
         public static Rigidbody locateRigidbodyUpwards(Part part)
         {
             Rigidbody rb = null;

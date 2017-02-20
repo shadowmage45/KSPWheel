@@ -13,7 +13,7 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0.1f, maxValue = 1, stepIncrement = 0.01f, suppressEditorShipModified = true)]
         public float repulsorHeight = 1f;
 
-        [KSPField(guiName = "Repuslor Power", guiActiveEditor = false, guiActive = true, isPersistant = true),
+        [KSPField(guiName = "Repuslor Power", guiActiveEditor = true, guiActive = true, isPersistant = true),
          UI_Toggle(enabledText ="On", disabledText ="Off", suppressEditorShipModified = true)]
         public bool repulsorEnabled = true;
 
@@ -84,6 +84,47 @@ namespace KSPWheel
             {
                 m.repulsorHeight = repulsorHeight;
             });
+        }
+
+        [KSPAction(guiName = "Toggle Repulsor Power")]
+        public void repuslorPowerAction(KSPActionParam p)
+        {
+            repulsorEnabled = !repulsorEnabled;
+            if (repulsorEnabled)
+            {
+                changeWheelState(KSPWheelState.DEPLOYED);
+                curLen = 0.0001f;
+            }
+        }
+
+        [KSPAction(guiName = "Repulsor Power 20%")]
+        public void repuslorHeight20Action(KSPActionParam p)
+        {
+            repulsorHeight = 0.20f;
+        }
+
+        [KSPAction(guiName = "Repulsor Power 40%")]
+        public void repuslorHeight40Action(KSPActionParam p)
+        {
+            repulsorHeight = 0.40f;
+        }
+
+        [KSPAction(guiName = "Repulsor Power 60%")]
+        public void repuslorHeight60Action(KSPActionParam p)
+        {
+            repulsorHeight = 0.60f;
+        }
+
+        [KSPAction(guiName = "Repulsor Power 80%")]
+        public void repuslorHeight80Action(KSPActionParam p)
+        {
+            repulsorHeight = 0.80f;
+        }
+
+        [KSPAction(guiName = "Repulsor Power 100%")]
+        public void repuslorHeight100Action(KSPActionParam p)
+        {
+            repulsorHeight = 1.00f;
         }
 
         public override void OnStart(StartState state)

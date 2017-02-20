@@ -11,7 +11,7 @@ namespace KSPWheel
         /// Name of the transform that will be rotated for visual steering effect
         /// </summary>
         [KSPField]
-        public string steeringName = "steering";
+        public string steeringName = string.Empty;
         
         /// <summary>
         /// Maximum deflection angle of the steering transform, measured from its default state (rotation = 0,0,0)
@@ -130,8 +130,11 @@ namespace KSPWheel
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
-            steeringTransform = part.transform.FindChildren(steeringName)[wheelData.indexInDuplicates];
-            defaultRotation = steeringTransform.localRotation;
+            if (!string.IsNullOrEmpty(steeringName))
+            {
+                steeringTransform = part.transform.FindChildren(steeringName)[wheelData.indexInDuplicates];
+                defaultRotation = steeringTransform.localRotation;
+            }
             if (steeringCurve == null || steeringCurve.Curve.length == 0)
             {
                 steeringCurve = new FloatCurve();

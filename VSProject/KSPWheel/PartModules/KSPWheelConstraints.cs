@@ -81,19 +81,24 @@ namespace KSPWheel.PartModules
             string[] moverSplit = moverDef.Split(',');
             string moverName = moverSplit[0];
             int moverIndex = moverSplit.Length >= 2 ? int.Parse(moverSplit[1]) : 0;
-            mover = part.transform.FindChildren(moverName)[moverIndex];
 
             string targetDef = node.GetStringValue("target");
             string[] targetSplit = targetDef.Split(',');
             string targetName = targetSplit[0];
             int targetIndex = targetSplit.Length >= 2 ? int.Parse(targetSplit[1]) : 0;
-            target = part.transform.FindChildren(targetName)[targetIndex];
 
-            if (target == null || mover == null)
+            try
             {
-                MonoBehaviour.print("ERROR SETTING UP CONSTRAINT.  Either mover or target was null for definitions: " + moverDef + " :: " + targetDef+".\n"+
-                    "Please check your definitions and correct the error in the model or config.");
+                mover = part.transform.FindChildren(moverName)[moverIndex];
+                target = part.transform.FindChildren(targetName)[targetIndex];
             }
+            catch (Exception e)
+            {
+                MonoBehaviour.print("ERROR SETTING UP CONSTRAINT.  Either mover or target was null for definitions: " + moverDef + " :: " + targetDef + ".\n" +
+                    "Please check your definitions and correct the error in the model or config.");
+                throw e;
+            }
+
             try
             {
                 type = (ConstraintType)Enum.Parse(typeof(ConstraintType), node.GetStringValue("type", "POSITION"), true);
@@ -162,7 +167,7 @@ namespace KSPWheel.PartModules
 
         private void updateRotation()
         {
-            mover.localRotation = target.rotation;
+            mover.rotation = target.rotation;
         }
 
         private void updateLookFree()
