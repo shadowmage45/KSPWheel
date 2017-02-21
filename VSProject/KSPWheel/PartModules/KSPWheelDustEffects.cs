@@ -58,10 +58,10 @@ namespace KSPWheel
         public float dustMaxSize = 1f;
 
         [KSPField]
-        public float dustMinEmission = 1f;
+        public float dustMinEmission = 50f;
 
         [KSPField]
-        public float dustMaxEmission = 10f;
+        public float dustMaxEmission = 500f;
 
         [KSPField]
         public float dustMinEnergy = 0.1f;
@@ -126,6 +126,15 @@ namespace KSPWheel
         private void onGamePause()
         {
             gamePaused = true;
+            if (dustEmitters != null)
+            {
+                int len = dustEmitters.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    dustEmitters[i].emit = false;
+                    waterEmitters[i].emit = false;
+                }
+            }
         }
 
         private void onGameUnpause()
@@ -168,17 +177,20 @@ namespace KSPWheel
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || wheel==null) { return; }
-            if (controller.wheelState != KSPWheelState.DEPLOYED) { return; }
-            bool enabled = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustEffects;
-            if (!enabled) { return; }
-            if (!setupEmitters) { setupDustEmitters(); }
+            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || wheel==null || gamePaused || controller.wheelState != KSPWheelState.DEPLOYED || !HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustEffects)
+            {
+                return;
+            }
+            if (!setupEmitters)
+            {
+                setupEmitters = true;
+                setupDustEmitters();
+            }
             updateDustEmission();
         }
 
         private void setupDustEmitters()
         {
-            setupEmitters = true;
             //one dust and one water effect emitter per wheel collider ..
             int len = controller.wheelData.Length;
             dustObjects = new GameObject[len];
@@ -224,7 +236,6 @@ namespace KSPWheel
 
         private void updateDustEmission()
         {
-            if (gamePaused) { return; }//game paused...
             int len = dustObjects.Length;
             if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustCamera)
             {
@@ -248,11 +259,6 @@ namespace KSPWheel
                 }
                 colorUpdateTimer -= Time.deltaTime;
             }
-            if (dustPower <= 0)
-            {
-                //early out, no need to compute anything, dust is effectively disabled
-                return;
-            }
             KSPWheelCollider wheel;
             KSPWheelBase.KSPWheelData data;
             float springForce = 1f;
@@ -263,28 +269,38 @@ namespace KSPWheel
             {
                 data = controller.wheelData[i];
                 wheel = data.wheel;
-                if (data.waterMode)
+                if (dustPower <= 0)
                 {
-                    //TODO -- how to handle emission power
-                    //should be mostly based on vessel speed, with a secondary term for wheel velocity
-                    //but this needs to be handled a bit differently for repulsors, as they still need spring force
-                    springForce = wheel.springForce * 0.1f * dustForceMult * 2f;
-                    speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
-                    slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
-                    mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
-                    waterObjects[i].transform.position = wheel.worldHitPos;
+                    dustEmitters[i].emit = false;
+                    waterEmitters[i].emit = false;
+                }
+                else if (data.waterMode)
+                {
+                    springForce = data.waterEffectSize;
+                    mult = data.waterEffectForce * dustSpeedMult;
+                    waterObjects[i].transform.position = data.waterEffectPos;
                     waterObjects[i].transform.rotation = wheel.transform.rotation;
-                    waterEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
-                    waterEmitters[i].minEmission = dustMinEmission * dustPower;
-                    waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
-                    waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
-                    waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-                    waterEmitters[i].minSize = dustMinSize * springForce * dustPower * 2f;
-                    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower * 2f;
-                    waterEmitters[i].Emit();
+                    if (mult > 0)
+                    {
+                        waterEmitters[i].localVelocity = Vector3.up * mult;
+                        waterEmitters[i].minEmission = dustMinEmission * dustPower;
+                        waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
+                        waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
+                        waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
+                        waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
+                        waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+                        waterEmitters[i].emit = true;
+                    }
+                    else
+                    {
+                        waterEmitters[i].emit = false;
+                    }
+                    dustEmitters[i].emit = false;
                 }
                 else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
                 {
+                    dustEmitters[i].emit = true;
+                    waterEmitters[i].emit = false;
                     springForce = wheel.springForce * 0.1f * dustForceMult;
                     speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
                     slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
@@ -298,7 +314,11 @@ namespace KSPWheel
                     dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
                     dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
                     dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
-                    dustEmitters[i].Emit();
+                }
+                else
+                {
+                    dustEmitters[i].emit = false;
+                    waterEmitters[i].emit = false;
                 }
             }
         }
@@ -324,6 +344,7 @@ namespace KSPWheel
                 waterAnimators[i].colorAnimation = waterColorArray;
             }
         }
+
     }
 
     [KSPAddon(KSPAddon.Startup.Instantly, true)]

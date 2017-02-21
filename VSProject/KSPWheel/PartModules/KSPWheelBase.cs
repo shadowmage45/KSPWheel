@@ -932,6 +932,9 @@ namespace KSPWheel
             public Collider prevHit;
             public PhysicMaterial prevMat;
             public bool waterMode;
+            public float waterEffectForce;
+            public float waterEffectSize;
+            public Vector3 waterEffectPos;
 
             public KSPWheelData(ConfigNode node)
             {

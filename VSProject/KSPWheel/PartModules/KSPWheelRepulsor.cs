@@ -235,7 +235,7 @@ namespace KSPWheel
                     wheel.useExternalHit = true;
                     wheel.externalHitPoint = oceanHitPos;
                     wheel.externalHitNormal = surfaceNormal;
-                    wheelData.waterMode = true;
+                    wheelData.waterMode = false;
                     return;
                 }
 
@@ -282,6 +282,9 @@ namespace KSPWheel
                         wheel.externalHitNormal = surfaceNormal;
                         wheelData.waterMode = true;
                     }
+                    wheelData.waterEffectPos = oceanHitPos;
+                    wheelData.waterEffectSize = wheel.springForce * 0.1f;
+                    wheelData.waterEffectForce = wheel.wheelLocalVelocity.magnitude;
                 }
             }
         }
