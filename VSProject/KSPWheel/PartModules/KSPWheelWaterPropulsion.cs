@@ -10,22 +10,22 @@ namespace KSPWheel
     {
 
         [KSPField]
-        public float forceSpeedFactor = 1f;
+        public float forceSpeedFactor = 0.5f;
 
         [KSPField]
-        public float forceRadiusFactor = 1f;
+        public float forceRadiusFactor = 0.5f;
 
-        [KSPField(guiName ="SubD", guiActive = true)]
+        [KSPField(guiName = "SubD", guiActive = true)]
         public float submergedDepth = 0f;
 
         [KSPField(guiName = "SubP", guiActive = true)]
         public float submergedPercent = 0f;
 
-        [KSPField(guiName = "FrcO", guiActive = true)]
-        public float forceOutput = 0f;
-
         [KSPField(guiName = "FrcP", guiActive = true)]
         public float forcePercent = 0f;
+
+        [KSPField(guiName = "FrcO", guiActive = true, guiUnits = "kN")]
+        public float forceOutput = 0f;
 
         [KSPField(guiName = "Trq", guiActive = true)]
         public float torque = 0f;
@@ -70,14 +70,13 @@ namespace KSPWheel
                     inertiaTorque = wheel.angularVelocity * wheel.momentOfInertia;//torque over one second needed to completely arrest wheel velocity
                     inertiaForce = wheel.radius * inertiaTorque;//force over one second needed to completely arrest wheel velocity
 
-                    forceOutput = forceSpeedFactor * inertiaForce * forcePercent;
+                    forceOutput = forceSpeedFactor * forceRadiusFactor * forcePercent * wheel.radius * wheel.angularVelocity;
 
                     //need to slow the wheel by forceOutput
                     torque = forceOutput * radius;
-                    accel = (torque / wheel.momentOfInertia) * -Mathf.Sign(wheel.angularVelocity);
-                    accel *= Time.fixedDeltaTime;
-                    accel = Mathf.Clamp(accel, -wheel.angularVelocity, wheel.angularVelocity);//ensure it cannot drive the wheel backwards??
-                    wheel.angularVelocity += accel * Time.fixedDeltaTime;
+                    accel = (torque / wheel.momentOfInertia) * Time.fixedDeltaTime;
+                    accel = Mathf.Clamp(accel, -Mathf.Abs(wheel.angularVelocity), Mathf.Abs(wheel.angularVelocity));//ensure it cannot drive the wheel backwards??
+                    wheel.angularVelocity -= accel;
 
                     //calculate the point and direction of force application
                     surfaceNormal = vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
