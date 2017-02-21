@@ -15,36 +15,16 @@ namespace KSPWheel
         [KSPField]
         public float forceRadiusFactor = 0.5f;
 
-        [KSPField(guiName = "SubD", guiActive = true)]
-        public float submergedDepth = 0f;
-
-        [KSPField(guiName = "SubP", guiActive = true)]
-        public float submergedPercent = 0f;
-
-        [KSPField(guiName = "FrcP", guiActive = true)]
-        public float forcePercent = 0f;
-
-        [KSPField(guiName = "FrcO", guiActive = true, guiUnits = "kN")]
-        public float forceOutput = 0f;
-
-        [KSPField(guiName = "Trq", guiActive = true)]
-        public float torque = 0f;
-
-        [KSPField(guiName = "Wacc", guiActive = true)]
-        public float accel = 0f;
-
         internal override void postWheelPhysicsUpdate()
         {
             base.postWheelPhysicsUpdate();
-            submergedDepth = 0f;
-            submergedPercent = 0f;
             if (vessel.mainBody.ocean)
             {
                 int len = controller.wheelData.Length;
                 KSPWheelBase.KSPWheelData data;
                 KSPWheelCollider wheel;
                 Vector3 wheelPos, surfaceNormal, wheelSurfaceForward, wheelForward;
-                float radius, alt, depth, inertiaTorque, inertiaForce;
+                float radius, alt, depth, torque, accel, forceOutput, forcePercent, submergedPercent, submergedDepth;
                 for (int i = 0; i < len; i++)
                 {
                     data = controller.wheelData[i];
@@ -67,10 +47,7 @@ namespace KSPWheel
                     depth = Mathf.Abs(alt);
                     forcePercent = 1 - (depth / radius);
 
-                    inertiaTorque = wheel.angularVelocity * wheel.momentOfInertia;//torque over one second needed to completely arrest wheel velocity
-                    inertiaForce = wheel.radius * inertiaTorque;//force over one second needed to completely arrest wheel velocity
-
-                    forceOutput = forceSpeedFactor * forceRadiusFactor * forcePercent * wheel.radius * wheel.angularVelocity;
+                    forceOutput = forceSpeedFactor * forceRadiusFactor * forcePercent * radius * wheel.angularVelocity;
 
                     //need to slow the wheel by forceOutput
                     torque = forceOutput * radius;
@@ -86,7 +63,9 @@ namespace KSPWheel
                     wheelSurfaceForward = wheelForward - surfaceNormal * Vector3.Dot(wheelForward, surfaceNormal);
 
                     wheel.rigidbody.AddForceAtPosition(wheelSurfaceForward * forceOutput, wheelPos, ForceMode.Force);
-
+                    data.waterEffectPos = wheelPos - wheelSurfaceForward * radius * Mathf.Sign(forceOutput);
+                    data.waterEffectSize = Mathf.Abs(wheel.angularVelocity * radius) * 0.15f;
+                    data.waterEffectForce = Mathf.Abs(forceOutput) * 0.15f;
                 }
             }
         }

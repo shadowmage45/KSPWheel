@@ -960,6 +960,9 @@ namespace KSPWheel
             public float timeBoostFactor;
             public float prevComp;
             public bool waterMode;
+            public float waterEffectForce;
+            public float waterEffectSize;
+            public Vector3 waterEffectPos;
 
             public KSPWheelData(ConfigNode node)
             {
