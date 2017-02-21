@@ -261,13 +261,13 @@ namespace KSPWheel
             float speedForce = 1f;
             float slipForce = 1f;
             float mult = 0f;
-            float velocity = 0f;
             for (int i = 0; i < len; i++)
             {
                 data = controller.wheelData[i];
                 wheel = data.wheel;
                 if (data.waterMode)
                 {
+                    //TODO -- water-effects don't disable properly when wheel leaves water
                     springForce = data.waterEffectSize;
                     mult = data.waterEffectForce * dustSpeedMult;
                     waterObjects[i].transform.position = data.waterEffectPos;
