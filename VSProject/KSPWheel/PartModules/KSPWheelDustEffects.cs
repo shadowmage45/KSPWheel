@@ -58,10 +58,10 @@ namespace KSPWheel
         public float dustMaxSize = 1f;
 
         [KSPField]
-        public float dustMinEmission = 1f;
+        public float dustMinEmission = 50f;
 
         [KSPField]
-        public float dustMaxEmission = 10f;
+        public float dustMaxEmission = 500f;
 
         [KSPField]
         public float dustMinEnergy = 0.1f;
@@ -126,6 +126,15 @@ namespace KSPWheel
         private void onGamePause()
         {
             gamePaused = true;
+            if (dustEmitters != null)
+            {
+                int len = dustEmitters.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    dustEmitters[i].emit = false;
+                    waterEmitters[i].emit = false;
+                }
+            }
         }
 
         private void onGameUnpause()
@@ -174,6 +183,7 @@ namespace KSPWheel
             }
             if (!setupEmitters)
             {
+                setupEmitters = true;
                 setupDustEmitters();
             }
             updateDustEmission();
@@ -181,7 +191,6 @@ namespace KSPWheel
 
         private void setupDustEmitters()
         {
-            setupEmitters = true;
             //one dust and one water effect emitter per wheel collider ..
             int len = controller.wheelData.Length;
             dustObjects = new GameObject[len];
@@ -250,11 +259,6 @@ namespace KSPWheel
                 }
                 colorUpdateTimer -= Time.deltaTime;
             }
-            if (dustPower <= 0)
-            {
-                //early out, no need to compute anything, dust is effectively disabled
-                return;
-            }
             KSPWheelCollider wheel;
             KSPWheelBase.KSPWheelData data;
             float springForce = 1f;
@@ -265,9 +269,13 @@ namespace KSPWheel
             {
                 data = controller.wheelData[i];
                 wheel = data.wheel;
-                if (data.waterMode)
+                if (dustPower <= 0)
                 {
-                    //TODO -- water-effects don't disable properly when wheel leaves water
+                    dustEmitters[i].emit = false;
+                    waterEmitters[i].emit = false;
+                }
+                else if (data.waterMode)
+                {
                     springForce = data.waterEffectSize;
                     mult = data.waterEffectForce * dustSpeedMult;
                     waterObjects[i].transform.position = data.waterEffectPos;
@@ -281,11 +289,18 @@ namespace KSPWheel
                         waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
                         waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
                         waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
-                        waterEmitters[i].Emit();
+                        waterEmitters[i].emit = true;
                     }
+                    else
+                    {
+                        waterEmitters[i].emit = false;
+                    }
+                    dustEmitters[i].emit = false;
                 }
                 else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
                 {
+                    dustEmitters[i].emit = true;
+                    waterEmitters[i].emit = false;
                     springForce = wheel.springForce * 0.1f * dustForceMult;
                     speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
                     slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
@@ -299,7 +314,11 @@ namespace KSPWheel
                     dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
                     dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
                     dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
-                    dustEmitters[i].Emit();
+                }
+                else
+                {
+                    dustEmitters[i].emit = false;
+                    waterEmitters[i].emit = false;
                 }
             }
         }
