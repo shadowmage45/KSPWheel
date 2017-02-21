@@ -14,9 +14,6 @@ namespace KSPWheel
         [KSPField]
         public string bustedWheelName = "bustedWheel";
 
-        [KSPField]
-        public float persistentWear = 0f;
-
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Wheel Status: ")]
         public string displayStatus = "Operational";
 
@@ -28,7 +25,22 @@ namespace KSPWheel
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
         public float stressTime = 0f;
 
+        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Wheel Wear"),
+         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
+        public float wheelWear = 0f;
+
+        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Motor Wear"),
+         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
+        public float motorWear = 0f;
+
+        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Suspension Wear"),
+         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
+        public float suspensionWear = 0f;
+
         private float invulnerableTime = 0f;
+
+        private float[] defaultRollingResistance;//per wheel collider rolling resistance tracking
+        private float[] defaultMotorEfficiency;//per-motor-module efficiency tracking
         
         private Transform[] wheelMeshes;
         private Transform[] bustedWheelMeshes;
@@ -213,8 +225,10 @@ namespace KSPWheel
             Events[nameof(repairWheel)].guiActiveUnfocused = wheelState == KSPWheelState.BROKEN;
             Fields[nameof(loadStress)].guiActive = wearType != KSPWheelWearType.NONE;
             Fields[nameof(stressTime)].guiActive = wearType != KSPWheelWearType.NONE;
-            Fields[nameof(persistentWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
             Fields[nameof(displayStatus)].guiActive = wearType != KSPWheelWearType.NONE;
+            Fields[nameof(wheelWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
+            Fields[nameof(motorWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
+            Fields[nameof(suspensionWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
             switch (wheelState)
             {
                 case KSPWheelState.RETRACTED:
@@ -225,19 +239,6 @@ namespace KSPWheel
                     break;
                 case KSPWheelState.BROKEN:
                     displayStatus = "Broken";
-                    break;
-                default:
-                    break;
-            }
-
-            switch (wearType)
-            {
-                case KSPWheelWearType.NONE:
-                    break;
-                case KSPWheelWearType.SIMPLE:
-                    break;
-                case KSPWheelWearType.ADVANCED:
-                    displayStatus = displayStatus + " - " + (1 - persistentWear)+"%";
                     break;
                 default:
                     break;
