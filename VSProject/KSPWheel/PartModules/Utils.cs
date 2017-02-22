@@ -389,6 +389,20 @@ namespace KSPWheel
             }
         }
 
+        public static T[] getControllerSubmodules<T>(this KSPWheelSubmodule s) where T : KSPWheelSubmodule
+        {
+            List<T> modules = new List<T>();
+            int len = s.controller.subModules.Count;
+            for (int i = 0; i < len; i++)
+            {
+                if (s.controller.subModules[i].GetType() == typeof(T))
+                {
+                    modules.Add((T)s.controller.subModules[i]);
+                }
+            }
+            return modules.ToArray();
+        }
+
         public static void symmetryUpdate<T>(this T t, Action<T> act) where T : PartModule
         {
             act(t);
