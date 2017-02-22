@@ -78,7 +78,7 @@ namespace KSPWheel
         [KSPField]
         public float minLoadRating = 0.05f;
 
-        [KSPField(guiName = "Max Load", guiActive = false, guiActiveEditor = false)]
+        [KSPField]
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -410,9 +410,6 @@ namespace KSPWheel
 
             field = Fields[nameof(showControls)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onShowUIUpdated;
-
-            field = Fields[nameof(maxLoadRating)];
-            field.guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
 
             Fields[nameof(springRating)].uiControlFlight.onFieldChanged = onLoadUpdated;
 

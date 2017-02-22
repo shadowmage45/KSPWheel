@@ -74,8 +74,6 @@ namespace KSPWheel
         internal override void onUIControlsUpdated(bool show)
         {
             base.onUIControlsUpdated(show);
-            Fields[nameof(maxSafeSpeed)].guiActive = Fields[nameof(maxSafeSpeed)].guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
-            Fields[nameof(maxSafeLoad)].guiActive = Fields[nameof(maxSafeLoad)].guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
         }
 
         internal override void onScaleUpdated()
@@ -236,6 +234,8 @@ namespace KSPWheel
             Fields[nameof(stressTime)].guiActive = wearType != KSPWheelWearType.NONE;
             Fields[nameof(persistentWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
             Fields[nameof(displayStatus)].guiActive = wearType != KSPWheelWearType.NONE;
+            Fields[nameof(maxSafeSpeed)].guiActive = Fields[nameof(maxSafeSpeed)].guiActiveEditor = wearType != KSPWheelWearType.NONE;
+            Fields[nameof(maxSafeLoad)].guiActive = Fields[nameof(maxSafeLoad)].guiActiveEditor = wearType != KSPWheelWearType.NONE;
             switch (wheelState)
             {
                 case KSPWheelState.RETRACTED:
