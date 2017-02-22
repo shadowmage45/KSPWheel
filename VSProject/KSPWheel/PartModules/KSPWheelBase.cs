@@ -78,7 +78,7 @@ namespace KSPWheel
         [KSPField]
         public float minLoadRating = 0.05f;
 
-        [KSPField(guiName = "Max Load", guiActive = false, guiActiveEditor = false)]
+        [KSPField]
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -410,9 +410,6 @@ namespace KSPWheel
 
             field = Fields[nameof(showControls)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onShowUIUpdated;
-
-            field = Fields[nameof(maxLoadRating)];
-            field.guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType != KSPWheelWearType.NONE;
 
             Fields[nameof(springRating)].uiControlFlight.onFieldChanged = onLoadUpdated;
 
@@ -815,14 +812,15 @@ namespace KSPWheel
             if (HighLogic.CurrentGame != null)//should not happen for on start
             {
                 KSPWheelScaleSettings scales = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelScaleSettings>();
-                partMassScaleFactor = Mathf.Pow(scale, scales.partMassScalingPower);
-                partCostScaleFactor = Mathf.Pow(scale, scales.partCostScalingPower);
-                wheelMassScaleFactor = Mathf.Pow(scale, scales.wheelMassScalingPower);
-                wheelMaxLoadScalingFactor = Mathf.Pow(scale, scales.wheelMaxLoadScalingPower);
-                wheelMaxSpeedScalingFactor = Mathf.Pow(scale, scales.wheelMaxSpeedScalingPower);
-                motorMaxRPMScalingFactor = Mathf.Pow(scale, scales.motorMaxRPMScalingPower);
-                motorPowerScalingFactor = Mathf.Pow(scale, scales.motorPowerScalingPower);
-                motorTorqueScalingFactor = Mathf.Pow(scale, scales.motorTorqueScalingPower);
+                float localScale = scale * part.rescaleFactor;
+                partMassScaleFactor = Mathf.Pow(localScale, scales.partMassScalingPower);
+                partCostScaleFactor = Mathf.Pow(localScale, scales.partCostScalingPower);
+                wheelMassScaleFactor = Mathf.Pow(localScale, scales.wheelMassScalingPower);
+                wheelMaxLoadScalingFactor = Mathf.Pow(localScale, scales.wheelMaxLoadScalingPower);
+                wheelMaxSpeedScalingFactor = Mathf.Pow(localScale, scales.wheelMaxSpeedScalingPower);
+                motorMaxRPMScalingFactor = Mathf.Pow(localScale, scales.motorMaxRPMScalingPower);
+                motorPowerScalingFactor = Mathf.Pow(localScale, scales.motorPowerScalingPower);
+                motorTorqueScalingFactor = Mathf.Pow(localScale, scales.motorTorqueScalingPower);
             }
             int len = subModules.Count;
             for (int i = 0; i < len; i++)

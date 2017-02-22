@@ -14,15 +14,21 @@ namespace KSPWheel
         [KSPField]
         public string bustedWheelName = "bustedWheel";
 
+        [KSPField(guiName= "Max Safe Speed",guiActive = true, guiActiveEditor = true, guiUnits ="m/s", guiFormat = "F2")]
+        public float maxSafeSpeed = 0f;
+
+        [KSPField(guiName = "Max Safe Load", guiActive = true, guiActiveEditor = true, guiUnits = "t", guiFormat = "F2")]
+        public float maxSafeLoad = 0f;
+
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Wheel Status: ")]
         public string displayStatus = "Operational";
 
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Wheel Stress"),
-         UI_ProgressBar(minValue = 0, maxValue = 1.5f, suppressEditorShipModified = true)]
+         UI_ProgressBar(minValue = 0, maxValue = 1.5f, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float loadStress = 0f;
 
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Failure Time"),
-         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true)]
+         UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float stressTime = 0f;
 
         [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Wheel Wear"),
@@ -77,6 +83,18 @@ namespace KSPWheel
             }
         }
 
+        internal override void onUIControlsUpdated(bool show)
+        {
+            base.onUIControlsUpdated(show);
+        }
+
+        internal override void onScaleUpdated()
+        {
+            base.onScaleUpdated();
+            maxSafeSpeed = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
+            maxSafeLoad = controller.maxLoadRating * controller.wheelMaxLoadScalingFactor;
+        }
+
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
@@ -90,6 +108,7 @@ namespace KSPWheel
             }
             updateWheelMeshes();
             updateDisplayState();
+            onScaleUpdated();
         }
 
         internal override void postWheelPhysicsUpdate()
@@ -129,7 +148,7 @@ namespace KSPWheel
             {
                 load += controller.wheelData[i].wheel.springForce / 10f;
             }
-            float maxLoad = controller.maxLoadRating * controller.wheelMaxLoadScalingFactor;
+            float maxLoad = maxSafeLoad;
             loadStress = load / maxLoad;
             if (load > maxLoad)
             {
@@ -137,7 +156,7 @@ namespace KSPWheel
                 stressTime += Time.fixedDeltaTime * overStress * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().stressDamageMultiplier * 0.25f;
             }
 
-            float maxSpeed = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
+            float maxSpeed = maxSafeSpeed;
             float speed = Mathf.Abs( wheel.linearVelocity );
             if (speed > maxSpeed )
             {
@@ -229,6 +248,8 @@ namespace KSPWheel
             Fields[nameof(wheelWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
             Fields[nameof(motorWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
             Fields[nameof(suspensionWear)].guiActive = wearType == KSPWheelWearType.ADVANCED;
+            Fields[nameof(maxSafeSpeed)].guiActive = Fields[nameof(maxSafeSpeed)].guiActiveEditor = wearType != KSPWheelWearType.NONE;
+            Fields[nameof(maxSafeLoad)].guiActive = Fields[nameof(maxSafeLoad)].guiActiveEditor = wearType != KSPWheelWearType.NONE;
             switch (wheelState)
             {
                 case KSPWheelState.RETRACTED:
