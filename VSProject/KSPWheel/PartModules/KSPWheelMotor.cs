@@ -129,6 +129,9 @@ namespace KSPWheel
         private float minInputPower = 0f;
         private float powerConversion = 65f;
 
+        private static float rpmToRad = 0.104719755f;
+        private static float radToRPM = 1 / 0.104719755f;
+
         public void onMotorInvert(BaseField field, System.Object obj)
         {
             if (HighLogic.LoadedSceneIsEditor && part.symmetryCounterparts.Count == 1)
@@ -149,7 +152,7 @@ namespace KSPWheel
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
                 m.gearRatio = gearRatio;
-                m.updateMotorStats();
+                m.calcPowerStats();
                 m.updateUIFloatEditControl(nameof(m.gearRatio), m.gearRatio);
             });
         }
@@ -223,7 +226,6 @@ namespace KSPWheel
             ConfigNode config = GameDatabase.Instance.GetConfigNodes("KSPWHEELCONFIG")[0];
             powerConversion = config.GetFloatValue("powerConversion", 65f);
             calcPowerStats();
-            updateMotorStats();
         }
 
         internal override string getModuleInfo()
@@ -239,6 +241,7 @@ namespace KSPWheel
         internal override void onScaleUpdated()
         {
             base.onScaleUpdated();
+            calcPowerStats();
         }
 
         internal override void onUIControlsUpdated(bool show)
@@ -294,17 +297,6 @@ namespace KSPWheel
             powerEff = (powerInKW <= 0 ? 0 : powerOutKW / powerInKW)*100f;
         }
 
-        private void updateMotorStats()
-        {
-            float scale = part.rescaleFactor * controller.scale;
-            float radius = wheelData.scaledRadius(scale);
-            float rpm = maxRPM / gearRatio;
-            float rps = rpm / 60;
-            float circ = radius * 2 * Mathf.PI;
-            float ms = rps * circ;
-            maxDrivenSpeed = ms;
-        }
-
         protected void integrateMotorEuler(float fI, float motorRPM)
         {
             motorRPM = Mathf.Abs(motorRPM);
@@ -347,7 +339,7 @@ namespace KSPWheel
         protected float calcRawTorque(float fI, float motorRPM)
         {
             motorRPM = Mathf.Abs(motorRPM);
-            float maxRPM = this.maxRPM * controller.motorMaxRPMScalingFactor;
+            float maxRPM = this.scaledMaxRPM;
             motorRPM = Mathf.Clamp(motorRPM, 0, maxRPM);
             float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
             float outputTorque = curveOut * maxMotorTorque * fI * controller.motorTorqueScalingFactor;
@@ -382,14 +374,14 @@ namespace KSPWheel
             peakOutputPower = ((scaledMaxRPM * 0.5f) * rpmToRad) * (scaledMaxTorque * 0.5f);
 
             //this is not actually 'mid-point power', but an interim value used with the power correction factor to determine the actual power use for any given RPM
-            powerMidpoint = 1 / motorEfficiency * peakOutputPower;
+            powerMidpoint = 1f / motorEfficiency * peakOutputPower;
 
-            peakInputPower = 1 * powerMidpoint * powerCorrection;
+            peakInputPower = 1f * powerMidpoint * powerCorrection;
             minInputPower = motorPowerFactor * powerMidpoint * powerCorrection;
-        }
 
-        private static float rpmToRad = 0.104719755f;
-        private static float radToRPM = 1 / 0.104719755f;
+            float radius = wheelData.scaledRadius(part.rescaleFactor * controller.scale);
+            maxDrivenSpeed = radius * (scaledMaxRPM / gearRatio) * rpmToRad;
+        }
 
         protected float wheelRPMIntegration(float rpm, float wm, float torque, float deltaTime)
         {

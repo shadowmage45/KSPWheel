@@ -410,7 +410,7 @@ namespace KSPWheel
         {
             if (wheelGroup <= 0)
             {
-                act.Invoke(t);
+                act(t);
                 return;
             }
             try
@@ -421,7 +421,21 @@ namespace KSPWheel
                     int len = t.part.vessel.Parts.Count;
                     for (int i = 0; i < len; i++)
                     {
+                        //TODO -- accomodate multiple base modules on a part, query the submodules belonging to that base module
                         KSPWheelBase baseModule = t.part.vessel.Parts[i].GetComponent<KSPWheelBase>();
+                        if (baseModule == null) { continue; }
+                        if (int.Parse(baseModule.wheelGroup) == wheelGroup)
+                        {
+                            subModules.AddRange(baseModule.part.GetComponents<T>());
+                        }
+                    }
+                }
+                else
+                {
+                    int len = EditorLogic.fetch.ship.Parts.Count;
+                    for (int i = 0; i < len; i++)
+                    {
+                        KSPWheelBase baseModule = EditorLogic.fetch.ship.Parts[i].GetComponent<KSPWheelBase>();
                         if (baseModule == null) { continue; }
                         if (int.Parse(baseModule.wheelGroup) == wheelGroup)
                         {
@@ -432,7 +446,7 @@ namespace KSPWheel
                 int len2 = subModules.Count;
                 for (int i = 0; i < len2; i++)
                 {
-                    act.Invoke(subModules[i]);
+                    act(subModules[i]);
                 }
             }
             catch (Exception e)

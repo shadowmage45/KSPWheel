@@ -15,6 +15,9 @@ namespace KSPWheel
         [KSPField]
         public float forceRadiusFactor = 0.5f;
 
+        [KSPField]
+        public float maxSubmerged = 0.5f;
+
         internal override void postWheelPhysicsUpdate()
         {
             base.postWheelPhysicsUpdate();
@@ -37,16 +40,24 @@ namespace KSPWheel
                     {
                         return;
                     }
-                    else if (alt < -radius)//fully submerged, net force output is zero (but should add a torque?)
+                    else if (maxSubmerged < 1f && alt < -radius)//fully submerged, net force output is zero (but should add a torque?)
                     {
                         return;
                     }
                     data.waterMode = true;
-                    submergedDepth = radius - alt;
-                    submergedPercent = submergedDepth / (radius * 2f);
                     depth = Mathf.Abs(alt);
-                    forcePercent = 1 - (depth / radius);
+                    submergedDepth = radius - alt;
+                    submergedPercent = Mathf.Clamp01(submergedDepth / (radius * 2f));
 
+                    if (submergedPercent <= maxSubmerged)
+                    {
+                        forcePercent = submergedPercent / maxSubmerged;
+                    }
+                    else
+                    {
+                        forcePercent = 1 - ((submergedPercent / maxSubmerged) - 1);
+                    }
+                    forcePercent = Mathf.Clamp01(forcePercent);
                     forceOutput = forceSpeedFactor * forceRadiusFactor * forcePercent * radius * wheel.angularVelocity;
 
                     //need to slow the wheel by forceOutput
