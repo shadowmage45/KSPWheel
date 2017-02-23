@@ -81,6 +81,10 @@ namespace KSPWheel
         [KSPField]
         public float maxLoadRating = 5f;
 
+        [KSPField(guiName = "Suspension Length", guiActive = true, guiActiveEditor = true, isPersistant = true, advancedTweakable = true),
+         UI_FloatRange(minValue = 0.0f, maxValue = 1.0f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+        public float suspensionLength = 1.0f;
+
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0.0f, maxValue = 1.0f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
         public float springRating = 0.5f;
@@ -107,6 +111,9 @@ namespace KSPWheel
 
         [KSPField]
         public float groundHeightOffset = 0f;
+
+        [KSPField]
+        public bool allowLengthAdjust = true;
 
         [KSPField]
         public bool allowScaling = true;
@@ -195,6 +202,8 @@ namespace KSPWheel
         [SerializeField]
         private float prevScale = 1f;
 
+        private float currentSuspensionLength = 1f;
+
         private bool advancedMode = false;
 
         private bool initializedWheels = false;
@@ -243,6 +252,14 @@ namespace KSPWheel
             });
         }
 
+        //public void suspensionLengthUpdated(BaseField field, object obj)
+        //{
+        //    this.symmetryUpdate(m => 
+        //    {
+        //        m.suspensionLength = suspensionLength;
+        //    });
+        //}
+
         public void onShowUIUpdated(BaseField field, object obj)
         {
             int len = subModules.Count;
@@ -253,6 +270,7 @@ namespace KSPWheel
 
             Fields[nameof(suspensionTarget)].guiActive = Fields[nameof(suspensionTarget)].guiActiveEditor = showControls && advancedMode;
             Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls && advancedMode;
+            Fields[nameof(suspensionLength)].guiActive = Fields[nameof(suspensionLength)].guiActiveEditor = showControls;
             Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode;
             Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls;
             Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls;
@@ -451,6 +469,7 @@ namespace KSPWheel
             {
                 Utils.setPartColliderField(part);
             }
+            currentSuspensionLength = suspensionLength;
             initializeScaling();
 
             if (customCollisionMaterial == null)
@@ -467,7 +486,7 @@ namespace KSPWheel
             for (int i = 0; i < count; i++)
             {
                 wheelData[i].locateTransform(part.transform);
-                wheelData[i].setupWheel(null, raycastMask, part.rescaleFactor * scale);
+                wheelData[i].setupWheel(null, raycastMask, part.rescaleFactor * scale, currentSuspensionLength);
                 if (HighLogic.LoadedSceneIsFlight)
                 {
                     CollisionManager.IgnoreCollidersOnVessel(vessel, wheelData[i].bumpStopCollider);
@@ -561,6 +580,14 @@ namespace KSPWheel
                 {
                     updateSuspension();
                 }
+                if (currentSuspensionLength != suspensionLength)
+                {
+                    currentSuspensionLength = Mathf.MoveTowards(currentSuspensionLength, suspensionLength, Time.fixedDeltaTime);
+                    for (int i = 0; i < len; i++)
+                    {
+                        wheelData[i].wheel.length = wheelData[i].suspensionTravel * scale * part.rescaleFactor * currentSuspensionLength;
+                    }
+                }
                 for (int i = 0; i < subLen; i++)
                 {
                     subModules[i].preWheelPhysicsUpdate();
@@ -573,7 +600,7 @@ namespace KSPWheel
                     wheel.updateWheel();
                     if (wheel.contactColliderHit != null)
                     {
-                        //TODO -- does grabbing a physics material result in a per-tick allocation like rendering materials does?
+                        //TODO -- keep an eye on this, as it may case side effects with other collisions
                         PhysicMaterial pm = wheel.contactColliderHit.material;
                         if (pm == null) { wheel.contactColliderHit.material = customCollisionMaterial; }
                         pm.frictionCombine = PhysicMaterialCombine.Multiply;
@@ -715,7 +742,6 @@ namespace KSPWheel
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
                 data.wheel.externalSpringForce = data.colliderData.collisionForce;
-                if (data.wheel.contactColliderHit != null) { data.wheel.contactColliderHit.material = customCollisionMaterial; }
             }
             if (wheelRepairTimer < 1)
             {
@@ -953,14 +979,14 @@ namespace KSPWheel
                 GameObject.Destroy(wc);
             }
 
-            public void setupWheel(Rigidbody rb, int raycastMask, float scaleFactor)
+            public void setupWheel(Rigidbody rb, int raycastMask, float scaleFactor, float lengthScalar)
             {
                 wheelTransform.position += wheelTransform.up * offset * scaleFactor;
                 wheel = wheelTransform.gameObject.AddComponent<KSPWheelCollider>();
                 wheel.rigidbody = rb;
                 wheel.radius = scaledRadius(scaleFactor);
                 wheel.mass = scaledMass(scaleFactor);
-                wheel.length = scaledLength(scaleFactor);
+                wheel.length = scaledLength(scaleFactor) * lengthScalar;
                 wheel.raycastMask = raycastMask;
 
                 if (HighLogic.LoadedSceneIsFlight)

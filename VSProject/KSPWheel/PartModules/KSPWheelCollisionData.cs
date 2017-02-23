@@ -11,6 +11,8 @@ namespace KSPWheel
 
         public Collider monitoredCollider;
         public float collisionForce;
+        public Vector3 collisionPoint;
+        public Vector3 surfaceNormal;
 
         public void OnCollisionEnter(Collision c)
         {
@@ -39,6 +41,7 @@ namespace KSPWheel
         private void updateCollisionForce(Collision c)
         {
             collisionForce = c.impulse.magnitude / Time.fixedDeltaTime;
+            collisionPoint = c.contacts[0].point;
         }
 
         private bool isMonitoredCollision(Collision c)
