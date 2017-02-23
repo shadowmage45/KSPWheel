@@ -125,6 +125,9 @@ namespace KSPWheel
         public string scalingTransform = string.Empty;
 
         [KSPField]
+        public bool scaleDragCubes = true;
+
+        [KSPField]
         public float forwardFriction = 1f;
 
         [KSPField]
@@ -524,7 +527,10 @@ namespace KSPWheel
                     {
                         part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
                     }
-                    updateDragCubes(1, scale);
+                    if (scaleDragCubes)
+                    {
+                        updateDragCubes(1, scale);
+                    }
                 }
             }
 

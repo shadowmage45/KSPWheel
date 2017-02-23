@@ -179,6 +179,9 @@ namespace KSPWheel
         private SphereCollider tempCollider;
 
         private KSPWheelSteering steering;
+
+        //initialize to negative value to force drag cube updating on first update tick
+        private float prevDragUpdateState = -1f;
         
 
         /// <summary>
@@ -341,6 +344,7 @@ namespace KSPWheel
                 CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
             }
             steering = part.GetComponent<KSPWheelSteering>();
+            controller.scaleDragCubes = false;
             updateAnimation(0f);//force update the animation based on current time
         }
 
@@ -376,6 +380,11 @@ namespace KSPWheel
                 if (steering != null)
                 {
                     steering.maxSteeringAngle = Mathf.Abs(wheelRotation) < 0.25f ? maxSteeringAngle : 0;
+                }
+                if ((prevDragUpdateState > animTime ? prevDragUpdateState - animTime : animTime - prevDragUpdateState) > 0.1f)
+                {
+                    updateDragCube();
+                    part.SendMessage("GeometryPartModuleRebuildMeshData");
                 }
             }
         }
@@ -587,6 +596,26 @@ namespace KSPWheel
             float p = pEnd - pStart;
             float t = time - pStart;
             return p <= 0 ? 0 : t / p;
+        }
+
+        private void updateDragCube()
+        {
+            if (!FlightDriver.fetch || FlightGlobals.ready)
+            {
+                return;
+            }
+            FlightIntegrator fi = vessel.GetComponent<FlightIntegrator>();
+            if (fi == null || !fi.firstFrame)
+            {
+                return;
+            }
+            prevDragUpdateState = animationTime;
+            DragCube newDefaultCube = DragCubeSystem.Instance.RenderProceduralDragCube(part);
+            newDefaultCube.Weight = 1f;
+            newDefaultCube.Name = "Default";
+            part.DragCubes.ClearCubes();
+            part.DragCubes.Cubes.Add(newDefaultCube);
+            part.DragCubes.ResetCubeWeights();
         }
 
         #endregion ENDREGION - Custom Update Methods
