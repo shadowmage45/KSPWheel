@@ -35,6 +35,8 @@ namespace KSPWheel
             if (isMonitoredCollision(c))
             {
                 collisionForce = 0f;
+                collisionPoint = monitoredCollider.transform.position;
+                surfaceNormal = Vector3.up;
             }
         }
 
@@ -42,6 +44,7 @@ namespace KSPWheel
         {
             collisionForce = c.impulse.magnitude / Time.fixedDeltaTime;
             collisionPoint = c.contacts[0].point;
+            surfaceNormal = (collisionPoint - monitoredCollider.transform.position).normalized;
         }
 
         private bool isMonitoredCollision(Collision c)
