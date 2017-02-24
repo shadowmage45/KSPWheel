@@ -376,13 +376,17 @@ namespace KSPWheel
             updateAnimation(animTime);
             if (HighLogic.LoadedSceneIsFlight)
             {
+                //TODO clean this up to be state driven instead of set every tick
                 tempCollider.gameObject.SetActive(controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING);
+                CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
                 if (steering != null)
                 {
                     steering.maxSteeringAngle = Mathf.Abs(wheelRotation) < 0.25f ? maxSteeringAngle : 0;
                 }
-                if ((prevDragUpdateState > animTime ? prevDragUpdateState - animTime : animTime - prevDragUpdateState) > 0.1f)
+                float diff = prevDragUpdateState > animationTime ? prevDragUpdateState - animationTime : animationTime - prevDragUpdateState;
+                if (diff > 0.1f)
                 {
+                    //MonoBehaviour.print("Updating drag cube state: " + prevDragUpdateState + " :: " + animationTime+" :: "+diff);
                     updateDragCube();
                     part.SendMessage("GeometryPartModuleRebuildMeshData");
                 }
@@ -600,15 +604,18 @@ namespace KSPWheel
 
         private void updateDragCube()
         {
-            if (!FlightDriver.fetch || FlightGlobals.ready)
+            if (!FlightDriver.fetch || !FlightGlobals.ready)
             {
                 return;
             }
             FlightIntegrator fi = vessel.GetComponent<FlightIntegrator>();
-            if (fi == null || !fi.firstFrame)
+            if (fi == null || fi.firstFrame)
             {
                 return;
             }
+            //have to un-parent the bump-stop collider, else it is seen as a dangling collider in the model and causes incorrect drag cube calculation
+            //Transform p = wheelData.bumpStopGameObject.transform.parent;
+            //wheelData.bumpStopGameObject.transform.parent = null;
             prevDragUpdateState = animationTime;
             DragCube newDefaultCube = DragCubeSystem.Instance.RenderProceduralDragCube(part);
             newDefaultCube.Weight = 1f;
@@ -616,6 +623,9 @@ namespace KSPWheel
             part.DragCubes.ClearCubes();
             part.DragCubes.Cubes.Add(newDefaultCube);
             part.DragCubes.ResetCubeWeights();
+            part.DragCubes.ForceUpdate(true, true);
+            //wheelData.bumpStopGameObject.transform.parent = p;
+            //MonoBehaviour.print("Set new drag cube to part to: " + newDefaultCube);
         }
 
         #endregion ENDREGION - Custom Update Methods
