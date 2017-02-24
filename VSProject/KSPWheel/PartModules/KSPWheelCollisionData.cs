@@ -13,6 +13,7 @@ namespace KSPWheel
         public float collisionForce;
         public Vector3 collisionPoint;
         public Vector3 surfaceNormal;
+        public Collider hitCollider;
 
         public void OnCollisionEnter(Collision c)
         {
@@ -37,6 +38,7 @@ namespace KSPWheel
                 collisionForce = 0f;
                 collisionPoint = monitoredCollider.transform.position;
                 surfaceNormal = Vector3.up;
+                hitCollider = null;
             }
         }
 
@@ -44,7 +46,8 @@ namespace KSPWheel
         {
             collisionForce = c.impulse.magnitude / Time.fixedDeltaTime;
             collisionPoint = c.contacts[0].point;
-            surfaceNormal = (collisionPoint - monitoredCollider.transform.position).normalized;
+            surfaceNormal = (monitoredCollider.transform.position - collisionPoint).normalized;
+            hitCollider = c.contacts[0].thisCollider == monitoredCollider ? c.contacts[0].otherCollider : c.contacts[0].thisCollider;
         }
 
         private bool isMonitoredCollision(Collision c)

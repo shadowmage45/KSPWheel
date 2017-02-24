@@ -43,6 +43,7 @@ namespace KSPWheel
         private float extSpringForce = 0f;
         private Vector3 extHitPoint = Vector3.zero;
         private Vector3 extHitNorm = Vector3.up;
+        private Collider extHitCollider = null;
         private bool useExtHitPoint = false;
 
         private float rollingResistanceCoefficient = 0.005f;//tire-deformation based rolling-resistance; scaled by spring force, is a flat force that will be subtracted from wheel velocity every tick
@@ -436,6 +437,12 @@ namespace KSPWheel
             set { extHitNorm = value; }
         }
 
+        public Collider externalHitCollider
+        {
+            get { return extHitCollider; }
+            set { extHitCollider = value; }
+        }
+
         /// <summary>
         /// Get the calculated moment-of-inertia for the wheel
         /// </summary>
@@ -724,7 +731,7 @@ namespace KSPWheel
                 currentSuspensionCompression = suspensionLength + wheelRadius - dist;
                 hitNormal = extHitNorm;
                 hitPoint = extHitPoint;
-                hitCollider = null;
+                hitCollider = extHitCollider;
                 grounded = true;
                 return true;
             }

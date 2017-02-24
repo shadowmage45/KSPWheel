@@ -743,8 +743,16 @@ namespace KSPWheel
                 data.wheel.damper = damper;
                 data.wheel.externalSpringForce = data.colliderData.collisionForce;
                 data.wheel.useExternalHit = data.wheel.externalSpringForce > 0;
-                data.wheel.externalHitPoint = data.colliderData.collisionPoint;
-                data.wheel.externalHitNormal = data.colliderData.surfaceNormal;
+                if (data.wheel.useExternalHit)
+                {
+                    data.wheel.externalHitPoint = data.wheel.transform.position - data.wheel.transform.up * data.wheel.radius;
+                    data.wheel.externalHitNormal = data.colliderData.surfaceNormal;
+                    data.wheel.externalHitCollider = data.colliderData.hitCollider;
+                }
+                else
+                {
+                    data.wheel.externalHitCollider = null;
+                }
             }
             if (wheelRepairTimer < 1)
             {
