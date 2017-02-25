@@ -216,10 +216,13 @@ namespace KSPWheel
         {
             this.wheelGroupUpdateBase(int.Parse(wheelGroup), m =>
             {
-                m.loadRating = loadRating;
-                m.springRating = springRating;
-                m.suspensionTarget = suspensionTarget;
-                m.dampRatio = dampRatio;
+                if (m != this)
+                {
+                    m.loadRating = loadRating;
+                    m.springRating = springRating;
+                    m.suspensionTarget = suspensionTarget;
+                    m.dampRatio = dampRatio;
+                }
                 if (m.advancedMode && m.wheelData != null)
                 {
                     KSPWheelData wheel;
