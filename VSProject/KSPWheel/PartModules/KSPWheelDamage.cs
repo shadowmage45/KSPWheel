@@ -81,8 +81,12 @@ namespace KSPWheel
                             return;
                         }
                         changeWheelState(KSPWheelState.DEPLOYED);
+                        motorWear = 0f;
+                        wheelWear = 0f;
+                        suspensionWear = 0f;
                         invulnerableTime += 5f;
                         controller.wheelRepairTimer = 0.0001f;
+                        //TODO -- add a delay before repairing based on how damaged things were
                         break;
                     default:
                         break;
@@ -240,16 +244,19 @@ namespace KSPWheel
             }
 
             // -- ADVANCED MODE SPEED WEAR UPDATING --
-            float speedPercent = Mathf.Pow((speed / maxSafeSpeed),4);
-            wheelWear += speedPercent * Time.fixedDeltaTime;
-            len = controller.wheelData.Length;
-            for (int i = 0; i < len; i++)
+            float speedPercent = Mathf.Pow(Mathf.Max((speed / maxSafeSpeed) - 0.75f, 0), 4);
+            if (speedPercent > 0)
             {
-                controller.wheelData[i].wheel.rollingResistance = defaultRollingResistance[i] + defaultRollingResistance[i] * wheelWear;
+                wheelWear += speedPercent * Time.fixedDeltaTime * 0.05f;//should give ~80 minutes at max speed before wear hits 1.0
+                len = controller.wheelData.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    controller.wheelData[i].wheel.rollingResistance = defaultRollingResistance[i] + defaultRollingResistance[i] * wheelWear;
+                }
             }
 
             // -- ADVANCED MODE SUSPENSION WEAR UPDATING --
-            float loadpercent = Mathf.Pow((load / maxSafeLoad), 4);
+            float loadpercent = Mathf.Pow(Mathf.Max((load / maxSafeLoad) - 0.9f, 0), 2);
             suspensionWear += loadpercent * Time.fixedDeltaTime;
             suspensionWear = Mathf.Clamp01(suspensionWear);
             controller.wheelRepairTimer = 1f - suspensionWear;
@@ -312,7 +319,7 @@ namespace KSPWheel
         {
             KSPWheelState wheelState = controller.wheelState;
             KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
-            Events[nameof(repairWheel)].guiActiveUnfocused = wheelState == KSPWheelState.BROKEN;
+            Events[nameof(repairWheel)].guiActiveUnfocused = wheelState == KSPWheelState.BROKEN || wearType==KSPWheelWearType.ADVANCED;
             Fields[nameof(loadStress)].guiActive = wearType != KSPWheelWearType.NONE;
             Fields[nameof(stressTime)].guiActive = wearType != KSPWheelWearType.NONE;
             Fields[nameof(displayStatus)].guiActive = wearType != KSPWheelWearType.NONE;
