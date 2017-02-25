@@ -395,7 +395,7 @@ namespace KSPWheel
             int len = s.controller.subModules.Count;
             for (int i = 0; i < len; i++)
             {
-                if (s.controller.subModules[i].GetType() == typeof(T))
+                if (s.controller.subModules[i] is T)
                 {
                     modules.Add((T)s.controller.subModules[i]);
                 }
