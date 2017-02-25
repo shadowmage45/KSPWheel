@@ -282,6 +282,10 @@ namespace KSPWheel
                         rI = -rI;
                     }
                 }
+                if (Mathf.Sign(wheel.rpm) !=Mathf.Sign(rI) && rI != 0)//if rI is commanding the wheel to slow down, also apply brakes, inversely proportional to 
+                {
+                    wheel.brakeTorque += (1 - torqueCurve.Evaluate(Mathf.Abs(wheel.rpm * gearRatio) / scaledMaxRPM)) * scaledMaxTorque * Mathf.Abs(rI); ;
+                }
                 fI += rI;
             }
             fI = Mathf.Clamp(fI, -1, 1);
