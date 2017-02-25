@@ -14,6 +14,9 @@ namespace KSPWheel
         [KSPField]
         public string bustedWheelName = "bustedWheel";
 
+        [KSPField]
+        public int repairLevel = 3;
+
         [KSPField(guiName= "Max Safe Speed",guiActive = true, guiActiveEditor = true, guiUnits ="m/s", guiFormat = "F2")]
         public float maxSafeSpeed = 0f;
 
@@ -70,13 +73,16 @@ namespace KSPWheel
                         changeWheelState(KSPWheelState.DEPLOYED);
                         invulnerableTime += 5f;
                         controller.wheelRepairTimer = 0.0001f;
-                        //TODO check for engineer?
                         break;
                     case KSPWheelWearType.ADVANCED:
+                        if (HighLogic.CurrentGame.Parameters.CustomParams<GameParameters.AdvancedParams>().KerbalExperienceEnabled(HighLogic.CurrentGame.Mode) && FlightGlobals.ActiveVessel.VesselValues.RepairSkill.value < repairLevel)
+                        {
+                            ScreenMessages.PostScreenMessage("Crew member has insufficient repair skill to fix this "+controller.wheelType.ToLower()+"\nLevel " + repairLevel + " or higher is required.");
+                            return;
+                        }
                         changeWheelState(KSPWheelState.DEPLOYED);
                         invulnerableTime += 5f;
                         controller.wheelRepairTimer = 0.0001f;
-                        //TODO resource use, check for engineer, ??
                         break;
                     default:
                         break;
