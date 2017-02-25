@@ -19,10 +19,10 @@ namespace KSPWheel
         [KSPField]
         public int wheelIndex = 0;
 
-        protected KSPWheelBase controller;
-        protected Transform wheelTransform;
-        protected KSPWheelBase.KSPWheelData wheelData;
-        protected KSPWheelCollider wheel;
+        internal KSPWheelBase controller;
+        internal Transform wheelTransform;
+        internal KSPWheelBase.KSPWheelData wheelData;
+        internal KSPWheelCollider wheel;
 
         //public override void OnLoad(ConfigNode node)
         //{

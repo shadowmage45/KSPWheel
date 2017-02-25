@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using UnityEngine;
 
 namespace KSPWheel
@@ -175,11 +176,10 @@ namespace KSPWheel
         private Transform rearDoor;
         private Transform rearDoorFlip;
 
-        [SerializeField]
         private SphereCollider tempCollider;
 
-        private KSPWheelSteering steering;
-        
+        //initialize to negative value to force drag cube updating on first update tick
+        private float prevDragUpdateState = -1f;
 
         /// <summary>
         /// Cached default orientations and locations for the above transforms
@@ -218,11 +218,11 @@ namespace KSPWheel
                 switch (controller.wheelState)
                 {
                     case KSPWheelState.RETRACTED:
-                        changeWheelState(KSPWheelState.DEPLOYING);
+                        changeWheelState(KSPWheelState.DEPLOYING, true);
                         part.Effect(deployEffect, 1f);
                         break;
                     case KSPWheelState.RETRACTING:
-                        changeWheelState(KSPWheelState.DEPLOYING);
+                        changeWheelState(KSPWheelState.DEPLOYING, true);
                         part.Effect(deployEffect, 1f);
                         break;
                     default:
@@ -234,11 +234,11 @@ namespace KSPWheel
                 switch (controller.wheelState)
                 {
                     case KSPWheelState.DEPLOYED:
-                        changeWheelState(KSPWheelState.RETRACTING);
+                        changeWheelState(KSPWheelState.RETRACTING, true);
                         part.Effect(retractEffect, 1f);
                         break;
                     case KSPWheelState.DEPLOYING:
-                        changeWheelState(KSPWheelState.RETRACTING);
+                        changeWheelState(KSPWheelState.RETRACTING, true);
                         part.Effect(retractEffect, 1f);
                         break;
                     default:
@@ -255,19 +255,19 @@ namespace KSPWheel
                 switch (m.controller.wheelState)
                 {
                     case KSPWheelState.RETRACTED:
-                        m.changeWheelState(KSPWheelState.DEPLOYING);
+                        m.changeWheelState(KSPWheelState.DEPLOYING, true);
                         part.Effect(deployEffect, 1f);
                         break;
                     case KSPWheelState.RETRACTING:
-                        m.changeWheelState(KSPWheelState.DEPLOYING);
+                        m.changeWheelState(KSPWheelState.DEPLOYING, true);
                         part.Effect(deployEffect, 1f);
                         break;
                     case KSPWheelState.DEPLOYED:
-                        m.changeWheelState(KSPWheelState.RETRACTING);
+                        m.changeWheelState(KSPWheelState.RETRACTING, true);
                         part.Effect(retractEffect, 1f);
                         break;
                     case KSPWheelState.DEPLOYING:
-                        m.changeWheelState(KSPWheelState.RETRACTING);
+                        m.changeWheelState(KSPWheelState.RETRACTING, true);
                         part.Effect(retractEffect, 1f);
                         break;
                     case KSPWheelState.BROKEN:
@@ -330,17 +330,21 @@ namespace KSPWheel
                 //the 'symmetry counterpart' that exists should be the original part
                 this.isFlipped = !part.symmetryCounterparts[0].GetComponent<KSPWheelAdjustableGear>().isFlipped;
             }
-            if (HighLogic.LoadedSceneIsFlight && tempCollider == null)
+            if (HighLogic.LoadedSceneIsFlight)
             {
                 tempCollider = new GameObject("StandInCollider").AddComponent<SphereCollider>();
                 tempCollider.radius = wheel.radius;
                 tempCollider.gameObject.layer = 26;
                 tempCollider.transform.parent = suspensionTarget;
                 tempCollider.transform.position = wheel.transform.position;
-                tempCollider.gameObject.SetActive(HighLogic.LoadedSceneIsFlight && (controller.wheelState != KSPWheelState.DEPLOYED && controller.wheelState != KSPWheelState.BROKEN));
-                CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
+                CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);//have to run this before the collider is disabled
+                tempCollider.enabled = controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING;
+                KSPWheelSteering steering = part.GetComponent<KSPWheelSteering>();
+                if (steering != null)
+                {
+                    steering.maxSteeringAngle = Mathf.Abs(wheelRotation) < 0.25f ? maxSteeringAngle : 0;
+                }
             }
-            steering = part.GetComponent<KSPWheelSteering>();
             updateAnimation(0f);//force update the animation based on current time
         }
 
@@ -372,10 +376,13 @@ namespace KSPWheel
             updateAnimation(animTime);
             if (HighLogic.LoadedSceneIsFlight)
             {
-                tempCollider.gameObject.SetActive(controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING);
-                if (steering != null)
+                float time = animationTime;
+                part.DragCubes.SetCubeWeight("Retracted", 1f - time);
+                part.DragCubes.SetCubeWeight("Deployed", time);
+                float diff = prevDragUpdateState > animationTime ? prevDragUpdateState - animationTime : animationTime - prevDragUpdateState;
+                if (diff > 0.1f)
                 {
-                    steering.maxSteeringAngle = Mathf.Abs(wheelRotation) < 0.25f ? maxSteeringAngle : 0;
+                    part.SendMessage("GeometryPartModuleRebuildMeshData");
                 }
             }
         }
@@ -383,6 +390,16 @@ namespace KSPWheel
         #endregion ENDREGION - Standard KSP/Unity Overrides
 
         #region REGION - Custom Update Methods
+
+        internal override void onStateChanged(KSPWheelState oldState, KSPWheelState newState)
+        {
+            base.onStateChanged(oldState, newState);
+            tempCollider.enabled = newState == KSPWheelState.RETRACTING || newState == KSPWheelState.DEPLOYING;
+            if (tempCollider.enabled)
+            {
+                CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
+            }
+        }
 
         /// <summary>
         /// Locates all of the relevant transforms for this module, and sets up their default orientation/location cached values
@@ -437,7 +454,7 @@ namespace KSPWheel
                 animationTime = 0f;
                 if (controller.wheelState != KSPWheelState.RETRACTED)
                 {
-                    changeWheelState(KSPWheelState.RETRACTED);
+                    changeWheelState(KSPWheelState.RETRACTED, true);
                     part.Effect(retractedEffect);
                 }
                 mainStrutRot = mainStrutRetractedAngle;
@@ -520,7 +537,7 @@ namespace KSPWheel
                 animationTime = 1.0f;
                 if (controller.wheelState != KSPWheelState.DEPLOYED)
                 {
-                    changeWheelState(KSPWheelState.DEPLOYED);
+                    changeWheelState(KSPWheelState.DEPLOYED, true);
                     part.Effect(deployedEffect);
                 }
                 mainStrutRot = 0f;

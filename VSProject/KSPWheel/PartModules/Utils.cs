@@ -389,6 +389,20 @@ namespace KSPWheel
             }
         }
 
+        public static T[] getControllerSubmodules<T>(this KSPWheelSubmodule s) where T : KSPWheelSubmodule
+        {
+            List<T> modules = new List<T>();
+            int len = s.controller.subModules.Count;
+            for (int i = 0; i < len; i++)
+            {
+                if (s.controller.subModules[i] is T)
+                {
+                    modules.Add((T)s.controller.subModules[i]);
+                }
+            }
+            return modules.ToArray();
+        }
+
         public static void symmetryUpdate<T>(this T t, Action<T> act) where T : PartModule
         {
             act(t);
@@ -487,7 +501,6 @@ namespace KSPWheel
                 for (int i = 0; i < len2; i++)
                 {
                     act.Invoke(subModules[i]);
-                    MonoUtilities.RefreshContextWindows(subModules[i].part);
                 }
             }
             catch (Exception e)

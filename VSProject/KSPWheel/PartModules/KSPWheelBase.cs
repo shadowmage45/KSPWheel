@@ -86,11 +86,11 @@ namespace KSPWheel
         public float suspensionLength = 1.0f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.0f, maxValue = 1.0f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0.0f, maxValue = 1.0f, stepIncrement = 0.05f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
-        UI_FloatRange(minValue = 0.35f, maxValue = 1.0f, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+        UI_FloatRange(minValue = 0.35f, maxValue = 1.0f, stepIncrement = 0.025f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float dampRatio = 0.65f;
 
         [KSPField(guiName = "Wheel Group", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -98,10 +98,10 @@ namespace KSPWheel
         public string wheelGroup = "0";
 
         [KSPField]
-        public float minDampRatio = 0.05f;
+        public float minDampRatio = 0.35f;
 
         [KSPField]
-        public float maxDampRatio = 2f;
+        public float maxDampRatio = 1f;
 
         [KSPField]
         public float maxSpeed = 0f;
@@ -130,6 +130,9 @@ namespace KSPWheel
 
         [KSPField]
         public string scalingTransform = string.Empty;
+
+        [KSPField]
+        public bool scaleDragCubes = true;
 
         [KSPField]
         public float forwardFriction = 1f;
@@ -225,10 +228,13 @@ namespace KSPWheel
         {
             this.wheelGroupUpdateBase(int.Parse(wheelGroup), m =>
             {
-                m.loadRating = loadRating;
-                m.springRating = springRating;
-                m.suspensionTarget = suspensionTarget;
-                m.dampRatio = dampRatio;
+                if (m != this)
+                {
+                    m.loadRating = loadRating;
+                    m.springRating = springRating;
+                    m.suspensionTarget = suspensionTarget;
+                    m.dampRatio = dampRatio;
+                }
                 if (m.advancedMode && m.wheelData != null)
                 {
                     KSPWheelData wheel;
@@ -552,7 +558,10 @@ namespace KSPWheel
                     {
                         part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
                     }
-                    updateDragCubes(1, scale);
+                    if (scaleDragCubes)
+                    {
+                        updateDragCubes(1, scale);
+                    }
                     onStateChanged(currentWheelState);//updates bump-stop collider friction
                 }
             }

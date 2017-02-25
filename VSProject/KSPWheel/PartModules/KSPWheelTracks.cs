@@ -15,6 +15,9 @@ namespace KSPWheel
         [KSPField]
         public int trackDir = 1;
 
+        [KSPField]
+        public int smrIndex = 0;
+
         private float factorSum;
         private float[] shares;
         private SkinnedMeshRenderer smr;
@@ -26,7 +29,7 @@ namespace KSPWheel
         {
             base.postWheelCreated();
             if (HighLogic.LoadedSceneIsEditor) { return; }
-            smr = part.GetComponentInChildren<SkinnedMeshRenderer>();
+            smr = part.GetComponentsInChildren<SkinnedMeshRenderer>()[smrIndex];
             if (smr != null)
             {
                 mat = smr.material;
