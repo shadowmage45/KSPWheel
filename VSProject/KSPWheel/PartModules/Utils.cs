@@ -487,7 +487,6 @@ namespace KSPWheel
                 for (int i = 0; i < len2; i++)
                 {
                     act.Invoke(subModules[i]);
-                    MonoUtilities.RefreshContextWindows(subModules[i].part);
                 }
             }
             catch (Exception e)

@@ -82,11 +82,11 @@ namespace KSPWheel
         public float maxLoadRating = 5f;
 
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.2f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
+         UI_FloatRange(minValue = 0.2f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float springRating = 0.5f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
-        UI_FloatRange(minValue = 0.35f, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true)]
+        UI_FloatRange(minValue = 0.35f, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float dampRatio = 0.65f;
 
         [KSPField(guiName = "Wheel Group", guiActive = true, guiActiveEditor = true, isPersistant = true),
@@ -94,10 +94,10 @@ namespace KSPWheel
         public string wheelGroup = "0";
 
         [KSPField]
-        public float minDampRatio = 0.05f;
+        public float minDampRatio = 0.25f;
 
         [KSPField]
-        public float maxDampRatio = 2f;
+        public float maxDampRatio = 1f;
 
         [KSPField]
         public float maxSpeed = 0f;
