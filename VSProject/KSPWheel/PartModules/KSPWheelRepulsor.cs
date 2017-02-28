@@ -284,7 +284,7 @@ namespace KSPWheel
                     }
                     wheelData.waterEffectPos = oceanHitPos;
                     wheelData.waterEffectSize = wheel.springForce * 0.1f;
-                    wheelData.waterEffectForce = wheel.wheelLocalVelocity.magnitude;
+                    wheelData.waterEffectForce = Mathf.Clamp(wheel.wheelLocalVelocity.magnitude, 0, 40f) / 40f;
                 }
             }
         }
