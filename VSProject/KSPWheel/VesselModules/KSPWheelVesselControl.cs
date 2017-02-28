@@ -12,7 +12,6 @@ namespace KSPWheel
         private int id = 0;
         private Rect windowRect = new Rect(100, 100, 1024, 768);
         private Vector2 scrollPos;
-        private bool guiOpen = false;
         private bool guiInitialized = false;
         private List<KSPWheelBase> baseModules = new List<KSPWheelBase>();
 
@@ -35,18 +34,11 @@ namespace KSPWheel
             }
         }
 
-        public void OnGUI()
+        public void drawGUI()
         {
-            if (guiOpen)
+            if (vessel.isActiveVessel)
             {
-                if (vessel.isActiveVessel)
-                {
-                    drawControlGUI();
-                }
-                else
-                {
-                    guiOpen = false;
-                }
+                drawControlGUI();
             }
         }
 

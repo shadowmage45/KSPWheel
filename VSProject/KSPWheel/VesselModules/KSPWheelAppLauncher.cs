@@ -9,6 +9,9 @@ namespace KSPWheel
         private ApplicationLauncherButton debugAppButton;
         private ApplicationLauncherButton controlsAppButton;
 
+        private bool debugGuiOpen = false;
+        private bool controlGuiOpen = false;
+
         public void Awake()
         {
             Texture2D tex;
@@ -36,6 +39,26 @@ namespace KSPWheel
             }
             debugAppButton = null;
             controlsAppButton = null;
+        }
+
+        public void OnGUI()
+        {
+            if (debugGuiOpen)
+            {
+                FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
+                if (fi == null || fi.Vessel == null)
+                {
+                    fi.Vessel.GetComponent<KSPWheelVesselDebug>().drawGUI();
+                }
+            }
+            if (controlGuiOpen)
+            {
+                FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
+                if (fi == null || fi.Vessel == null)
+                {
+                    fi.Vessel.GetComponent<KSPWheelVesselControl>().drawGUI();
+                }
+            }
         }
 
         private void debugGuiEnable()

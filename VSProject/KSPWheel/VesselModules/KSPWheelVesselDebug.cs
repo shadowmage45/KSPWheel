@@ -8,7 +8,6 @@ namespace KSPWheel
         private int id = 0;
         private Rect windowRect = new Rect(100, 100, 640, 480);
         private Vector2 scrollPos;
-        private bool guiOpen = false;
         private bool guiInitialized = false;
         private bool debugRendering = false;
 
@@ -37,18 +36,11 @@ namespace KSPWheel
             }
         }
 
-        public void OnGUI()
+        public void drawGUI()
         {
-            if (guiOpen)
+            if (vessel.isActiveVessel)
             {
-                if (vessel.isActiveVessel)
-                {
-                    drawDebugGUI();
-                }
-                else
-                {
-                    guiOpen = false;
-                }
+                drawDebugGUI();
             }
         }
 
