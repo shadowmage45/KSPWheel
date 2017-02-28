@@ -133,7 +133,7 @@ namespace KSPWheel
             if (!string.IsNullOrEmpty(gimbalName)) { gimbalTransform = part.transform.FindRecursive(gimbalName); }
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
             Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
-            curLen = repulsorHeight;
+            curLen = repulsorEnabled ? repulsorHeight : 0.0001f;
             if (!string.IsNullOrEmpty(gridName) && HighLogic.LoadedSceneIsFlight)
             {
                 Transform gridMesh = part.transform.FindRecursive(gridName);
