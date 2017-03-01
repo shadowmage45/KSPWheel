@@ -258,14 +258,6 @@ namespace KSPWheel
             });
         }
 
-        //public void suspensionLengthUpdated(BaseField field, object obj)
-        //{
-        //    this.symmetryUpdate(m => 
-        //    {
-        //        m.suspensionLength = suspensionLength;
-        //    });
-        //}
-
         public void onShowUIUpdated(BaseField field, object obj)
         {
             int len = subModules.Count;
@@ -750,18 +742,31 @@ namespace KSPWheel
                 }
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
+                data.wheel.externalHitCollider = null;
                 data.wheel.externalSpringForce = data.colliderData.collisionForce;
-                data.wheel.useExternalHit = data.wheel.externalSpringForce > 0;
-                if (data.wheel.useExternalHit)
+                bool useExternalHit = false;
+                if (data.wheel.externalSpringForce > 0)
                 {
-                    data.wheel.externalHitPoint = data.wheel.transform.position - data.wheel.transform.up * data.wheel.radius;
-                    data.wheel.externalHitNormal = data.colliderData.surfaceNormal;
-                    data.wheel.externalHitCollider = data.colliderData.hitCollider;
+                    Vector3 ray = (data.colliderData.collisionPoint - data.wheelTransform.position);
+                    RaycastHit hit;
+                    if (Physics.Raycast(transform.position, ray.normalized, out hit, ray.magnitude * 1.2f, raycastMask))
+                    {
+                        float d1 = Vector3.Dot(hit.normal, data.wheel.transform.up);
+                        if (d1 > 0)
+                        {
+                            d1 = Vector3.Dot(data.wheel.transform.right, hit.normal);
+                            if (Mathf.Abs(d1) < 0.8f)
+                            {
+                                useExternalHit = true;
+                                data.wheel.externalHitNormal = hit.normal;
+                                data.wheel.externalHitPoint = data.wheel.transform.position - data.wheel.transform.up * data.wheel.radius;
+                                data.wheel.externalHitCollider = data.colliderData.hitCollider;
+                            }
+                        }
+                    }
+
                 }
-                else
-                {
-                    data.wheel.externalHitCollider = null;
-                }
+                data.wheel.useExternalHit = useExternalHit;
             }
             if (wheelRepairTimer < 1)
             {
@@ -1018,7 +1023,7 @@ namespace KSPWheel
                     bumpStopGameObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                     bumpStopGameObject.name = "KSPWheelBumpStop-" + wheelColliderName;
                     bumpStopGameObject.transform.localScale = new Vector3(scaleXZ, scaleY, scaleXZ);
-                    bumpStopGameObject.layer = 26;
+                    bumpStopGameObject.layer = 2;//ignore raycast layer, should still collide, but not get caught by part-highlight raycasts
                     //remove existing capsule collider
                     GameObject.DestroyImmediate(bumpStopGameObject.GetComponent<CapsuleCollider>());
                     //remove existing mesh renderer
