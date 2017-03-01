@@ -20,10 +20,9 @@ namespace KSPWheel
         private static float w3 = 100;
         private static float w4 = 250;
 
-        public void toggleGUI()
+        public void drawGUI()
         {
-            guiOpen = !guiOpen;
-            if (guiOpen && !guiInitialized)
+            if (!guiInitialized)
             {
                 guiInitialized = true;
                 baseModules.Clear();
@@ -32,10 +31,6 @@ namespace KSPWheel
                     baseModules.AddUniqueRange(p.GetComponentsInChildren<KSPWheelBase>());
                 }
             }
-        }
-
-        public void drawGUI()
-        {
             if (vessel.isActiveVessel)
             {
                 drawControlGUI();
@@ -128,7 +123,7 @@ namespace KSPWheel
             //close button at the bottom of the window, below the scroll bar
             if (GUILayout.Button("Close"))
             {
-                guiOpen = false;
+                KSPWheelLauncher.instance.controlGuiDisable();
             }
             GUILayout.EndVertical();
             GUI.DragWindow();

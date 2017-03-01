@@ -13,12 +13,10 @@ namespace KSPWheel
 
         private List<WheelDebugData> wheels = new List<WheelDebugData>();
 
-        public void toggleGUI(bool active)
+        public void drawGUI()
         {
-            guiOpen = active;
-            if (guiOpen && !guiInitialized)
+            if (!guiInitialized)
             {
-                MonoBehaviour.print("Initializing debug data instances");
                 wheels.Clear();
                 guiInitialized = true;
                 List<KSPWheelBase> baseModules = new List<KSPWheelBase>();
@@ -34,10 +32,6 @@ namespace KSPWheel
                     }
                 }
             }
-        }
-
-        public void drawGUI()
-        {
             if (vessel.isActiveVessel)
             {
                 drawDebugGUI();
@@ -127,7 +121,7 @@ namespace KSPWheel
             //close button at the bottom of the window, below the scroll bar
             if (GUILayout.Button("Close"))
             {
-                guiOpen = false;
+                KSPWheelLauncher.instance.debugGuiDisable();
             }
             GUILayout.EndVertical();
             GUI.DragWindow();
@@ -185,15 +179,6 @@ namespace KSPWheel
         {
             this.baseModule = baseModule;
             this.wheelData = wheelData;
-            this.debugLineRenderBase = null;
-            this.debugLineRendererFwd = null;
-            this.debugLineRendererSide = null;
-            this.debugLineRendererUp = null;
-            this.debugLineRendererWheel = null;
-            this.fwd = null;
-            this.side = null;
-            this.up = null;
-            this.wheel = null;
         }
 
         /// <summary>
@@ -293,6 +278,7 @@ namespace KSPWheel
             }
             debugLineRenderBase = null;
         }
+
     }
     
 }
