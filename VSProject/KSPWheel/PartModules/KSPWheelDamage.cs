@@ -34,15 +34,15 @@ namespace KSPWheel
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float stressTime = 0f;
 
-        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Wheel Wear", guiFormat = "F2"),
+        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Wheel Wear", guiFormat = "F2", isPersistant = true),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float wheelWear = 0f;
 
-        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Motor Wear", guiFormat = "F2"),
+        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Motor Wear", guiFormat = "F2", isPersistant = true),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float motorWear = 0f;
 
-        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Suspension Wear", guiFormat = "F2"),
+        [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Suspension Wear", guiFormat = "F2", isPersistant = true),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float suspensionWear = 0f;
 
@@ -61,10 +61,10 @@ namespace KSPWheel
         [KSPEvent(guiName = "Repair Wheel/Gear", guiActive = false, guiActiveEditor = false, guiActiveUnfocused = false, externalToEVAOnly = true, unfocusedRange = 8f)]
         public void repairWheel()
         {
-            if (controller.wheelState == KSPWheelState.BROKEN)
+            KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
+            if (controller.wheelState == KSPWheelState.BROKEN || (controller.wheelState==KSPWheelState.DEPLOYED && wearType==KSPWheelWearType.ADVANCED))
             {
                 MonoBehaviour.print("Repairing wheel!");
-                KSPWheelWearType wearType = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wearType;
                 switch (wearType)
                 {
                     case KSPWheelWearType.NONE:
@@ -73,6 +73,7 @@ namespace KSPWheel
                         changeWheelState(KSPWheelState.DEPLOYED);
                         invulnerableTime += 5f;
                         controller.wheelRepairTimer = 0.0001f;
+                        MonoBehaviour.print("Repaired wheel Simple");
                         break;
                     case KSPWheelWearType.ADVANCED:
                         if (HighLogic.CurrentGame.Parameters.CustomParams<GameParameters.AdvancedParams>().KerbalExperienceEnabled(HighLogic.CurrentGame.Mode) && FlightGlobals.ActiveVessel.VesselValues.RepairSkill.value < repairLevel)
@@ -86,6 +87,7 @@ namespace KSPWheel
                         suspensionWear = 0f;
                         invulnerableTime += 5f;
                         controller.wheelRepairTimer = 0.0001f;
+                        MonoBehaviour.print("Repaired wheel.  Damage: " + motorWear + " : " + wheelWear + " : " + suspensionWear);
                         //TODO -- add a delay before repairing based on how damaged things were
                         break;
                     default:
@@ -141,6 +143,7 @@ namespace KSPWheel
             updateWheelMeshes();
             updateDisplayState();
             onScaleUpdated();
+            //TODO -- update stats for initial persistent wear setup
         }
 
         internal override void postWheelPhysicsUpdate()
@@ -226,7 +229,7 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 //TODO - this should be reduced by the motors 'min power' figure, the amount of power that is actually consumed to maintain the magnetic field
-                heatProduction += motors[i].powerInKW - motors[i].powerOutKW;
+                heatProduction += (motors[i].powerInKW - motors[i].powerOutKW) * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().motorHeatMultiplier;
             }
             part.AddThermalFlux(heatProduction);
             //TODO these should both be config fields
@@ -235,7 +238,7 @@ namespace KSPWheel
             if (part.temperature > heatTolerance)
             {
                 float heatWear = (float)part.temperature - heatTolerance / (peakDamageHeat - heatTolerance);
-                motorWear += heatWear * Time.fixedDeltaTime;
+                motorWear += heatWear * Time.fixedDeltaTime * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().motorDamageMultiplier;
                 len = motors.Length;
                 for (int i = 0; i < len; i++)
                 {
@@ -247,7 +250,7 @@ namespace KSPWheel
             float speedPercent = Mathf.Pow(Mathf.Max((speed / maxSafeSpeed) - 0.75f, 0), 4);
             if (speedPercent > 0)
             {
-                wheelWear += speedPercent * Time.fixedDeltaTime * 0.05f;//should give ~80 minutes at max speed before wear hits 1.0
+                wheelWear += speedPercent * Time.fixedDeltaTime * 0.05f * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().speedDamageMultiplier;//should give ~80 minutes at max speed before wear hits 1.0
                 len = controller.wheelData.Length;
                 for (int i = 0; i < len; i++)
                 {
@@ -255,9 +258,27 @@ namespace KSPWheel
                 }
             }
 
+            //// -- ADVANCED MODE SLIP WEAR UPDATING --
+            //float slip = 0f;
+            //for (int i = 0; i < len; i++)
+            //{
+            //    slip += Mathf.Abs(controller.wheelData[i].wheel.wheelLocalVelocity.x);
+            //}
+            //slip /= controller.wheelData.Length;
+            //float slipPercent = Mathf.Pow(Mathf.Max((slip / (maxSafeSpeed * 0.1f)), 0), 4);
+            //if (speedPercent > 0)
+            //{
+            //    wheelWear += speedPercent * Time.fixedDeltaTime * 0.05f * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().slipDamageMultiplier;//should give ~80 minutes at max speed before wear hits 1.0
+            //    len = controller.wheelData.Length;
+            //    for (int i = 0; i < len; i++)
+            //    {
+            //        controller.wheelData[i].wheel.rollingResistance = defaultRollingResistance[i] + defaultRollingResistance[i] * wheelWear;
+            //    }
+            //}
+
             // -- ADVANCED MODE SUSPENSION WEAR UPDATING --
             float loadpercent = Mathf.Pow(Mathf.Max((load / maxSafeLoad) - 0.9f, 0), 2);
-            suspensionWear += loadpercent * Time.fixedDeltaTime;
+            suspensionWear += loadpercent * Time.fixedDeltaTime * HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelWearSettings>().stressDamageMultiplier;
             suspensionWear = Mathf.Clamp01(suspensionWear);
             controller.wheelRepairTimer = 1f - suspensionWear;
         }

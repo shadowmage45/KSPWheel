@@ -133,7 +133,7 @@ namespace KSPWheel
             if (!string.IsNullOrEmpty(gimbalName)) { gimbalTransform = part.transform.FindRecursive(gimbalName); }
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
             Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
-            curLen = repulsorHeight;
+            curLen = repulsorEnabled ? repulsorHeight : 0.0001f;
             if (!string.IsNullOrEmpty(gridName) && HighLogic.LoadedSceneIsFlight)
             {
                 Transform gridMesh = part.transform.FindRecursive(gridName);
@@ -284,7 +284,7 @@ namespace KSPWheel
                     }
                     wheelData.waterEffectPos = oceanHitPos;
                     wheelData.waterEffectSize = wheel.springForce * 0.1f;
-                    wheelData.waterEffectForce = wheel.wheelLocalVelocity.magnitude;
+                    wheelData.waterEffectForce = Mathf.Clamp(wheel.wheelLocalVelocity.magnitude, 0, 40f) / 40f;
                 }
             }
         }

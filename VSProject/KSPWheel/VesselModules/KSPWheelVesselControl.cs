@@ -12,7 +12,6 @@ namespace KSPWheel
         private int id = 0;
         private Rect windowRect = new Rect(100, 100, 1024, 768);
         private Vector2 scrollPos;
-        private bool guiOpen = false;
         private bool guiInitialized = false;
         private List<KSPWheelBase> baseModules = new List<KSPWheelBase>();
 
@@ -21,10 +20,9 @@ namespace KSPWheel
         private static float w3 = 100;
         private static float w4 = 250;
 
-        public void toggleGUI()
+        public void drawGUI()
         {
-            guiOpen = !guiOpen;
-            if (guiOpen && !guiInitialized)
+            if (!guiInitialized)
             {
                 guiInitialized = true;
                 baseModules.Clear();
@@ -33,20 +31,9 @@ namespace KSPWheel
                     baseModules.AddUniqueRange(p.GetComponentsInChildren<KSPWheelBase>());
                 }
             }
-        }
-
-        public void OnGUI()
-        {
-            if (guiOpen)
+            if (vessel.isActiveVessel)
             {
-                if (vessel.isActiveVessel)
-                {
-                    drawControlGUI();
-                }
-                else
-                {
-                    guiOpen = false;
-                }
+                drawControlGUI();
             }
         }
 
@@ -136,7 +123,7 @@ namespace KSPWheel
             //close button at the bottom of the window, below the scroll bar
             if (GUILayout.Button("Close"))
             {
-                guiOpen = false;
+                KSPWheelLauncher.instance.controlGuiDisable();
             }
             GUILayout.EndVertical();
             GUI.DragWindow();
