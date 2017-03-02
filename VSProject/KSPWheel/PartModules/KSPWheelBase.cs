@@ -133,6 +133,15 @@ namespace KSPWheel
         [KSPField]
         public float sidewaysFriction = 1f;
 
+        [KSPField]
+        public float antiRoll = 0f;
+
+        /// <summary>
+        /// Determines if the wheel-collider indices should be inverted for symmetry parts -- needs set to false on parts that have proper L/R counterparts (KSPWheelSidedModel)
+        /// </summary>
+        [KSPField]
+        public bool antiRollInvertIndices = true;
+
         /// <summary>
         /// Used for in-editor part information display.  Sets the title of the module to this (rather than KSPWheelBase)
         /// </summary>
@@ -570,6 +579,25 @@ namespace KSPWheel
                     wheel = wheelData[i].wheel;
                     wheel.gravityVector = vessel.gravityForPos;
                     wheel.updateWheel();
+                }
+                if (antiRoll > 0 && part.symmetryCounterparts!=null && part.symmetryCounterparts.Count>0)
+                {
+                    //TODO -- find index of this base module within set of base modules in the part
+                    //TODO -- use that index as the index-in-duplicates of the base module on the other part.
+                    KSPWheelBase otherModule = (KSPWheelBase)part.symmetryCounterparts[0].Modules[part.Modules.IndexOf(this)];
+                    KSPWheelCollider otherWheel;
+                    int otherIndex = 0;
+                    for (int i = 0; i < len; i++)
+                    {
+                        wheel = wheelData[i].wheel;
+                        otherIndex = antiRollInvertIndices ? len - 1 - i : i;
+                        otherWheel = otherModule.wheelData[otherIndex].wheel;
+                        if (wheel.isGrounded && otherWheel.isGrounded)
+                        {
+                            float force = (wheel.compressionDistance - otherWheel.compressionDistance) * antiRoll * wheel.spring;
+                            wheel.rigidbody.AddForceAtPosition(force * wheel.contactNormal, wheel.transform.position);
+                        }
+                    }
                 }
                 for (int i = 0; i < subLen; i++)
                 {
