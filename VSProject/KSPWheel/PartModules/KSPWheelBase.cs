@@ -133,7 +133,11 @@ namespace KSPWheel
         [KSPField]
         public float sidewaysFriction = 1f;
 
-        [KSPField]
+        /// <summary>
+        /// The coefficient of the wheel colliders spring force that will be used for anti-roll-bar simulation
+        /// </summary>
+        [KSPField(guiName = "Anti Roll", guiActive = true, guiActiveEditor = true, isPersistant = true, guiFormat = "F2"),
+         UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.05f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float antiRoll = 0f;
 
         /// <summary>
@@ -141,6 +145,12 @@ namespace KSPWheel
         /// </summary>
         [KSPField]
         public bool antiRollInvertIndices = true;
+
+        /// <summary>
+        /// If true, will use wheel colliders within the same part for anti-roll functionality
+        /// </summary>
+        [KSPField]
+        public bool useSelfAntiRoll = false;
 
         /// <summary>
         /// Used for in-editor part information display.  Sets the title of the module to this (rather than KSPWheelBase)
@@ -268,6 +278,7 @@ namespace KSPWheel
             Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode;
             Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls;
             Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls;
+            Fields[nameof(antiRoll)].guiActive = Fields[nameof(antiRoll)].guiActiveEditor = showControls;
         }
 
         private void onScaleAdjusted(BaseField field, System.Object obj)
@@ -580,24 +591,42 @@ namespace KSPWheel
                     wheel.gravityVector = vessel.gravityForPos;
                     wheel.updateWheel();
                 }
-                if (antiRoll > 0 && part.symmetryCounterparts!=null && part.symmetryCounterparts.Count>0)
+                if (antiRoll > 0)
                 {
-                    //TODO -- find index of this base module within set of base modules in the part
-                    //TODO -- use that index as the index-in-duplicates of the base module on the other part.
-                    KSPWheelBase otherModule = (KSPWheelBase)part.symmetryCounterparts[0].Modules[part.Modules.IndexOf(this)];
-                    KSPWheelCollider otherWheel;
-                    int otherIndex = 0;
-                    for (int i = 0; i < len; i++)
+                    if (useSelfAntiRoll)
                     {
-                        wheel = wheelData[i].wheel;
-                        otherIndex = antiRollInvertIndices ? len - 1 - i : i;
-                        otherWheel = otherModule.wheelData[otherIndex].wheel;
-                        if (wheel.isGrounded && otherWheel.isGrounded)
+                        KSPWheelCollider otherWheel;
+                        for (int i = 0; i < len; i++)
                         {
-                            float force = (wheel.compressionDistance - otherWheel.compressionDistance) * antiRoll * wheel.spring;
-                            wheel.rigidbody.AddForceAtPosition(force * wheel.contactNormal, wheel.transform.position);
+                            wheel = wheelData[i].wheel;
+                            otherWheel = wheelData[wheelData[i].symmetryIndex].wheel;
+                            if (wheel.isGrounded && otherWheel.isGrounded)
+                            {
+                                float force = (wheel.compressionDistance - otherWheel.compressionDistance) * antiRoll * wheel.spring;
+                                wheel.rigidbody.AddForceAtPosition(force * wheel.contactNormal, wheel.transform.position);
+                            }
                         }
                     }
+                    else if (part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
+                    {
+                        //TODO -- find index of this base module within set of base modules in the part
+                        //TODO -- use that index as the index-in-duplicates of the base module on the other part.
+                        KSPWheelBase otherModule = (KSPWheelBase)part.symmetryCounterparts[0].Modules[part.Modules.IndexOf(this)];
+                        KSPWheelCollider otherWheel;
+                        int otherIndex = 0;
+                        for (int i = 0; i < len; i++)
+                        {
+                            wheel = wheelData[i].wheel;
+                            otherIndex = antiRollInvertIndices ? len - 1 - i : i;
+                            otherWheel = otherModule.wheelData[otherIndex].wheel;
+                            if (wheel.isGrounded && otherWheel.isGrounded)
+                            {
+                                float force = (wheel.compressionDistance - otherWheel.compressionDistance) * antiRoll * wheel.spring;
+                                wheel.rigidbody.AddForceAtPosition(force * wheel.contactNormal, wheel.transform.position);
+                            }
+                        }
+                    }
+
                 }
                 for (int i = 0; i < subLen; i++)
                 {
@@ -986,6 +1015,7 @@ namespace KSPWheel
             public readonly float loadShare;
             public readonly float offset;
             public readonly int indexInDuplicates;
+            public readonly int symmetryIndex;
             public KSPWheelCollider wheel;
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
@@ -1007,8 +1037,9 @@ namespace KSPWheel
                 wheelMass = node.GetFloatValue("mass", 0.05f);
                 suspensionTravel = node.GetFloatValue("travel", 0.25f);
                 loadShare = node.GetFloatValue("load", 1f);
-                offset = node.GetFloatValue("offset");
-                indexInDuplicates = node.GetIntValue("indexInDuplicates");
+                offset = node.GetFloatValue("offset", 0f);
+                indexInDuplicates = node.GetIntValue("indexInDuplicates", 0);
+                symmetryIndex = node.GetIntValue("symmetryIndex", 0);
             }
 
             public void locateTransform(Transform root)
