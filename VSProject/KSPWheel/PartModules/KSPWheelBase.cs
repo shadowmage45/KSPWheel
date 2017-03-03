@@ -137,7 +137,7 @@ namespace KSPWheel
         /// The coefficient of the wheel colliders spring force that will be used for anti-roll-bar simulation
         /// </summary>
         [KSPField(guiName = "Anti Roll", guiActive = true, guiActiveEditor = true, isPersistant = true, guiFormat = "F2"),
-         UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.05f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
+         UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.05f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.All)]
         public float antiRoll = 0f;
 
         /// <summary>
@@ -606,6 +606,8 @@ namespace KSPWheel
                                 wheel.rigidbody.AddForceAtPosition(force * wheel.contactNormal, wheel.transform.position);
                             }
                         }
+                        //TODO -- linking / use of multiple base-modules in the same part
+                        //TODO -- might require adding a second 'baseModuleSymmetryIndex' to the wheel-data instances
                     }
                     else if (part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
                     {
@@ -755,10 +757,17 @@ namespace KSPWheel
                 {
                     data.timeBoostFactor = 0f;
                     spring = lengthCorrectedMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
-                    springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
-                    natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
-                    criticalDamping = 2 * springLoad * natFreq;//critical damping
-                    damper = criticalDamping * dampRatio * wheelRepairTimer;//add an -additiona- reduction to damper based on repair timer, ensure it is essentially nil for the first tick after repaired
+                    if (spring > 0)
+                    {
+                        springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
+                        natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
+                        criticalDamping = 2 * springLoad * natFreq;//critical damping
+                        damper = criticalDamping * dampRatio * wheelRepairTimer;//add an -additiona- reduction to damper based on repair timer, ensure it is essentially nil for the first tick after repaired
+                    }
+                    else
+                    {
+                        damper = 0f;
+                    }
                 }
                 else
                 {
