@@ -29,16 +29,20 @@ namespace KSPWheel
         {
             base.postWheelCreated();
             if (HighLogic.LoadedSceneIsEditor) { return; }
-            smr = part.GetComponentsInChildren<SkinnedMeshRenderer>()[smrIndex];
-            if (smr != null)
+            SkinnedMeshRenderer[] smrs = part.GetComponentsInChildren<SkinnedMeshRenderer>();
+            if (smrs != null && smrs.Length > 0)
             {
-                mat = smr.material;
-                if (mat != null)
+                smr = part.GetComponentsInChildren<SkinnedMeshRenderer>()[smrIndex];
+                if (smr != null)
                 {
-                    Vector2 scaling = mat.mainTextureScale;
-                    scaling.x *= trackDir;
-                    mat.SetTextureScale("_MainTex", scaling);
-                    mat.SetTextureScale("_BumpMap", scaling);
+                    mat = smr.material;
+                    if (mat != null)
+                    {
+                        Vector2 scaling = mat.mainTextureScale;
+                        scaling.x *= trackDir;
+                        mat.SetTextureScale("_MainTex", scaling);
+                        mat.SetTextureScale("_BumpMap", scaling);
+                    }
                 }
             }
             updateScaleValues();
