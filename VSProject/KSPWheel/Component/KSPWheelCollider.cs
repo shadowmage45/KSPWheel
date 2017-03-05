@@ -926,7 +926,7 @@ namespace KSPWheel
             if (currentAngularVelocity != 0)
             {
                 float fRollResist = localForce.y * rollingResistanceCoefficient;//rolling resistance force in newtons
-                float tRollResist = fRollResist * radiusInverse;//rolling resistance as a torque
+                float tRollResist = fRollResist * wheelRadius;//rolling resistance as a torque
                 float wRollResist = tRollResist * inertiaInverse * Time.fixedDeltaTime;//rolling resistance angular velocity change
                 wRollResist = Mathf.Min(wRollResist, Mathf.Abs(currentAngularVelocity)) * Mathf.Sign(currentAngularVelocity);
                 currentAngularVelocity -= wRollResist;
