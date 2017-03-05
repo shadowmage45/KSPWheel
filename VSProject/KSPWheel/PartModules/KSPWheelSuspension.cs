@@ -52,7 +52,6 @@ namespace KSPWheel
         private float deployedPosition = 1f;
         private GameObject lockedSuspensionObject;
         private CapsuleCollider lockedSuspensionCollider;
-        private Vector3 lockedPos = Vector3.zero;
         private int[] secondaryWheelInd = null;
 
         private void suspensionLockChanged(BaseField field, System.Object obj)
@@ -61,8 +60,7 @@ namespace KSPWheel
             {
                 if (lockSuspension)
                 {
-                    lockedPos = Vector3.zero;
-                    lockedSuspensionCollider.center = lockedPos;
+                    lockedSuspensionCollider.center = Vector3.zero;
                     lockedSuspensionCollider.enabled = controller.wheelState == KSPWheelState.DEPLOYED;
                 }
                 else if (!lockSuspension)
@@ -190,14 +188,15 @@ namespace KSPWheel
                     lockedSuspensionCollider = lockedSuspensionObject.AddComponent<CapsuleCollider>();
                     lockedSuspensionCollider.radius = wheel.radius;
                     lockedSuspensionCollider.height = wheel.radius * 2;
-                    lockedPos.y = -(wheel.length - wheel.compressionDistance);
-                    lockedSuspensionCollider.center = lockedPos;
+                    lockedSuspensionCollider.center = Vector3.zero;
                 }
-                float d = Mathf.Abs(lockedPos.y) - wheel.length * 0.95f;
-                if (d != 0)
+                float destY = -wheel.length * 1.01f;
+                float t = lockedSuspensionCollider.center.y;
+                if (t != destY)
                 {
-                    lockedPos.y += d;
-                    lockedSuspensionCollider.center = lockedPos;
+                    t = Mathf.MoveTowards(t, destY, wheel.length * Time.fixedDeltaTime * 0.5f);
+                    Vector3 pos = new Vector3(0, t, 0);
+                    lockedSuspensionCollider.center = pos;
                 }
             }
         }
