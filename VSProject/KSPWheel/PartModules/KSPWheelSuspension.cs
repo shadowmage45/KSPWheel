@@ -24,6 +24,13 @@ namespace KSPWheel
         [KSPField]
         public Vector3 suspensionAxis = Vector3.up;
 
+        /// <summary>
+        /// Secondary wheel indexes form compression distance averaging
+        /// CSV list, defaults to none
+        /// </summary>
+        [KSPField]
+        public string secondaryWheels = string.Empty;
+
         [KSPField]
         public float retractedPosition = 1f;
 
@@ -46,6 +53,7 @@ namespace KSPWheel
         private GameObject lockedSuspensionObject;
         private CapsuleCollider lockedSuspensionCollider;
         private Vector3 lockedPos = Vector3.zero;
+        private int[] secondaryWheelInd = null;
 
         private void suspensionLockChanged(BaseField field, System.Object obj)
         {
@@ -70,6 +78,16 @@ namespace KSPWheel
             Fields[nameof(lockSuspension)].guiActive = allowLockedSuspension;
             Fields[nameof(lockSuspension)].guiActiveEditor = false;
             Fields[nameof(lockSuspension)].uiControlFlight.onFieldChanged = suspensionLockChanged;
+            if (!string.IsNullOrEmpty(secondaryWheels))
+            {
+                string[] sp = secondaryWheels.Split(',');
+                int len = sp.Length;
+                secondaryWheelInd = new int[len];
+                for (int i = 0; i < len; i++)
+                {
+                    secondaryWheelInd[i] = int.Parse(sp[i].Trim());
+                }
+            }
         }
 
         public void Update()
@@ -109,10 +127,21 @@ namespace KSPWheel
                 if (controller.wheelState == KSPWheelState.DEPLOYED)
                 {
                     offset = wheel.length - wheel.compressionDistance;
+                    if (secondaryWheelInd != null)
+                    {
+                        int len = secondaryWheelInd.Length;
+                        KSPWheelBase.KSPWheelData sec;
+                        for (int i = 0; i < len; i++)
+                        {
+                            sec = controller.wheelData[secondaryWheelInd[i]];
+                            offset += sec.wheel.length - sec.wheel.compressionDistance;
+                        }
+                        offset /= len + 1;
+                    }
                 }
                 else if (controller.wheelState == KSPWheelState.BROKEN)
                 {
-                    offset = suspensionOffset * part.rescaleFactor * controller.scale;
+                    offset = 0f;
                 }
                 else//retracting or deploying, find and set to proper position
                 {
