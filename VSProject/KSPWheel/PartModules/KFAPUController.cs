@@ -40,6 +40,24 @@ namespace KSPWheel
         [KSPField(guiName = "Output", guiUnits = "EC/s", guiFormat = "F2", guiActive = true, guiActiveEditor = false)]
         public float energyOutput = 0f;
 
+        [KSPField(guiName = "Mode", guiActive =true, guiActiveEditor = true, isPersistant = true)]
+        public string modeDisplay = "Closed Cycle";
+
+        [KSPField(isPersistant = true)]
+        public bool closedMode = true;
+
+        [SerializeField]
+        private ResourceRatio closedRatio;
+        [SerializeField]
+        private ResourceRatio openRatio;
+
+        [KSPEvent(guiName = "Toggle Mode", guiActive = true, guiActiveEditor = true)]
+        public void toggleMode()
+        {
+            this.closedMode = !this.closedMode;
+            updateRecipe();
+        }
+
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
@@ -48,6 +66,12 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            if (inputList.Count >= 3)
+            {
+                closedRatio = inputList[1];
+                openRatio = inputList[2];
+            }
+            updateRecipe();
         }
 
         public override string GetInfo()
@@ -95,6 +119,23 @@ namespace KSPWheel
         {
             base.PostProcess(result, deltaTime);
             energyOutput = (float)(result.TimeFactor * Recipe.Outputs[0].Ratio) / (float)deltaTime;
+        }
+
+        private void updateRecipe()
+        {
+            modeDisplay = closedMode ? "Closed Cycle" : "Open Cycle";
+            if (inputList.Count >= 3)
+            {
+                inputList.RemoveAt(1);
+                inputList.RemoveAt(1);
+            }
+            else
+            {
+                inputList.RemoveAt(1);
+            }
+            inputList.Add(closedMode ? closedRatio : openRatio);
+            this._recipe = null;
+            this._recipe = this.LoadRecipe();
         }
 
     }
