@@ -877,6 +877,7 @@ namespace KSPWheel
                         wheelData[i].wheel.angularVelocity = 0f;
                         wheelData[i].wheel.motorTorque = 0f;
                         wheelData[i].wheel.brakeTorque = 0f;
+                        wheelData[i].wheel.clearGroundedState();
                     }
                 }
             }
@@ -948,32 +949,119 @@ namespace KSPWheel
             }
         }
 
+        private Collider prevCollider;
+        private Vessel landedOnVessel;
+        private string landedBiomeName;
         //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow (or they are handled by regular Part methods?)
         private void updateLandedState()
         {
-            //if wheels are not deployed let the stock code handle grounded checks from the collider data
-            if (currentWheelState != KSPWheelState.DEPLOYED && part.GroundContact && prevGrounded)
+            bool updateVesselLandedState = false;
+            bool splashed = false;
+            bool wheelGrounded = false;
+            Collider collider = null;
+            int len = wheelData.Length;
+            for (int i = 0; i < len; i++)
             {
-                prevGrounded = false;
-                part.GroundContact = false;
-                vessel.checkLanded();
-                return;
-            }
-            if (currentWheelState == KSPWheelState.DEPLOYED)
-            {
-                grounded = false;
-                int len = wheelData.Length;
-                for (int i = 0; i < len; i++)
+                if (wheelData[i].waterMode)
                 {
-                    if (wheelData[i].wheel.isGrounded)
+                    splashed = true;
+                }
+                if (wheelData[i].wheel.contactColliderHit != null)
+                {
+                    collider = wheelData[i].wheel.contactColliderHit;
+                }
+                if (wheelData[i].wheel.isGrounded)
+                {
+                    wheelGrounded = true;
+                }
+            }
+
+            if (prevCollider != collider)//something has changed
+            {
+                //set to default values for no hit
+                updateVesselLandedState = true;
+                landedOnVessel = null;
+                grounded = false;
+                landedBiomeName = string.Empty;
+                if (collider != null)//something was hit, set new values depending on what it was
+                {
+                    if (collider.gameObject.layer == 0)//possibly a part
                     {
+                        //check for if same vessel
+                        Part hitPart = collider.gameObject.GetComponentUpwards<Part>();
+                        if (hitPart != null)
+                        {
+                            if (hitPart.vessel == vessel)//ignore same vessel collision data, treat as ungrounded
+                            {
+                                //noop, handled by defaults for no hit above
+                            }
+                            else if (hitPart.vessel != null)//not same vessel, use hit vessels grounded state
+                            {
+                                landedOnVessel = hitPart.vessel;
+                                landedBiomeName = landedOnVessel.landedAt;
+                                grounded = landedOnVessel.LandedOrSplashed;
+                            }
+                            else//null vessel, not sure why/when this would occur, but treat as undefined
+                            {
+                                collider = null;//setting collider to null will cause it to be re-checked next update if the same object is hit
+                            }
+                        }
+                        //else -- not a part, undefined, use default 'no hit' data from above
+                    }
+                    else if (collider.gameObject.layer == 15)//scenery
+                    {
+                        if (string.IsNullOrEmpty(collider.gameObject.tag) || collider.gameObject.tag == "Untagged")
+                        {
+                            landedBiomeName = string.Empty;
+                        }
+                        else
+                        {
+                            landedBiomeName = collider.gameObject.tag;
+                        }
                         grounded = true;
-                        break;
                     }
                 }
-                part.GroundContact = grounded;
-                vessel.checkLanded();
-                prevGrounded = grounded;
+            }
+            else if (landedOnVessel != null)//else nothing changed, but should update the vessel landed on, if any
+            {
+                grounded = landedOnVessel.LandedOrSplashed;
+                if (grounded)
+                {
+                    if (landedBiomeName != landedOnVessel.landedAt)//change of state, new landed/not landed
+                    {
+                        landedBiomeName = landedOnVessel.landedAt;
+                        updateVesselLandedState = true;
+                    }
+                }
+                else if (!string.IsNullOrEmpty(landedBiomeName))//was previously landed, but now is not
+                {
+                    updateVesselLandedState = true;
+                    landedBiomeName = string.Empty;
+                }
+            }
+            else if (wheelGrounded && collider == null)//repulsors get into this state while levitating over water; wheel returns grounded, but no collider
+            {
+                //TODO
+                //unknown...
+                //grounded = false;
+                //landedBiomeName = string.Empty;
+            }
+            else if (splashed)//wheels will get into this state while in the water
+            {
+                //TODO -- does stock code fully handle splashed setting?
+                //unknown...
+            }
+            prevCollider = collider;
+            prevGrounded = grounded;
+            part.GroundContact = grounded;
+            if (updateVesselLandedState)
+            {
+                vessel.checkLanded();//this clears landed biome name
+                vessel.SetLandedAt(landedBiomeName);
+            }
+            else if (grounded && !string.IsNullOrEmpty(landedBiomeName))
+            {
+                vessel.SetLandedAt(landedBiomeName);//has to run every tick, else stock code clobbers it during init
             }
         }
 
