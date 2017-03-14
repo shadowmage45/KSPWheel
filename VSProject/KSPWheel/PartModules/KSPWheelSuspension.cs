@@ -70,12 +70,19 @@ namespace KSPWheel
             }
         }
 
+        [KSPAction("Lock Suspension")]
+        public void suspensionLockAction(KSPActionParam param)
+        {
+            suspensionLockChanged(null, null);
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             Fields[nameof(lockSuspension)].guiActive = allowLockedSuspension;
             Fields[nameof(lockSuspension)].guiActiveEditor = false;
             Fields[nameof(lockSuspension)].uiControlFlight.onFieldChanged = suspensionLockChanged;
+            Actions[nameof(suspensionLockAction)].active = allowLockedSuspension;
             if (!string.IsNullOrEmpty(secondaryWheels))
             {
                 string[] sp = secondaryWheels.Split(',');

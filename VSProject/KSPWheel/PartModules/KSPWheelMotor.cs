@@ -197,6 +197,30 @@ namespace KSPWheel
             });
         }
 
+        [KSPAction("Lock Motor")]
+        public void motorLockAction(KSPActionParam param)
+        {
+            motorLocked = !motorLocked;
+        }
+
+        [KSPAction("Invert Motor")]
+        public void motorInvertAction(KSPActionParam param)
+        {
+            invertMotor = !invertMotor;
+        }
+
+        [KSPAction("Lock Steering")]
+        public void steeringLockAction(KSPActionParam param)
+        {
+            steeringLocked = !steeringLocked;
+        }
+
+        [KSPAction("Invert Steering")]
+        public void steeringInvertAction(KSPActionParam param)
+        {
+            invertSteering = !invertSteering;
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
