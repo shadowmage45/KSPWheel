@@ -849,6 +849,7 @@ namespace KSPWheel
         {
             KSPWheelState oldState = currentWheelState;
             currentWheelState = newState;
+            this.persistentState = currentWheelState.ToString();
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
