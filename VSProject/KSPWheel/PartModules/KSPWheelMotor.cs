@@ -250,6 +250,8 @@ namespace KSPWheel
             ConfigNode config = GameDatabase.Instance.GetConfigNodes("KSPWHEELCONFIG")[0];
             powerConversion = config.GetFloatValue("powerConversion", 65f);
             calcPowerStats();
+            Actions[nameof(steeringLockAction)].active = tankSteering;
+            Actions[nameof(steeringInvertAction)].active = tankSteering;
         }
 
         internal override string getModuleInfo()
