@@ -37,6 +37,9 @@ namespace KSPWheel
         public string retractedEffect = string.Empty;
 
         [KSPField]
+        public string actionName = "Gear";
+
+        [KSPField]
         public bool updateDragCubes = true;
 
         [KSPField]
@@ -134,6 +137,13 @@ namespace KSPWheel
                 configNodeData = node.ToString();
             }
             base.OnLoad(node);
+        }
+
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+            Events[nameof(toggleGearEvent)].guiName = "Toggle " + actionName + " Deployment";
+            Actions[nameof(toggleGearAction)].guiName = "Toggle " + actionName + " Deployment";
         }
 
         public void Update()
