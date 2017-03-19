@@ -124,6 +124,9 @@ namespace KSPWheel
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
 
+        [KSPField]
+        public float maxECDraw = 0f;
+
         public float torqueOutput;
 
         private float powerCorrection = 4f;
@@ -425,6 +428,7 @@ namespace KSPWheel
             powerMidpoint = 1f / motorEfficiency * peakOutputPower;
 
             peakInputPower = 1f * powerMidpoint * powerCorrection;
+            maxECDraw = peakInputPower / powerConversion;
             minInputPower = motorPowerFactor * powerMidpoint * powerCorrection;
 
             float radius = wheelData.scaledRadius(part.rescaleFactor * controller.scale);
