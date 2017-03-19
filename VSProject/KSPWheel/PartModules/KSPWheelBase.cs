@@ -899,6 +899,14 @@ namespace KSPWheel
                 motorPowerScalingFactor = Mathf.Pow(localScale, scales.motorPowerScalingPower);
                 motorTorqueScalingFactor = Mathf.Pow(localScale, scales.motorTorqueScalingPower);
             }
+            if (wheelData != null)
+            {
+                int wlen = wheelData.Length;
+                for (int i = 0; i < wlen; i++)
+                {
+                    if (wheelData[i].wheel != null) { wheelData[i].wheel.length = wheelData[i].suspensionTravel * scale * part.rescaleFactor; }
+                }
+            }
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
