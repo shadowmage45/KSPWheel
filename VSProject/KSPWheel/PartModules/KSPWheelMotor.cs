@@ -79,6 +79,12 @@ namespace KSPWheel
          UI_FloatEdit(suppressEditorShipModified = true, minValue = 0.25f, maxValue = 20f, incrementSlide = 0.05f, incrementLarge = 1f, incrementSmall = 0.25f, sigFigs = 2)]
         public float gearRatio = 4f;
 
+        [KSPField]
+        public float minGearRatio = 0.25f;
+
+        [KSPField]
+        public float maxGearRatio = 20f;
+
         /// <summary>
         /// GUI display values below here
         /// </summary>
@@ -252,6 +258,10 @@ namespace KSPWheel
             calcPowerStats();
             Actions[nameof(steeringLockAction)].active = tankSteering;
             Actions[nameof(steeringInvertAction)].active = tankSteering;
+
+            UI_FloatEdit fe = (UI_FloatEdit)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(gearRatio)].uiControlEditor : Fields[nameof(gearRatio)].uiControlFlight);
+            fe.minValue = minGearRatio;
+            fe.maxValue = maxGearRatio;
         }
 
         internal override string getModuleInfo()
