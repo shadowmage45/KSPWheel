@@ -25,6 +25,9 @@ namespace KSPWheel
         public float tempColliderOffset = 0f;
 
         [KSPField]
+        public Vector3 tempColliderAxis = Vector3.up;
+
+        [KSPField]
         public string deployEffect = string.Empty;
 
         [KSPField]
@@ -204,9 +207,8 @@ namespace KSPWheel
             {
                 GameObject standInCollider = new GameObject("KSPWheelTempCollider");
                 standInCollider.transform.NestToParent(tempColliderTransform);
-                Vector3 tempColliderAxis = Vector3.up;
-                Vector3 worldAxis = standInCollider.transform.TransformDirection(tempColliderAxis);
-                standInCollider.transform.Translate(worldAxis * tempColliderOffset);
+                Vector3 worldAxis = tempColliderTransform.TransformDirection(tempColliderAxis);
+                standInCollider.transform.Translate(worldAxis * tempColliderOffset, Space.World);
                 standInCollider.layer = 26;
                 collider = standInCollider.AddComponent<SphereCollider>();
                 collider.radius = wheel.radius;
