@@ -339,9 +339,12 @@ namespace KSPWheel
             //integrateMotorRK4(fI, motorRPM, wheel.mass);
 
             motorCurRPM = Mathf.Abs(motorRPM);
-            powerOutKW = motorCurRPM * Mathf.Abs(torqueOutput) * rpmToRad;
-            powerInKW = guiResourceUse * powerConversion;
-            powerEff = (powerInKW <= 0 ? 0 : (powerOutKW/gearRatio) / powerInKW) * 100f;
+            float torquePercent =  1 - (motorCurRPM / scaledMaxRPM);
+            float rawTorqueOutput = scaledMaxTorque * torquePercent;
+            powerOutKW = motorCurRPM * rawTorqueOutput * rpmToRad;
+            //powerInKW = guiResourceUse * powerConversion; // this is the -actual- input power, but we need the pre-integration input power for the given RPM to derive efficiency
+            powerInKW = minInputPower + torquePercent * (peakInputPower - minInputPower);//the actual calcualted input power for the output torque
+            powerEff = (powerInKW <= 0 ? 0 : powerOutKW / powerInKW) * 100f;//finally, the efficiency of the raw output and input power values
         }
 
         protected void integrateMotorEuler(float fI, float motorRPM)
@@ -547,82 +550,6 @@ namespace KSPWheel
         //    outRpm = wheelRPMIntegration(dRpm, wheelMass, dTorque, time);
         //}
 
-    }
-
-    /// <summary>
-    /// Returns a 'magic number' used to fix the power input calculation min/mid/max values.
-    /// TODO -- make sure interpolated values actually work.  It appears to return proper values for discrete inputs from the input table, but no testing has been done for lerping....
-    /// </summary>
-    public static class MotorPFCurve
-    {
-        public static float[] inputPoints = new float[10];
-        public static float[] outputPoints = new float[10];
-
-        static MotorPFCurve()
-        {
-            inputPoints[0] = 0.001f;
-            inputPoints[1] = 0.050f;
-            inputPoints[2] = 0.100f;
-            inputPoints[3] = 0.150f;
-            inputPoints[4] = 0.200f;
-            inputPoints[5] = 0.250f;
-            inputPoints[6] = 0.300f;
-            inputPoints[7] = 0.350f;
-            inputPoints[8] = 0.400f;
-            inputPoints[9] = 0.450f;
-
-            outputPoints[0] = 3.7585f;
-            outputPoints[1] = 2.6715f;
-            outputPoints[2] = 2.3090f;
-            outputPoints[3] = 2.0784f;
-            outputPoints[4] = 1.9098f;
-            outputPoints[5] = 1.7776f;
-            outputPoints[6] = 1.6697f;
-            outputPoints[7] = 1.5790f;
-            outputPoints[8] = 1.5010f;
-            outputPoints[9] = 1.4328f;
-        }
-
-        public static float sample(float pf, float ef)
-        {
-            //zero PF is a special degenerate case where each efficiency value has its own corrector value
-            if (pf == 0)
-            {
-                return ef * 4;
-            }
-            //else if PF > 0, all efficiency values use the same
-
-            int startIndex=0;
-            float start, end, startVal, endVal, lerp;
-
-            int len = inputPoints.Length;
-            for (int i = len-1; i >=0; i--)
-            {
-                if (pf >= inputPoints[i])
-                {
-                    startIndex = i;
-                    break;
-                }
-            }
-            start = inputPoints[startIndex];
-            end = start;
-            startVal = outputPoints[startIndex];
-            endVal = startVal;
-            if (startIndex < len - 1)
-            {
-                end = inputPoints[startIndex + 1];
-                endVal = outputPoints[startIndex + 1];
-            }
-            else//its off the end of the scale, return val directly, log error.
-            {
-                MonoBehaviour.print("ERROR: Input value was outside of the defined data set: " + pf + " ending val: " + inputPoints[len - 1]+" make sure your input value is less than the ending value");
-                return endVal;
-            }
-            float range = end - start;
-            float pointVal = pf - start;
-            lerp = pointVal / range;
-            return Mathf.Lerp(startVal, endVal, lerp);
-        }
     }
 
 }
