@@ -873,13 +873,16 @@ namespace KSPWheel
                 {
                     if (wheelData[i].bumpStopCollider == null) { break; }//if one is not present, none will be, as something is not initialized yet;
                     wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
-                    if (newState != KSPWheelState.DEPLOYED && wheelData[i].wheel != null)
+                    if (wheelData[i].wheel != null)
                     {
                         wheelData[i].wheel.angularVelocity = 0f;
                         wheelData[i].wheel.motorTorque = 0f;
                         wheelData[i].wheel.brakeTorque = 0f;
                         wheelData[i].wheel.clearGroundedState();
                     }
+                    prevCollider = null;
+                    landedOnVessel = null;
+                    landedBiomeName = string.Empty;
                 }
             }
         }
