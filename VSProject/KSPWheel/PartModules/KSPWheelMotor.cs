@@ -128,12 +128,8 @@ namespace KSPWheel
         public float maxECDraw = 0f;
 
         public float torqueOutput;
-
-        private float powerCorrection = 4f;
-        private float powerMidpoint = 0f;
         private float scaledMaxTorque = 0f;//actual post-scaling max torque
         private float scaledMaxRPM = 0f;
-        private float peakOutputPower = 0f;
         private float peakInputPower = 0f;
         private float minInputPower = 0f;
         private float powerConversion = 65f;
@@ -331,7 +327,7 @@ namespace KSPWheel
                 }
                 if (Mathf.Sign(wheel.rpm) !=Mathf.Sign(rI) && rI != 0)//if rI is commanding the wheel to slow down, also apply brakes, inversely proportional to 
                 {
-                    wheel.brakeTorque += (1 - torqueCurve.Evaluate(Mathf.Abs(wheel.rpm * gearRatio) / scaledMaxRPM)) * scaledMaxTorque * Mathf.Abs(rI); ;
+                    wheel.brakeTorque += (1 - torqueCurve.Evaluate(Mathf.Abs(wheel.rpm * gearRatio) / scaledMaxRPM)) * scaledMaxTorque * Mathf.Abs(rI);
                 }
                 fI += rI;
             }
@@ -343,9 +339,12 @@ namespace KSPWheel
             //integrateMotorRK4(fI, motorRPM, wheel.mass);
 
             motorCurRPM = Mathf.Abs(motorRPM);
-            powerOutKW = motorCurRPM * Mathf.Abs(torqueOutput) * rpmToRad;
-            powerInKW = guiResourceUse * powerConversion;
-            powerEff = (powerInKW <= 0 ? 0 : powerOutKW / powerInKW)*100f;
+            float torquePercent =  1 - (motorCurRPM / scaledMaxRPM);
+            float rawTorqueOutput = scaledMaxTorque * torquePercent;
+            powerOutKW = motorCurRPM * rawTorqueOutput * rpmToRad;
+            //powerInKW = guiResourceUse * powerConversion; // this is the -actual- input power, but we need the pre-integration input power for the given RPM to derive efficiency
+            powerInKW = minInputPower + torquePercent * (peakInputPower - minInputPower);//the actual calcualted input power for the output torque
+            powerEff = (powerInKW <= 0 ? 0 : powerOutKW / powerInKW) * 100f;//finally, the efficiency of the raw output and input power values
         }
 
         protected void integrateMotorEuler(float fI, float motorRPM)
@@ -374,12 +373,14 @@ namespace KSPWheel
             float dt = Time.fixedDeltaTime * p;
             float ecs = 0f;
             float t = 0f;
+            float tt = 0f;
             float rpm = motorRPM;
             for (int i = 0; i < substeps; i++)
             {
-                t += p * calcRawTorque(fI, rpm);
+                tt = p * calcRawTorque(fI, rpm);
+                t += tt;
                 ecs += p * calcECUse(fI, rpm);
-                rpm = wheelRPMIntegration(rpm, wheel.mass, t, dt);
+                rpm = wheelRPMIntegration(rpm, wheel.mass, tt, dt);
             }
             t *= updateResourceDrain(ecs);
             t *= gearRatio;
@@ -403,10 +404,10 @@ namespace KSPWheel
             if (fI <= 0) { return 0f; }
             motorRPM = Mathf.Abs(motorRPM);            
             if (motorRPM > scaledMaxRPM) { motorRPM = scaledMaxRPM; }
-            float torquePercent = 1 - (motorRPM / maxRPM);
-            float lostPower = (1 - torquePercent) * minInputPower;
-            float usedPower = torquePercent * peakInputPower;
-            return (lostPower + usedPower) * Mathf.Abs(fI) / powerConversion;//65 is the stock electrical to mechanical conversion factor (1ec=1kj, but does the work of 65kj)
+            float torquePercent = 1 - (motorRPM / scaledMaxRPM);
+            float delta = peakInputPower - minInputPower;
+            float powerDraw = torquePercent * delta + minInputPower;
+            return (powerDraw * Mathf.Abs(fI)) / powerConversion;//65 is the stock electrical to mechanical conversion factor (1ec=1kj, but does the work of 65kj)
         }
 
         /// <summary>
@@ -418,21 +419,58 @@ namespace KSPWheel
             scaledMaxTorque = maxMotorTorque * controller.motorTorqueScalingFactor;
             scaledMaxRPM = maxRPM * controller.motorMaxRPMScalingFactor;
 
-            //setup the power factor correction value
-            powerCorrection = MotorPFCurve.sample(motorPowerFactor, motorEfficiency);
-
-            //this is the peak 'power' output of the motor, that happens at 50% rpm + torque
-            peakOutputPower = ((scaledMaxRPM * 0.5f) * rpmToRad) * (scaledMaxTorque * 0.5f);
-
-            //this is not actually 'mid-point power', but an interim value used with the power correction factor to determine the actual power use for any given RPM
-            powerMidpoint = 1f / motorEfficiency * peakOutputPower;
-
-            peakInputPower = 1f * powerMidpoint * powerCorrection;
-            maxECDraw = peakInputPower / powerConversion;
-            minInputPower = motorPowerFactor * powerMidpoint * powerCorrection;
-
             float radius = wheelData.scaledRadius(part.rescaleFactor * controller.scale);
             maxDrivenSpeed = radius * (scaledMaxRPM / gearRatio) * rpmToRad;
+            calcPowerStats(scaledMaxTorque, scaledMaxRPM, motorEfficiency, motorPowerFactor, out peakInputPower, out minInputPower);            
+            maxECDraw = peakInputPower / powerConversion;
+        }
+
+        public static void calcPowerStats(float maxTorque, float maxRPM, float efficiency, float powerFactor, out float maxKw, out float minKw)
+        {
+            /**
+
+            The rpm% of peak efficiency is plotted as the intersection of two functions.
+
+            The two equations are:
+            a = powerFactor
+            The slope of the line denoted by torque output, linear with slope of -1
+            y = 1 - x
+
+            The second is the curve denoted by the power equation and the power factor
+            y = x * (-(1-a) * x + 1)
+
+            The solution to those two equations (one of them) is:  (wolfram used to solve for equation =\)
+            x = 1/(1-a) - sqrt( a / (a-1)^2 )
+
+            Thus the rpm% where you will find the (config specified) peak efficiency is (x).
+            
+            From this you can calculate the mechanical output power at that
+            rpm given the linear torque curve of the simulated motor type.
+            outAtPeak = x * maxRPM * (1-x) * maxTorque * rpmToRadians
+
+            From the output power and the specified efficiency the input
+            power for that single point can be calculated.  
+            inAtPeak = outAtPeak / efficiency
+            
+            As the input power 'curve' is actually a simple linear function, 
+            the min and max input power values can both be derived from that
+            single point.
+
+            ??
+            z = (1 - (1 - powerFactor)) * x
+            inMax = inAtPeak / z
+            inMin = inMax * powerFactor
+            ??
+
+            **/
+            float efficiencyPeak = 1 / (1 - powerFactor) - Mathf.Sqrt(powerFactor / Mathf.Pow(powerFactor - 1, 2));
+            float effInverse = 1 - efficiency;
+            float kwOutputAtPeak = efficiencyPeak * maxRPM * effInverse * maxTorque * 0.10472f;
+            float kwInputAtPeak = kwOutputAtPeak / efficiency;
+            float peakInput = 1 / ((efficiencyPeak * powerFactor) + effInverse) * kwInputAtPeak;
+            float noLoad = powerFactor * peakInput;
+            maxKw = peakInput;
+            minKw = noLoad;
         }
 
         protected float wheelRPMIntegration(float rpm, float wm, float torque, float deltaTime)
@@ -512,82 +550,6 @@ namespace KSPWheel
         //    outRpm = wheelRPMIntegration(dRpm, wheelMass, dTorque, time);
         //}
 
-    }
-
-    /// <summary>
-    /// Returns a 'magic number' used to fix the power input calculation min/mid/max values.
-    /// TODO -- make sure interpolated values actually work.  It appears to return proper values for discrete inputs from the input table, but no testing has been done for lerping....
-    /// </summary>
-    public static class MotorPFCurve
-    {
-        public static float[] inputPoints = new float[10];
-        public static float[] outputPoints = new float[10];
-
-        static MotorPFCurve()
-        {
-            inputPoints[0] = 0.001f;
-            inputPoints[1] = 0.050f;
-            inputPoints[2] = 0.100f;
-            inputPoints[3] = 0.150f;
-            inputPoints[4] = 0.200f;
-            inputPoints[5] = 0.250f;
-            inputPoints[6] = 0.300f;
-            inputPoints[7] = 0.350f;
-            inputPoints[8] = 0.400f;
-            inputPoints[9] = 0.450f;
-
-            outputPoints[0] = 3.7585f;
-            outputPoints[1] = 2.6715f;
-            outputPoints[2] = 2.3090f;
-            outputPoints[3] = 2.0784f;
-            outputPoints[4] = 1.9098f;
-            outputPoints[5] = 1.7776f;
-            outputPoints[6] = 1.6697f;
-            outputPoints[7] = 1.5790f;
-            outputPoints[8] = 1.5010f;
-            outputPoints[9] = 1.4328f;
-        }
-
-        public static float sample(float pf, float ef)
-        {
-            //zero PF is a special degenerate case where each efficiency value has its own corrector value
-            if (pf == 0)
-            {
-                return ef * 4;
-            }
-            //else if PF > 0, all efficiency values use the same
-
-            int startIndex=0;
-            float start, end, startVal, endVal, lerp;
-
-            int len = inputPoints.Length;
-            for (int i = len-1; i >=0; i--)
-            {
-                if (pf >= inputPoints[i])
-                {
-                    startIndex = i;
-                    break;
-                }
-            }
-            start = inputPoints[startIndex];
-            end = start;
-            startVal = outputPoints[startIndex];
-            endVal = startVal;
-            if (startIndex < len - 1)
-            {
-                end = inputPoints[startIndex + 1];
-                endVal = outputPoints[startIndex + 1];
-            }
-            else//its off the end of the scale, return val directly, log error.
-            {
-                MonoBehaviour.print("ERROR: Input value was outside of the defined data set: " + pf + " ending val: " + inputPoints[len - 1]+" make sure your input value is less than the ending value");
-                return endVal;
-            }
-            float range = end - start;
-            float pointVal = pf - start;
-            lerp = pointVal / range;
-            return Mathf.Lerp(startVal, endVal, lerp);
-        }
     }
 
 }
