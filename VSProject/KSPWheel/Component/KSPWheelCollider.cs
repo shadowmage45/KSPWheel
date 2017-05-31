@@ -562,7 +562,6 @@ namespace KSPWheel
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             prevSuspensionCompression = currentSuspensionCompression;
             prevFSpring = localForce.y;
-            float prevVSpring = vSpring;
             bool prevGrounded = grounded;
             if (checkSuspensionContact())//suspension compression is calculated in the suspension contact check
             {
@@ -603,13 +602,27 @@ namespace KSPWheel
             {
                 integrateUngroundedTorques();
                 grounded = false;
-                vSpring = prevVSpring = prevFSpring = fDamp = prevSuspensionCompression = currentSuspensionCompression = 0;
+                vSpring = prevFSpring = fDamp = prevSuspensionCompression = currentSuspensionCompression = 0;
                 localForce = Vector3.zero;
                 hitNormal = Vector3.zero;
                 hitPoint = Vector3.zero;
                 hitCollider = null;
                 localVelocity = Vector3.zero;
             }
+        }
+
+        /// <summary>
+        /// Should be called whenever the wheel collider is disabled -- clears out internal state data from the previous wheel hit
+        /// </summary>
+        public void clearGroundedState()
+        {
+            grounded = false;
+            vSpring = prevFSpring = fDamp = prevSuspensionCompression = currentSuspensionCompression = 0;
+            localForce = Vector3.zero;
+            hitNormal = Vector3.up;
+            hitPoint = Vector3.zero;
+            localVelocity = Vector3.zero;
+            hitCollider = null;
         }
 
         #endregion ENDREGION - Update methods -- internal, external
@@ -933,7 +946,7 @@ namespace KSPWheel
             if (currentAngularVelocity != 0)
             {
                 float fRollResist = localForce.y * rollingResistanceCoefficient;//rolling resistance force in newtons
-                float tRollResist = fRollResist * radiusInverse;//rolling resistance as a torque
+                float tRollResist = fRollResist * wheelRadius;//rolling resistance as a torque
                 float wRollResist = tRollResist * inertiaInverse * Time.fixedDeltaTime;//rolling resistance angular velocity change
                 wRollResist = Mathf.Min(wRollResist, Mathf.Abs(currentAngularVelocity)) * Mathf.Sign(currentAngularVelocity);
                 currentAngularVelocity -= wRollResist;

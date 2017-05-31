@@ -100,6 +100,18 @@ namespace KSPWheel
             });
         }
 
+        [KSPAction("Lock Steering")]
+        public void steeringLockAction(KSPActionParam param)
+        {
+            steeringLocked = !steeringLocked;
+        }
+
+        [KSPAction("Invert Steering")]
+        public void steeringInvertAction(KSPActionParam param)
+        {
+            invertSteering = !invertSteering;
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);

@@ -9,6 +9,11 @@ namespace KSPWheel
         private ApplicationLauncherButton debugAppButton;
         private ApplicationLauncherButton controlsAppButton;
 
+        private bool debugGuiOpen = false;
+        private bool controlGuiOpen = false;
+
+        public static KSPWheelLauncher instance;
+
         public void Awake()
         {
             Texture2D tex;
@@ -20,8 +25,9 @@ namespace KSPWheel
             if ((HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight) && controlsAppButton == null)
             {
                 //tex = GameDatabase.Instance.GetTexture("Squad/PartList/SimpleIcons/R&D_node_icon_advancedmotors", false);
-                //controlsAppButton = ApplicationLauncher.Instance.AddModApplication(controlGuiEnable, controlGuiEnable, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, tex);
+                //controlsAppButton = ApplicationLauncher.Instance.AddModApplication(controlGuiEnable, controlGuiEnable, null, null, null, null, ApplicationLauncher.AppScenes.FLIGHT, tex);
             }
+            instance = this;
         }
 
         public void OnDestroy()
@@ -38,42 +44,56 @@ namespace KSPWheel
             controlsAppButton = null;
         }
 
-        private void debugGuiEnable()
+        public void OnGUI()
         {
+            if (debugGuiOpen)
+            {
+                FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
+                if (fi != null && fi.Vessel != null)
+                {
+                    fi.Vessel.GetComponent<KSPWheelVesselDebug>().drawGUI();
+                }
+            }
+            if (controlGuiOpen)
+            {
+                FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
+                if (fi != null && fi.Vessel != null)
+                {
+                    fi.Vessel.GetComponent<KSPWheelVesselControl>().drawGUI();
+                }
+            }
+        }
+
+        public void debugGuiEnable()
+        {
+            debugGuiOpen = false;
             FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
             if (fi == null || fi.Vessel == null)
             {
                 return;
             }
-            toggleDebugGui(fi.Vessel, true);
+            debugGuiOpen = true;
         }
 
-        private void debugGuiDisable()
+        public void debugGuiDisable()
         {
+            debugGuiOpen = false;
+        }
+
+        public void controlGuiEnable()
+        {
+            controlGuiOpen = false;
             FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
             if (fi == null || fi.Vessel == null)
             {
                 return;
             }
-            toggleDebugGui(fi.Vessel, false);
+            controlGuiOpen = true;
         }
 
-        private void toggleDebugGui(Vessel vessel, bool active)
+        public void controlGuiDisable()
         {
-            KSPWheelVesselDebug debug = vessel.GetComponent<KSPWheelVesselDebug>();
-            if (debug != null) { debug.toggleGUI(active); }
-        }
-
-        private void controlGuiEnable()
-        {
-            FlightIntegrator fi = FlightIntegrator.ActiveVesselFI;
-            if (fi == null || fi.Vessel == null)
-            {
-                return;
-            }
-            Vessel vessel = fi.Vessel;
-            KSPWheelVesselControl control = vessel.GetComponent<KSPWheelVesselControl>();//TODO -- does this work?
-            if (control != null) { control.toggleGUI(); }
+            controlGuiOpen = false;
         }
 
     }

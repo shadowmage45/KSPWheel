@@ -38,11 +38,11 @@ namespace KSPWheel
                     alt = FlightGlobals.getAltitudeAtPos(wheelPos);
                     if (alt > radius)//impossible that wheel contacted surface regardless of orientation
                     {
-                        return;
+                        continue;
                     }
                     else if (maxSubmerged < 1f && alt < -radius)//fully submerged, net force output is zero (but should add a torque?)
                     {
-                        return;
+                        continue;
                     }
                     data.waterMode = true;
                     depth = Mathf.Abs(alt);

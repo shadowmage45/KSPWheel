@@ -20,14 +20,6 @@ namespace KSPWheel
         [KSPField(guiName = "Energy Use", guiActive = true, guiUnits = "EC/s")]
         public float guiEnergyUse = 0f;
 
-        [KSPField(guiName = "Force Application", guiActiveEditor = false, guiActive = false),
-         UI_Toggle(enabledText = "Offset", disabledText = "Standard", suppressEditorShipModified = true)]
-        public bool forcePointOffset = true;
-
-        [KSPField(guiName = "Force Axis", guiActiveEditor = false, guiActive = false),
-         UI_Toggle(enabledText = "Suspension", disabledText = "HitNormal", suppressEditorShipModified = true)]
-        public bool suspensionNormal = false;
-
         [KSPField]
         public float easeTimeMult = 0.25f;
 
@@ -45,12 +37,6 @@ namespace KSPWheel
 
         [KSPField]
         public int animAxis = 1;
-
-        [KSPField]
-        public bool gimbaled = false;
-
-        [KSPField]
-        public string gimbalName = String.Empty;
 
         [KSPField]
         public string gridName = String.Empty;
@@ -130,10 +116,9 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            if (!string.IsNullOrEmpty(gimbalName)) { gimbalTransform = part.transform.FindRecursive(gimbalName); }
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
             Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
-            curLen = repulsorHeight;
+            curLen = repulsorEnabled ? repulsorHeight : 0.0001f;
             if (!string.IsNullOrEmpty(gridName) && HighLogic.LoadedSceneIsFlight)
             {
                 Transform gridMesh = part.transform.FindRecursive(gridName);
@@ -201,10 +186,9 @@ namespace KSPWheel
             {
                 curLen = Mathf.MoveTowards(curLen, repulsorHeight, 0.5f * Time.fixedDeltaTime);
             }
-            if (gimbaled && gimbalTransform!=null) { gimbalTransform.LookAt(vessel.mainBody.transform.position); }
             wheel.length = curLen * maxHeight;
-            wheel.useSuspensionNormal = suspensionNormal;
-            wheel.forceApplicationOffset = forcePointOffset ? 1f : 0f;
+            wheel.useSuspensionNormal = false;
+            wheel.forceApplicationOffset = 1f;
 
             //repulsor water handling code
             wheel.useExternalHit = false;
@@ -284,7 +268,7 @@ namespace KSPWheel
                     }
                     wheelData.waterEffectPos = oceanHitPos;
                     wheelData.waterEffectSize = wheel.springForce * 0.1f;
-                    wheelData.waterEffectForce = wheel.wheelLocalVelocity.magnitude;
+                    wheelData.waterEffectForce = Mathf.Clamp(wheel.wheelLocalVelocity.magnitude, 0, 40f) / 40f;
                 }
             }
         }

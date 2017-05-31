@@ -1,4 +1,6 @@
-﻿namespace KSPWheel
+﻿using System;
+
+namespace KSPWheel
 {
     public class KSPWheelSettings : GameParameters.CustomParameterNode
     {
@@ -33,6 +35,8 @@
         public override GameParameters.GameMode GameMode { get { return GameParameters.GameMode.ANY; } }
 
         public override bool HasPresets { get { return false; } }
+
+        public override string DisplaySection { get { return "KSPWheel"; } }
 
     }
 
@@ -76,13 +80,12 @@
 
         public override bool HasPresets { get { return false; } }
 
+        public override string DisplaySection { get { return "KSPWheel"; } }
+
     }
 
     public class KSPWheelWearSettings : GameParameters.CustomParameterNode
     {
-
-        [GameParameters.CustomFloatParameterUI("Impact Tolerance Multiplier", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "Global multiplier to the config specified impact tolerance of wheels, applied to the calculated impact velocity.  Lower values result in higher impact tolerance, setting to zero disables impact damage.")]
-        public float impactToleranceMultiplier = 1f;
 
         [GameParameters.CustomFloatParameterUI("Wheel Stress Damage Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "Determines how quickly wheels break from being overloaded or absorbing impact forces.  Lower values result in increased load and impact stress tolerance, setting to zero disables stress based damage.")]
         public float stressDamageMultiplier = 1f;
@@ -96,7 +99,7 @@
         [GameParameters.CustomFloatParameterUI("Motor Use Wear Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how quickly motors accumulate wear from standard use.  Lower values result in increased motor lifespan, setting to zero disables use based damage.")]
         public float motorDamageMultiplier = 1f;
 
-        [GameParameters.CustomFloatParameterUI("Motor Heat Wear Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how quickly motors accumulate wear from being used while overheated.  Lower values result in increased motor heat tolerance, setting to zero disables heat based damage.")]
+        [GameParameters.CustomFloatParameterUI("Motor Heat Output Rate", minValue = 0, maxValue = 4, stepCount = 40, displayFormat = "F2", toolTip = "ADVANCED WEAR MODE ONLY\nDetermines how much heat motors output wear from being used.  Lower values result in decreased motor heat output, setting to zero disables motor heat output.")]
         public float motorHeatMultiplier = 1f;
 
         public override string Section { get { return "KSPWheel"; } }
@@ -108,6 +111,8 @@
         public override GameParameters.GameMode GameMode { get { return GameParameters.GameMode.ANY; } }
 
         public override bool HasPresets { get { return false; } }
+
+        public override string DisplaySection { get { return "KSPWheel"; } }
 
     }
 

@@ -24,6 +24,13 @@ namespace KSPWheel
         [KSPField]
         public Vector3 suspensionAxis = Vector3.up;
 
+        /// <summary>
+        /// Secondary wheel indexes form compression distance averaging
+        /// CSV list, defaults to none
+        /// </summary>
+        [KSPField]
+        public string secondaryWheels = string.Empty;
+
         [KSPField]
         public float retractedPosition = 1f;
 
@@ -45,7 +52,7 @@ namespace KSPWheel
         private float deployedPosition = 1f;
         private GameObject lockedSuspensionObject;
         private CapsuleCollider lockedSuspensionCollider;
-        private Vector3 lockedPos = Vector3.zero;
+        private int[] secondaryWheelInd = null;
 
         private void suspensionLockChanged(BaseField field, System.Object obj)
         {
@@ -53,8 +60,7 @@ namespace KSPWheel
             {
                 if (lockSuspension)
                 {
-                    lockedPos = Vector3.zero;
-                    lockedSuspensionCollider.center = lockedPos;
+                    lockedSuspensionCollider.center = Vector3.zero;
                     lockedSuspensionCollider.enabled = controller.wheelState == KSPWheelState.DEPLOYED;
                 }
                 else if (!lockSuspension)
@@ -64,12 +70,29 @@ namespace KSPWheel
             }
         }
 
+        [KSPAction("Lock Suspension")]
+        public void suspensionLockAction(KSPActionParam param)
+        {
+            suspensionLockChanged(null, null);
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             Fields[nameof(lockSuspension)].guiActive = allowLockedSuspension;
             Fields[nameof(lockSuspension)].guiActiveEditor = false;
             Fields[nameof(lockSuspension)].uiControlFlight.onFieldChanged = suspensionLockChanged;
+            Actions[nameof(suspensionLockAction)].active = allowLockedSuspension;
+            if (!string.IsNullOrEmpty(secondaryWheels))
+            {
+                string[] sp = secondaryWheels.Split(',');
+                int len = sp.Length;
+                secondaryWheelInd = new int[len];
+                for (int i = 0; i < len; i++)
+                {
+                    secondaryWheelInd[i] = int.Parse(sp[i].Trim());
+                }
+            }
         }
 
         public void Update()
@@ -109,10 +132,21 @@ namespace KSPWheel
                 if (controller.wheelState == KSPWheelState.DEPLOYED)
                 {
                     offset = wheel.length - wheel.compressionDistance;
+                    if (secondaryWheelInd != null)
+                    {
+                        int len = secondaryWheelInd.Length;
+                        KSPWheelBase.KSPWheelData sec;
+                        for (int i = 0; i < len; i++)
+                        {
+                            sec = controller.wheelData[secondaryWheelInd[i]];
+                            offset += sec.wheel.length - sec.wheel.compressionDistance;
+                        }
+                        offset /= len + 1;
+                    }
                 }
                 else if (controller.wheelState == KSPWheelState.BROKEN)
                 {
-                    offset = suspensionOffset * part.rescaleFactor * controller.scale;
+                    offset = 0f;
                 }
                 else//retracting or deploying, find and set to proper position
                 {
@@ -161,14 +195,15 @@ namespace KSPWheel
                     lockedSuspensionCollider = lockedSuspensionObject.AddComponent<CapsuleCollider>();
                     lockedSuspensionCollider.radius = wheel.radius;
                     lockedSuspensionCollider.height = wheel.radius * 2;
-                    lockedPos.y = -(wheel.length - wheel.compressionDistance);
-                    lockedSuspensionCollider.center = lockedPos;
+                    lockedSuspensionCollider.center = Vector3.zero;
                 }
-                float d = Mathf.Abs(lockedPos.y) - wheel.length * 0.95f;
-                if (d != 0)
+                float destY = -wheel.length * 1.01f;
+                float t = lockedSuspensionCollider.center.y;
+                if (t != destY)
                 {
-                    lockedPos.y += d;
-                    lockedSuspensionCollider.center = lockedPos;
+                    t = Mathf.MoveTowards(t, destY, wheel.length * Time.fixedDeltaTime * 0.5f);
+                    Vector3 pos = new Vector3(0, t, 0);
+                    lockedSuspensionCollider.center = pos;
                 }
             }
         }
