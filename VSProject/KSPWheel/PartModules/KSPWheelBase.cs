@@ -85,6 +85,12 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0.2f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float springRating = 0.5f;
 
+        [KSPField]
+        public float minSpringRating = 0.2f;
+
+        [KSPField]
+        public float maxSpringRating = 0.8f;
+
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
         UI_FloatRange(minValue = 0.35f, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float dampRatio = 0.65f;
@@ -444,6 +450,20 @@ namespace KSPWheel
             {
                 rng.minValue = minDampRatio;
                 rng.maxValue = maxDampRatio;
+            }
+
+            field = Fields[nameof(springRating)];
+            rng = (UI_FloatRange)field.uiControlFlight;
+            if (rng != null)
+            {
+                rng.minValue = minSpringRating;
+                rng.maxValue = maxSpringRating;
+            }
+            rng = (UI_FloatRange)field.uiControlEditor;
+            if (rng != null)
+            {
+                rng.minValue = minSpringRating;
+                rng.maxValue = maxSpringRating;
             }
 
             field = Fields[nameof(suspensionTarget)];
