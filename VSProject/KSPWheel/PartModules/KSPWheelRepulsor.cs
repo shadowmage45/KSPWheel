@@ -44,6 +44,9 @@ namespace KSPWheel
         [KSPField]
         public string repulsorSoundEffect = String.Empty;
 
+        [KSPField]
+        public bool showGUIHeight = true;
+
         private Transform gimbalTransform;
 
         private Material gridMaterial;
@@ -290,8 +293,7 @@ namespace KSPWheel
         internal override void onUIControlsUpdated(bool show)
         {
             base.onUIControlsUpdated(show);
-            Fields[nameof(repulsorHeight)].guiActive = Fields[nameof(repulsorHeight)].guiActiveEditor = show;
-            Fields[nameof(repulsorEnabled)].guiActive = show;
+            Fields[nameof(repulsorHeight)].guiActive = Fields[nameof(repulsorHeight)].guiActiveEditor = show && showGUIHeight;
             Fields[nameof(repulsorEnabled)].guiActive = Fields[nameof(repulsorEnabled)].guiActiveEditor = show;
         }
 

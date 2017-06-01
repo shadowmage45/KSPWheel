@@ -127,6 +127,23 @@ namespace KSPWheel
         [KSPField]
         public float maxECDraw = 0f;
 
+        [KSPField]
+        public bool showGUIMotorLimit = true;
+        [KSPField]
+        public bool showGUIMotorInvert = true;
+        [KSPField]
+        public bool showGUIMotorLock = true;
+        [KSPField]
+        public bool showGUISteerLock = true;
+        [KSPField]
+        public bool showGUISteerInvert = true;
+        [KSPField]
+        public bool showGUIGearRatio = true;
+        [KSPField]
+        public bool showGUIHalfTrack = true;
+        [KSPField]
+        public bool showGUIStats = true;
+
         public float torqueOutput;
         private float scaledMaxTorque = 0f;//actual post-scaling max torque
         private float scaledMaxRPM = 0f;
@@ -255,8 +272,8 @@ namespace KSPWheel
             ConfigNode config = GameDatabase.Instance.GetConfigNodes("KSPWHEELCONFIG")[0];
             powerConversion = config.GetFloatValue("powerConversion", 65f);
             calcPowerStats();
-            Actions[nameof(steeringLockAction)].active = tankSteering;
-            Actions[nameof(steeringInvertAction)].active = tankSteering;
+            Actions[nameof(steeringLockAction)].active = tankSteering && showGUISteerLock;
+            Actions[nameof(steeringInvertAction)].active = tankSteering && showGUISteerInvert;
 
             UI_FloatEdit fe = (UI_FloatEdit)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(gearRatio)].uiControlEditor : Fields[nameof(gearRatio)].uiControlFlight);
             fe.minValue = minGearRatio;
@@ -283,23 +300,23 @@ namespace KSPWheel
         {
             base.onUIControlsUpdated(show);
 
-            Fields[nameof(motorOutput)].guiActive = Fields[nameof(motorOutput)].guiActiveEditor = show;
-            Fields[nameof(invertMotor)].guiActive = Fields[nameof(invertMotor)].guiActiveEditor = show;
-            Fields[nameof(motorLocked)].guiActive = Fields[nameof(motorLocked)].guiActiveEditor = show;
+            Fields[nameof(motorOutput)].guiActive = Fields[nameof(motorOutput)].guiActiveEditor = show && showGUIMotorLimit;
+            Fields[nameof(invertMotor)].guiActive = Fields[nameof(invertMotor)].guiActiveEditor = show && showGUIMotorInvert;
+            Fields[nameof(motorLocked)].guiActive = Fields[nameof(motorLocked)].guiActiveEditor = show && showGUIMotorLock;
 
-            Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = tankSteering && show;
-            Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering && show;
-            Fields[nameof(halfTrackSteering)].guiActive = Fields[nameof(halfTrackSteering)].guiActiveEditor = tankSteering && show;
+            Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = tankSteering && show && showGUISteerInvert;
+            Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = tankSteering && show && showGUISteerLock;
+            Fields[nameof(halfTrackSteering)].guiActive = Fields[nameof(halfTrackSteering)].guiActiveEditor = tankSteering && show && showGUIHalfTrack;
 
-            Fields[nameof(gearRatio)].guiActive = Fields[nameof(gearRatio)].guiActiveEditor = show && HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().manualGearing;
+            Fields[nameof(gearRatio)].guiActive = Fields[nameof(gearRatio)].guiActiveEditor = show && HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().manualGearing && showGUIGearRatio;
 
-            Fields[nameof(maxDrivenSpeed)].guiActive = Fields[nameof(maxDrivenSpeed)].guiActiveEditor = show;
-            Fields[nameof(motorCurRPM)].guiActive = Fields[nameof(motorCurRPM)].guiActiveEditor = show;
-            Fields[nameof(torqueOut)].guiActive = Fields[nameof(torqueOut)].guiActiveEditor = show;
-            Fields[nameof(powerOutKW)].guiActive = Fields[nameof(powerOutKW)].guiActiveEditor = show;
-            Fields[nameof(powerInKW)].guiActive = Fields[nameof(powerInKW)].guiActiveEditor = show;
-            Fields[nameof(powerEff)].guiActive = Fields[nameof(powerEff)].guiActiveEditor = show;
-            Fields[nameof(guiResourceUse)].guiActive = Fields[nameof(guiResourceUse)].guiActiveEditor = show;
+            Fields[nameof(maxDrivenSpeed)].guiActive = Fields[nameof(maxDrivenSpeed)].guiActiveEditor = show && showGUIStats;
+            Fields[nameof(motorCurRPM)].guiActive = Fields[nameof(motorCurRPM)].guiActiveEditor = show && showGUIStats;
+            Fields[nameof(torqueOut)].guiActive = Fields[nameof(torqueOut)].guiActiveEditor = show && showGUIStats;
+            Fields[nameof(powerOutKW)].guiActive = Fields[nameof(powerOutKW)].guiActiveEditor = show && showGUIStats;
+            Fields[nameof(powerInKW)].guiActive = Fields[nameof(powerInKW)].guiActiveEditor = show && showGUIStats;
+            Fields[nameof(powerEff)].guiActive = Fields[nameof(powerEff)].guiActiveEditor = show && showGUIStats;
+            Fields[nameof(guiResourceUse)].guiActive = Fields[nameof(guiResourceUse)].guiActiveEditor = show && showGUIStats;
         }
 
         internal override void preWheelPhysicsUpdate()

@@ -158,6 +158,21 @@ namespace KSPWheel
         [KSPField]
         public string wheelType = "Wheel";
 
+        [KSPField]
+        public bool showGUISpring = true;
+
+        [KSPField]
+        public bool showGUIDamper = true;
+
+        [KSPField]
+        public bool showGUIAntiRoll = true;
+
+        [KSPField]
+        public bool showGUIScale = true;
+
+        [KSPField]
+        public bool showGUIWheelGroup = true;
+
         #endregion
 
         #region REGION - Persistent data
@@ -275,10 +290,11 @@ namespace KSPWheel
 
             Fields[nameof(suspensionTarget)].guiActive = Fields[nameof(suspensionTarget)].guiActiveEditor = showControls && advancedMode;
             Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls && advancedMode;
-            Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode;
-            Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls;
-            Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls;
-            Fields[nameof(antiRoll)].guiActive = Fields[nameof(antiRoll)].guiActiveEditor = showControls;
+            Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode && showGUISpring;
+            Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls && showGUIDamper;
+            Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls && showGUIWheelGroup;
+            Fields[nameof(antiRoll)].guiActive = Fields[nameof(antiRoll)].guiActiveEditor = showControls && showGUIAntiRoll;
+            Fields[nameof(scale)].guiActive = Fields[nameof(scale)].guiActiveEditor = showControls && allowScaling && showGUIScale;
         }
 
         private void onScaleAdjusted(BaseField field, System.Object obj)

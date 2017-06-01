@@ -61,6 +61,17 @@ namespace KSPWheel
         [KSPField]
         public FloatCurve steeringCurve = new FloatCurve();
 
+        [KSPField]
+        public bool showGUISteerLock;
+        [KSPField]
+        public bool showGUISteerInvert;
+        [KSPField]
+        public bool showGUISteerBias;
+        [KSPField]
+        public bool showGUISteerResponse;
+        [KSPField]
+        public bool showGUISteerLimit;
+
         private Transform steeringTransform;
         private Quaternion defaultRotation;
         private float rotInput;
@@ -131,12 +142,12 @@ namespace KSPWheel
         internal override void onUIControlsUpdated(bool show)
         {
             base.onUIControlsUpdated(show);
-            Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = show;
-            Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = show;
-            Fields[nameof(steeringLimit)].guiActive = Fields[nameof(steeringLimit)].guiActiveEditor = show;
-            Fields[nameof(steeringLimitHigh)].guiActive = Fields[nameof(steeringLimitHigh)].guiActiveEditor = show;
-            Fields[nameof(steeringResponse)].guiActive = Fields[nameof(steeringResponse)].guiActiveEditor = show;
-            Fields[nameof(steeringBias)].guiActive = Fields[nameof(steeringBias)].guiActiveEditor = show;
+            Fields[nameof(steeringLocked)].guiActive = Fields[nameof(steeringLocked)].guiActiveEditor = show && showGUISteerLock;
+            Fields[nameof(invertSteering)].guiActive = Fields[nameof(invertSteering)].guiActiveEditor = show && showGUISteerInvert;
+            Fields[nameof(steeringLimit)].guiActive = Fields[nameof(steeringLimit)].guiActiveEditor = show && showGUISteerLimit;
+            Fields[nameof(steeringLimitHigh)].guiActive = Fields[nameof(steeringLimitHigh)].guiActiveEditor = show && showGUISteerLimit;
+            Fields[nameof(steeringResponse)].guiActive = Fields[nameof(steeringResponse)].guiActiveEditor = show && showGUISteerResponse;
+            Fields[nameof(steeringBias)].guiActive = Fields[nameof(steeringBias)].guiActiveEditor = show && showGUISteerBias;
         }
 
         internal override void postControllerSetup()
