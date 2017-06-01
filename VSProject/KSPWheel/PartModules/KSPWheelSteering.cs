@@ -62,15 +62,15 @@ namespace KSPWheel
         public FloatCurve steeringCurve = new FloatCurve();
 
         [KSPField]
-        public bool showGUISteerLock;
+        public bool showGUISteerLock = true;
         [KSPField]
-        public bool showGUISteerInvert;
+        public bool showGUISteerInvert = true;
         [KSPField]
-        public bool showGUISteerBias;
+        public bool showGUISteerBias = true;
         [KSPField]
-        public bool showGUISteerResponse;
+        public bool showGUISteerResponse = true;
         [KSPField]
-        public bool showGUISteerLimit;
+        public bool showGUISteerLimit = true;
 
         private Transform steeringTransform;
         private Quaternion defaultRotation;
