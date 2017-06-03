@@ -34,6 +34,8 @@
 
         public override bool HasPresets { get { return false; } }
 
+        public override string DisplaySection { get { return "KSPWheel"; } }
+
     }
 
     public class KSPWheelScaleSettings : GameParameters.CustomParameterNode
@@ -76,6 +78,8 @@
 
         public override bool HasPresets { get { return false; } }
 
+        public override string DisplaySection { get { return "KSPWheel"; } }
+
     }
 
     public class KSPWheelWearSettings : GameParameters.CustomParameterNode
@@ -105,6 +109,8 @@
         public override GameParameters.GameMode GameMode { get { return GameParameters.GameMode.ANY; } }
 
         public override bool HasPresets { get { return false; } }
+
+        public override string DisplaySection { get { return "KSPWheel"; } }
 
     }
 
