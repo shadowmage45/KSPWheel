@@ -195,7 +195,7 @@ namespace KSPWheel
             speed = 0f;
             for (int i = 0; i < len; i++)
             {
-                speed += Mathf.Abs(controller.wheelData[i].wheel.linearVelocity);
+                speed += Mathf.Abs(controller.wheelData[i].wheel.linearVelocity) / TimeWarp.CurrentRate;
             }
             speed /= controller.wheelData.Length;
             if (speed > maxSafeSpeed )
