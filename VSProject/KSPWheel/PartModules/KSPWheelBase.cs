@@ -57,6 +57,10 @@ namespace KSPWheel
         [KSPField]
         public float frictionMult = 1f;
 
+        [KSPField(guiName = "Friction Multiplier", guiActive = true, guiActiveEditor = true, isPersistant = true, guiFormat = "F3"),
+         UI_FloatRange(minValue = 0f, maxValue = 4f, suppressEditorShipModified = true, stepIncrement = 0.05f)]
+        public float frictionControl = 1f;
+
         [KSPField]
         public float rollingResistance = 0.005f;
 
@@ -481,6 +485,23 @@ namespace KSPWheel
             ufe.minValue = minScale;
             ufe.maxValue = maxScale;
 
+            bool frictionControlEnabled = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().enableFrictionControl;
+            Callback<BaseField, System.Object> frictionAction = delegate (BaseField a, System.Object b)
+            {
+                float fMult = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().globalFrictionAdjustment;
+                this.symmetryUpdate(m =>
+                {
+                    if (m != this) { m.frictionControl = frictionControl; }
+                    int len = m.wheelData.Length;
+                    for (int i = 0; i < len; i++)
+                    {
+                        m.wheelData[i].wheel.surfaceFrictionCoefficient = m.frictionControl * m.frictionMult * fMult;
+                    }
+                });
+            };
+            Fields[nameof(frictionControl)].guiActive = Fields[nameof(frictionControl)].guiActiveEditor = frictionControlEnabled;
+            Fields[nameof(frictionControl)].uiControlEditor.onFieldChanged = Fields[nameof(frictionControl)].uiControlFlight.onFieldChanged = frictionAction;
+
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -517,6 +538,7 @@ namespace KSPWheel
         {
             int count = wheelData.Length;
             string[] wheelPersistentDatas = persistentData.Split(';');
+            float fMult = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().globalFrictionAdjustment;
             for (int i = 0; i < count; i++)
             {
                 wheelData[i].locateTransform(part.transform);
@@ -526,7 +548,7 @@ namespace KSPWheel
                     CollisionManager.IgnoreCollidersOnVessel(vessel, wheelData[i].bumpStopCollider);
                     wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
                 }
-                wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
+                wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult * fMult * frictionControl;
                 wheelData[i].wheel.forwardFrictionCoefficient = forwardFriction;
                 wheelData[i].wheel.sideFrictionCoefficient = sidewaysFriction;
                 wheelData[i].wheel.rollingResistance = rollingResistance;
