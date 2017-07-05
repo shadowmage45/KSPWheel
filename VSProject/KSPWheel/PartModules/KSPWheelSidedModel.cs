@@ -75,6 +75,7 @@ namespace KSPWheel
             modelClone.transform.parent = modelRoot;
             modelClone.transform.localPosition = Vector3.zero;
             modelClone.transform.localRotation = Quaternion.identity;
+            part.gameObject.SendMessage("onPartGeometryChanged");//triggers texture-set module to reinit texture sets
         }
 
         private KSPWheelSidedModel findCloneModule()
