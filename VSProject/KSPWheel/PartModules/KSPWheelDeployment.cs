@@ -54,6 +54,12 @@ namespace KSPWheel
         [KSPField]
         public bool invertAnimation = false;
 
+        [KSPField]
+        public bool useFromEVA = false;
+
+        [KSPField]
+        public bool useFromEVAOnly = false;
+
         [Persistent]
         public string configNodeData = String.Empty;
 
@@ -147,6 +153,9 @@ namespace KSPWheel
             base.OnStart(state);
             Events[nameof(toggleGearEvent)].guiName = "Toggle " + actionName + " Deployment";
             Actions[nameof(toggleGearAction)].guiName = "Toggle " + actionName + " Deployment";
+            Events[nameof(toggleGearEvent)].guiActiveUncommand = true;
+            Events[nameof(toggleGearEvent)].guiActiveUnfocused = useFromEVA;
+            Events[nameof(toggleGearEvent)].externalToEVAOnly = useFromEVA && useFromEVAOnly;
         }
 
         public void Update()
