@@ -304,7 +304,7 @@ namespace KSPWheel
             Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls && showGUIDamper;
             Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls && showGUIWheelGroup;
             Fields[nameof(antiRoll)].guiActive = Fields[nameof(antiRoll)].guiActiveEditor = showControls && showGUIAntiRoll;
-            Fields[nameof(scale)].guiActive = Fields[nameof(scale)].guiActiveEditor = showControls && allowScaling && showGUIScale;
+            Fields[nameof(scale)].guiActiveEditor = showControls && allowScaling && showGUIScale;
         }
 
         private void onScaleAdjusted(BaseField field, System.Object obj)
