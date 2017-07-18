@@ -85,8 +85,10 @@
     <Compile Include="PartModules\KSPWheelSounds.cs" />
     <Compile Include="PartModules\KSPWheelState.cs" />
     <Compile Include="PartModules\KSPWheelSteering.cs" />
+    <Compile Include="PartModules\KSPWheelStrut.cs" />
     <Compile Include="PartModules\KSPWheelSubmodule.cs" />
     <Compile Include="PartModules\KSPWheelSuspension.cs" />
+    <Compile Include="PartModules\KSPWheelTextureSwitch.cs" />
     <Compile Include="PartModules\KSPWheelTracks.cs" />
     <Compile Include="PartModules\KSPWheelTransformRemoval.cs" />
     <Compile Include="PartModules\KSPWheelWaterPropulsion.cs" />

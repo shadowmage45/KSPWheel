@@ -76,7 +76,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\KSPFrictionCurve.cs" />
-    <Compile Include="Assets\Scripts\KSPWheelAutoLevel.cs" />
     <Compile Include="Assets\Scripts\KSPWheelCollider.cs" />
     <Compile Include="Assets\Scripts\KSPWheelComponent.cs" />
     <Compile Include="Assets\Scripts\KSPWheelFrictionCurve.cs" />
