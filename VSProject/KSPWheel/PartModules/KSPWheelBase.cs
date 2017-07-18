@@ -577,6 +577,11 @@ namespace KSPWheel
             {
                 return;
             }
+            if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex > 0)
+            {
+                //MonoBehaviour.print("Skipping wheel update from non-physics timewarp");
+                return;
+            }
             if (!initializedWheels)
             {
                 Rigidbody rb = null;
