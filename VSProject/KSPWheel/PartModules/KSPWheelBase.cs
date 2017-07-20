@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -1175,6 +1176,23 @@ namespace KSPWheel
             damper = cd * dampRatio;
         }
 
+        public string getDebugInfo()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Part: "+part.name);
+            sb.AppendLine("ID: " + part.craftID);
+            sb.AppendLine("Wheels in part: " + wheelData.Length);
+            sb.AppendLine("Spring: " + springRating);
+            sb.AppendLine("Damper: " + dampRatio);
+            sb.AppendLine("Per-Wheel data: ");
+            int len = wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                sb.AppendLine(wheelData[i].getDebugInfo());
+            }
+            return sb.ToString();
+        }
+
         #endregion
 
         public class KSPWheelData
@@ -1304,6 +1322,28 @@ namespace KSPWheel
                 {
                     wheel.rpm = float.Parse(vals[1]);
                 }
+            }
+
+            public string getDebugInfo()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Travel: " + wheel.length);
+                sb.AppendLine("Mass  : " + wheel.mass);
+                sb.AppendLine("Share : " + loadShare);
+                sb.AppendLine("Rating: " + loadRating);
+                sb.AppendLine("LdTarg: " + loadTarget);
+                sb.AppendLine("Spring: " + wheel.spring);
+                sb.AppendLine("Damper: " + wheel.damper);
+                sb.AppendLine("SForce: " + wheel.springForce);
+                sb.AppendLine("DampFc: " + wheel.dampForce);
+                sb.AppendLine("HitDst: " + wheel.compressionDistance);
+                sb.AppendLine("FX    : " + wheel.lateralForce);
+                sb.AppendLine("FZ    : " + wheel.longitudinalForce);
+                sb.AppendLine("SX    : " + wheel.lateralSlip);
+                sb.AppendLine("SZ    : " + wheel.longitudinalSlip);
+                sb.AppendLine("SteerA: " + wheel.steeringAngle);
+                sb.AppendLine("Torque: " + wheel.motorTorque);
+                return sb.ToString();
             }
         }
 

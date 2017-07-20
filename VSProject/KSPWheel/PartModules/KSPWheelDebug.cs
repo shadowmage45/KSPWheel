@@ -163,6 +163,10 @@ namespace KSPWheel
             {
                 updateDebugRendering();
             }
+            if (GUILayout.Button("Dump Wheel Debug Data"))
+            {
+                dumpDebugData();
+            }
 
             //per-wheel instance data view
             scrollPos = GUILayout.BeginScrollView(scrollPos);
@@ -232,6 +236,11 @@ namespace KSPWheel
             }
             GUILayout.EndVertical();
             GUI.DragWindow();
+        }
+
+        public void dumpDebugData()
+        {
+            //TODO
         }
 
     }
