@@ -567,6 +567,14 @@ namespace KSPWheel
             }
             this.onShowUIUpdated(null, null);
             initializedEditor = true;
+            //if this is flight scene, update stock drag cubes
+            //TODO -- this needs testing/verification if it causes any problems with stock code
+            if (scaleDragCubes && HighLogic.LoadedSceneIsFlight)
+            {
+                updateDragCubes(prevScale, scale);
+            }
+            //finally, also update FAR voxelization
+            part.SendMessage("GeometryPartModuleRebuildMeshData");
         }
 
         /// <summary>
@@ -618,6 +626,7 @@ namespace KSPWheel
                     {
                         updateDragCubes(1, scale);
                     }
+                    part.SendMessage("GeometryPartModuleRebuildMeshData");
                 }
             }
 
