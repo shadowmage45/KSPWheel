@@ -374,16 +374,16 @@ namespace KSPWheel
                 part.Effect(retractEffect, 0f);
             }
             updateAnimation(animTime);
+            float diff = prevDragUpdateState > animationTime ? prevDragUpdateState - animationTime : animationTime - prevDragUpdateState;
             if (HighLogic.LoadedSceneIsFlight)
             {
                 part.DragCubes.SetCubeWeight("Retracted", 1f - animationTime);
                 part.DragCubes.SetCubeWeight("Deployed", animationTime);
-                float diff = prevDragUpdateState > animationTime ? prevDragUpdateState - animationTime : animationTime - prevDragUpdateState;
-                if (diff > 0.1f || animationTime<=0 || animationTime>=1)
-                {
-                    part.SendMessage("GeometryPartModuleRebuildMeshData");
-                    prevDragUpdateState = animationTime;
-                }
+            }
+            if (diff > 0.1f || animationTime <= 0 || animationTime >= 1)
+            {
+                part.SendMessage("GeometryPartModuleRebuildMeshData");
+                prevDragUpdateState = animationTime;
             }
         }
 
