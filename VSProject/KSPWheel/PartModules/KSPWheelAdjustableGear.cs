@@ -321,6 +321,15 @@ namespace KSPWheel
             this.updateUIFloatRangeControl(nameof(wheelRotation), wheelRotation, minWheelAngle, maxWheelAngle, 0.5f);
         }
 
+        internal override void postControllerSetup()
+        {
+            base.postControllerSetup();
+            if (vessel != null)
+            {
+                vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, controller.wheelState == KSPWheelState.DEPLOYED);
+            }
+        }
+
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
