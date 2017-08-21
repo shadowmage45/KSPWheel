@@ -394,10 +394,13 @@ namespace KSPWheel
         internal override void onStateChanged(KSPWheelState oldState, KSPWheelState newState)
         {
             base.onStateChanged(oldState, newState);
-            tempCollider.enabled = newState == KSPWheelState.RETRACTING || newState == KSPWheelState.DEPLOYING;
-            if (tempCollider.enabled)
+            if (tempCollider != null)//can be null in the editor?
             {
-                CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
+                tempCollider.enabled = newState == KSPWheelState.RETRACTING || newState == KSPWheelState.DEPLOYING;
+                if (tempCollider.enabled)
+                {
+                    CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
+                }
             }
         }
 
