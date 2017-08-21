@@ -380,7 +380,7 @@ namespace KSPWheel
                 part.DragCubes.SetCubeWeight("Retracted", 1f - animationTime);
                 part.DragCubes.SetCubeWeight("Deployed", animationTime);
             }
-            if (diff > 0.1f || animationTime <= 0 || animationTime >= 1)
+            if (diff > 0.1f || (prevDragUpdateState!=animationTime && (animationTime <= 0 || animationTime >= 1)))
             {
                 part.SendMessage("GeometryPartModuleRebuildMeshData");
                 prevDragUpdateState = animationTime;
