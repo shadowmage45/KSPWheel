@@ -379,11 +379,11 @@ namespace KSPWheel
                 part.DragCubes.SetCubeWeight("Retracted", 1f - animationTime);
                 part.DragCubes.SetCubeWeight("Deployed", animationTime);
                 float diff = prevDragUpdateState > animationTime ? prevDragUpdateState - animationTime : animationTime - prevDragUpdateState;
-                if (diff > 0.1f)
+                if (diff > 0.1f || animationTime<=0 || animationTime>=1)
                 {
                     part.SendMessage("GeometryPartModuleRebuildMeshData");
+                    prevDragUpdateState = animationTime;
                 }
-                prevDragUpdateState = animationTime;
             }
         }
 
