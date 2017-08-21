@@ -949,6 +949,10 @@ namespace KSPWheel
                     landedBiomeName = string.Empty;
                 }
             }
+            if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
+            {
+                part.SendMessage("GeometryPartModuleRebuildMeshData");
+            }
         }
 
         private void onScaleUpdated()
