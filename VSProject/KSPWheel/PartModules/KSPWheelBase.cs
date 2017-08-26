@@ -568,7 +568,6 @@ namespace KSPWheel
             this.onShowUIUpdated(null, null);
             initializedEditor = true;
             //if this is flight scene, update stock drag cubes
-            //TODO -- this needs testing/verification if it causes any problems with stock code
             if (scaleDragCubes && HighLogic.LoadedSceneIsFlight)
             {
                 updateDragCubes(prevScale, scale);
