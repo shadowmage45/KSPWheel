@@ -690,10 +690,20 @@ namespace KSPWheel
             // and pray that all the rhs/lhs coordinates are correct...
             float slopeLatDot = Vector3.Dot(upDown, wR);
             agFix = agForce * slopeLatDot * wR * Mathf.Clamp(currentSideFrictionCoef, 0, 1);
-            if (brakeTorque > 0 && Mathf.Abs(motorTorque) < brakeTorque)
+            float vel = Mathf.Abs(localVelocity.z);
+            if (brakeTorque > 0 && Mathf.Abs(motorTorque) < brakeTorque && vel < 4)
             {
+                float mult = 1f;
+                if (vel > 2)
+                {
+                    //if between 2m/s and 4/ms, lerp output force between them
+                    //zero ouput at or above 4m/s, max output at or below 2m/s, intermediate force output inbetween those values
+                    vel -= 2;//clamp to range 0-2
+                    vel *= 0.5f;//clamp to range 0-1
+                    mult = 1-vel;//invert to range 1-0; with 0 being for input velocity of 4
+                }
                 float slopeLongDot = Vector3.Dot(upDown, wF);
-                agFix += agForce * slopeLongDot * wF * Mathf.Clamp(currentFwdFrictionCoef, 0, 1);
+                agFix += agForce * slopeLongDot * wF * Mathf.Clamp(currentFwdFrictionCoef, 0, 1) * mult;
             }
             return agFix;
         }
