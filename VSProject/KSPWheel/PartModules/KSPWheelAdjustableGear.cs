@@ -324,9 +324,10 @@ namespace KSPWheel
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
-            if (vessel != null)
+            if (vessel != null && controller != null)
             {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, controller.wheelState == KSPWheelState.DEPLOYED);
+                bool state = vessel.ActionGroups[KSPActionGroup.Gear];
+                vessel.ActionGroups[KSPActionGroup.Gear] = state || controller.wheelState == KSPWheelState.DEPLOYED;
             }
         }
 
