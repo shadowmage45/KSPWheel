@@ -200,7 +200,8 @@ namespace KSPWheel
             }
             if (vessel != null)
             {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, controller.wheelState == KSPWheelState.DEPLOYED);
+                bool state = vessel.ActionGroups[KSPActionGroup.Gear];
+                vessel.ActionGroups[KSPActionGroup.Gear] = state || controller.wheelState == KSPWheelState.DEPLOYED;
             }
             if (!string.IsNullOrEmpty(tempColliderName))
             {
