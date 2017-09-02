@@ -28,15 +28,31 @@ namespace KSPWheel
         [KSPField(isPersistant = true)]
         private bool isClone = false;
 
+        [SerializeField]
+        private bool setupClone = false;
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
             KSPWheelSidedModel cloneModule = findCloneModule();
-            if (cloneModule != null)
+            if (cloneModule != null)//has symmetry parts
             {
-                isClone = !cloneModule.isClone;
+                bool c = !cloneModule.isClone;
+                if (c != isClone)//model is being flipped from what it currently is
+                {
+                    setupClone = false;//set flag to update model
+                }
+                isClone = c;
             }
-            setupModel();
+            else if(!isClone)//has no symmetry parts, and doesn't need any model swapping
+            {
+                setupClone = true;
+            }
+            if (!setupClone)
+            {
+                setupClone = true;
+                setupModel();
+            }
         }
 
         private void setupModel()
@@ -59,6 +75,7 @@ namespace KSPWheel
             modelClone.transform.parent = modelRoot;
             modelClone.transform.localPosition = Vector3.zero;
             modelClone.transform.localRotation = Quaternion.identity;
+            part.gameObject.SendMessage("onPartGeometryChanged");//triggers texture-set module to reinit texture sets
         }
 
         private KSPWheelSidedModel findCloneModule()

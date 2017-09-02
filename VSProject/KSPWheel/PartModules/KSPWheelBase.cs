@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -57,6 +58,10 @@ namespace KSPWheel
         [KSPField]
         public float frictionMult = 1f;
 
+        [KSPField(guiName = "Friction Multiplier", guiActive = true, guiActiveEditor = true, isPersistant = true, guiFormat = "F3"),
+         UI_FloatRange(minValue = 0f, maxValue = 4f, suppressEditorShipModified = true, stepIncrement = 0.05f)]
+        public float frictionControl = 1f;
+
         [KSPField]
         public float rollingResistance = 0.005f;
 
@@ -88,6 +93,12 @@ namespace KSPWheel
         [KSPField(guiName = "Spring Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = 0.0f, maxValue = 1.0f, stepIncrement = 0.05f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float springRating = 0.5f;
+
+        [KSPField]
+        public float minSpringRating = 0.2f;
+
+        [KSPField]
+        public float maxSpringRating = 0.8f;
 
         [KSPField(guiName = "Damp Ratio", guiActive = true, guiActiveEditor = true, isPersistant = true),
         UI_FloatRange(minValue = 0.35f, maxValue = 1.0f, stepIncrement = 0.025f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
@@ -141,10 +152,44 @@ namespace KSPWheel
         public float sidewaysFriction = 1f;
 
         /// <summary>
+        /// The coefficient of the wheel colliders spring force that will be used for anti-roll-bar simulation
+        /// </summary>
+        [KSPField(guiName = "Anti Roll", guiActive = true, guiActiveEditor = true, isPersistant = true, guiFormat = "F2"),
+         UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.05f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.All)]
+        public float antiRoll = 0f;
+
+        /// <summary>
+        /// Determines if the wheel-collider indices should be inverted for symmetry parts -- needs set to false on parts that have proper L/R counterparts (KSPWheelSidedModel)
+        /// </summary>
+        [KSPField]
+        public bool antiRollInvertIndices = true;
+
+        /// <summary>
+        /// If true, will use wheel colliders within the same part for anti-roll functionality
+        /// </summary>
+        [KSPField]
+        public bool useSelfAntiRoll = false;
+
+        /// <summary>
         /// Used for in-editor part information display.  Sets the title of the module to this (rather than KSPWheelBase)
         /// </summary>
         [KSPField]
         public string wheelType = "Wheel";
+
+        [KSPField]
+        public bool showGUISpring = true;
+
+        [KSPField]
+        public bool showGUIDamper = true;
+
+        [KSPField]
+        public bool showGUIAntiRoll = true;
+
+        [KSPField]
+        public bool showGUIScale = true;
+
+        [KSPField]
+        public bool showGUIWheelGroup = true;
 
         #endregion
 
@@ -268,10 +313,11 @@ namespace KSPWheel
 
             Fields[nameof(suspensionTarget)].guiActive = Fields[nameof(suspensionTarget)].guiActiveEditor = showControls && advancedMode;
             Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls && advancedMode;
-            Fields[nameof(suspensionLength)].guiActive = Fields[nameof(suspensionLength)].guiActiveEditor = showControls;
-            Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode;
-            Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls;
-            Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls;
+            Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode && showGUISpring;
+            Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls && showGUIDamper;
+            Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls && showGUIWheelGroup;
+            Fields[nameof(antiRoll)].guiActive = Fields[nameof(antiRoll)].guiActiveEditor = showControls && showGUIAntiRoll;
+            Fields[nameof(scale)].guiActiveEditor = showControls && allowScaling && showGUIScale;
         }
 
         private void onScaleAdjusted(BaseField field, System.Object obj)
@@ -423,6 +469,20 @@ namespace KSPWheel
                 rng.maxValue = maxDampRatio;
             }
 
+            field = Fields[nameof(springRating)];
+            rng = (UI_FloatRange)field.uiControlFlight;
+            if (rng != null)
+            {
+                rng.minValue = minSpringRating;
+                rng.maxValue = maxSpringRating;
+            }
+            rng = (UI_FloatRange)field.uiControlEditor;
+            if (rng != null)
+            {
+                rng.minValue = minSpringRating;
+                rng.maxValue = maxSpringRating;
+            }
+
             field = Fields[nameof(suspensionTarget)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
             field.guiActive = field.guiActiveEditor = advancedMode;
@@ -437,6 +497,23 @@ namespace KSPWheel
             UI_FloatEdit ufe = (UI_FloatEdit)Fields[nameof(scale)].uiControlEditor;
             ufe.minValue = minScale;
             ufe.maxValue = maxScale;
+
+            bool frictionControlEnabled = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().enableFrictionControl;
+            Callback<BaseField, System.Object> frictionAction = delegate (BaseField a, System.Object b)
+            {
+                float fMult = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().globalFrictionAdjustment;
+                this.symmetryUpdate(m =>
+                {
+                    if (m != this) { m.frictionControl = frictionControl; }
+                    int len = m.wheelData.Length;
+                    for (int i = 0; i < len; i++)
+                    {
+                        m.wheelData[i].wheel.surfaceFrictionCoefficient = m.frictionControl * m.frictionMult * fMult;
+                    }
+                });
+            };
+            Fields[nameof(frictionControl)].guiActive = Fields[nameof(frictionControl)].guiActiveEditor = frictionControlEnabled;
+            Fields[nameof(frictionControl)].uiControlEditor.onFieldChanged = Fields[nameof(frictionControl)].uiControlFlight.onFieldChanged = frictionAction;
 
             //destroy stock collision enhancer collider
             if (HighLogic.LoadedSceneIsFlight)
@@ -481,6 +558,7 @@ namespace KSPWheel
         {
             int count = wheelData.Length;
             string[] wheelPersistentDatas = persistentData.Split(';');
+            float fMult = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().globalFrictionAdjustment;
             for (int i = 0; i < count; i++)
             {
                 wheelData[i].locateTransform(part.transform);
@@ -490,7 +568,7 @@ namespace KSPWheel
                     CollisionManager.IgnoreCollidersOnVessel(vessel, wheelData[i].bumpStopCollider);
                     wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
                 }
-                wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult;
+                wheelData[i].wheel.surfaceFrictionCoefficient = frictionMult * fMult * frictionControl;
                 wheelData[i].wheel.forwardFrictionCoefficient = forwardFriction;
                 wheelData[i].wheel.sideFrictionCoefficient = sidewaysFriction;
                 wheelData[i].wheel.rollingResistance = rollingResistance;
@@ -508,6 +586,13 @@ namespace KSPWheel
             }
             this.onShowUIUpdated(null, null);
             initializedEditor = true;
+            //if this is flight scene, update stock drag cubes
+            if (scaleDragCubes && HighLogic.LoadedSceneIsFlight)
+            {
+                updateDragCubes(prevScale, scale);
+            }
+            //finally, also update FAR voxelization
+            part.SendMessage("GeometryPartModuleRebuildMeshData");
         }
 
         /// <summary>
@@ -517,6 +602,11 @@ namespace KSPWheel
         {
             if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || !FlightDriver.fetch)
             {
+                return;
+            }
+            if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex > 0)
+            {
+                //MonoBehaviour.print("Skipping wheel update from non-physics timewarp");
                 return;
             }
             if (!initializedWheels)
@@ -555,6 +645,7 @@ namespace KSPWheel
                         updateDragCubes(1, scale);
                     }
                     onStateChanged(currentWheelState);//updates bump-stop collider friction
+                    part.SendMessage("GeometryPartModuleRebuildMeshData");
                 }
             }
 
@@ -606,6 +697,45 @@ namespace KSPWheel
                         if (pm == null) { wheel.contactColliderHit.material = customCollisionMaterial; }
                         pm.frictionCombine = PhysicMaterialCombine.Multiply;
                     }
+                }
+                if (antiRoll > 0)
+                {
+                    if (useSelfAntiRoll)
+                    {
+                        KSPWheelCollider otherWheel;
+                        for (int i = 0; i < len; i++)
+                        {
+                            wheel = wheelData[i].wheel;
+                            otherWheel = wheelData[wheelData[i].symmetryIndex].wheel;
+                            if (wheel.isGrounded && otherWheel.isGrounded)
+                            {
+                                float force = (wheel.compressionDistance - otherWheel.compressionDistance) * antiRoll * wheel.spring;
+                                wheel.rigidbody.AddForceAtPosition(force * wheel.contactNormal, wheel.transform.position);
+                            }
+                        }
+                        //TODO -- linking / use of multiple base-modules in the same part
+                        //TODO -- might require adding a second 'baseModuleSymmetryIndex' to the wheel-data instances
+                    }
+                    else if (part.symmetryCounterparts != null && part.symmetryCounterparts.Count > 0)
+                    {
+                        //TODO -- find index of this base module within set of base modules in the part
+                        //TODO -- use that index as the index-in-duplicates of the base module on the other part.
+                        KSPWheelBase otherModule = (KSPWheelBase)part.symmetryCounterparts[0].Modules[part.Modules.IndexOf(this)];
+                        KSPWheelCollider otherWheel;
+                        int otherIndex = 0;
+                        for (int i = 0; i < len; i++)
+                        {
+                            wheel = wheelData[i].wheel;
+                            otherIndex = antiRollInvertIndices ? len - 1 - i : i;
+                            otherWheel = otherModule.wheelData[otherIndex].wheel;
+                            if (wheel.isGrounded && otherWheel.isGrounded)
+                            {
+                                float force = (wheel.compressionDistance - otherWheel.compressionDistance) * antiRoll * wheel.spring;
+                                wheel.rigidbody.AddForceAtPosition(force * wheel.contactNormal, wheel.transform.position);
+                            }
+                        }
+                    }
+
                 }
                 for (int i = 0; i < subLen; i++)
                 {
@@ -788,6 +918,7 @@ namespace KSPWheel
         {
             KSPWheelState oldState = currentWheelState;
             currentWheelState = newState;
+            this.persistentState = currentWheelState.ToString();
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
             {
@@ -813,6 +944,7 @@ namespace KSPWheel
                 int len = wheelData.Length;
                 for (int i = 0; i < len; i++)
                 {
+                    if (wheelData[i] == null) { continue; }
                     if (wheelData[i].bumpStopCollider != null)
                     {
                         wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
@@ -834,13 +966,21 @@ namespace KSPWheel
                         }
                         wheelData[i].bumpStopCollider.material = wheelData[i].bumpStopMat;
                     }
-                    if (newState != KSPWheelState.DEPLOYED && wheelData[i].wheel != null)
+                    if (newState != KSPWheelState.DEPLOYED && wheelData[i].wheel!=null)
                     {
                         wheelData[i].wheel.angularVelocity = 0f;
                         wheelData[i].wheel.motorTorque = 0f;
                         wheelData[i].wheel.brakeTorque = 0f;
+                        wheelData[i].wheel.clearGroundedState();
                     }
+                    prevCollider = null;
+                    landedOnVessel = null;
+                    landedBiomeName = string.Empty;
                 }
+            }
+            if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
+            {
+                part.SendMessage("GeometryPartModuleRebuildMeshData");
             }
         }
 
@@ -858,6 +998,14 @@ namespace KSPWheel
                 motorMaxRPMScalingFactor = Mathf.Pow(localScale, scales.motorMaxRPMScalingPower);
                 motorPowerScalingFactor = Mathf.Pow(localScale, scales.motorPowerScalingPower);
                 motorTorqueScalingFactor = Mathf.Pow(localScale, scales.motorTorqueScalingPower);
+            }
+            if (wheelData != null)
+            {
+                int wlen = wheelData.Length;
+                for (int i = 0; i < wlen; i++)
+                {
+                    if (wheelData[i].wheel != null) { wheelData[i].wheel.length = wheelData[i].suspensionTravel * scale * part.rescaleFactor; }
+                }
             }
             int len = subModules.Count;
             for (int i = 0; i < len; i++)
@@ -910,32 +1058,119 @@ namespace KSPWheel
             }
         }
 
+        private Collider prevCollider;
+        private Vessel landedOnVessel;
+        private string landedBiomeName;
         //TODO also need to check the rest of the parts' colliders for contact/grounded state somehow (or they are handled by regular Part methods?)
         private void updateLandedState()
         {
-            //if wheels are not deployed let the stock code handle grounded checks from the collider data
-            if (currentWheelState != KSPWheelState.DEPLOYED && part.GroundContact && prevGrounded)
+            bool updateVesselLandedState = false;
+            bool splashed = false;
+            bool wheelGrounded = false;
+            Collider collider = null;
+            int len = wheelData.Length;
+            for (int i = 0; i < len; i++)
             {
-                prevGrounded = false;
-                part.GroundContact = false;
-                vessel.checkLanded();
-                return;
-            }
-            if (currentWheelState == KSPWheelState.DEPLOYED)
-            {
-                grounded = false;
-                int len = wheelData.Length;
-                for (int i = 0; i < len; i++)
+                if (wheelData[i].waterMode)
                 {
-                    if (wheelData[i].wheel.isGrounded)
+                    splashed = true;
+                }
+                if (wheelData[i].wheel.contactColliderHit != null)
+                {
+                    collider = wheelData[i].wheel.contactColliderHit;
+                }
+                if (wheelData[i].wheel.isGrounded)
+                {
+                    wheelGrounded = true;
+                }
+            }
+
+            if (prevCollider != collider)//something has changed
+            {
+                //set to default values for no hit
+                updateVesselLandedState = true;
+                landedOnVessel = null;
+                grounded = false;
+                landedBiomeName = string.Empty;
+                if (collider != null)//something was hit, set new values depending on what it was
+                {
+                    if (collider.gameObject.layer == 0)//possibly a part
                     {
+                        //check for if same vessel
+                        Part hitPart = collider.gameObject.GetComponentUpwards<Part>();
+                        if (hitPart != null)
+                        {
+                            if (hitPart.vessel == vessel)//ignore same vessel collision data, treat as ungrounded
+                            {
+                                //noop, handled by defaults for no hit above
+                            }
+                            else if (hitPart.vessel != null)//not same vessel, use hit vessels grounded state
+                            {
+                                landedOnVessel = hitPart.vessel;
+                                landedBiomeName = landedOnVessel.landedAt;
+                                grounded = landedOnVessel.LandedOrSplashed;
+                            }
+                            else//null vessel, not sure why/when this would occur, but treat as undefined
+                            {
+                                collider = null;//setting collider to null will cause it to be re-checked next update if the same object is hit
+                            }
+                        }
+                        //else -- not a part, undefined, use default 'no hit' data from above
+                    }
+                    else if (collider.gameObject.layer == 15)//scenery
+                    {
+                        if (string.IsNullOrEmpty(collider.gameObject.tag) || collider.gameObject.tag == "Untagged")
+                        {
+                            landedBiomeName = string.Empty;
+                        }
+                        else
+                        {
+                            landedBiomeName = collider.gameObject.tag;
+                        }
                         grounded = true;
-                        break;
                     }
                 }
-                part.GroundContact = grounded;
-                vessel.checkLanded();
-                prevGrounded = grounded;
+            }
+            else if (landedOnVessel != null)//else nothing changed, but should update the vessel landed on, if any
+            {
+                grounded = landedOnVessel.LandedOrSplashed;
+                if (grounded)
+                {
+                    if (landedBiomeName != landedOnVessel.landedAt)//change of state, new landed/not landed
+                    {
+                        landedBiomeName = landedOnVessel.landedAt;
+                        updateVesselLandedState = true;
+                    }
+                }
+                else if (!string.IsNullOrEmpty(landedBiomeName))//was previously landed, but now is not
+                {
+                    updateVesselLandedState = true;
+                    landedBiomeName = string.Empty;
+                }
+            }
+            else if (wheelGrounded && collider == null)//repulsors get into this state while levitating over water; wheel returns grounded, but no collider
+            {
+                //TODO
+                //unknown...
+                //grounded = false;
+                //landedBiomeName = string.Empty;
+            }
+            else if (splashed)//wheels will get into this state while in the water
+            {
+                //TODO -- does stock code fully handle splashed setting?
+                //unknown...
+            }
+            prevCollider = collider;
+            prevGrounded = grounded;
+            part.GroundContact = grounded;
+            if (updateVesselLandedState)
+            {
+                vessel.checkLanded();//this clears landed biome name
+                vessel.SetLandedAt(landedBiomeName);
+            }
+            else if (grounded && !string.IsNullOrEmpty(landedBiomeName))
+            {
+                vessel.SetLandedAt(landedBiomeName);//has to run every tick, else stock code clobbers it during init
             }
         }
 
@@ -956,6 +1191,22 @@ namespace KSPWheel
             damper = cd * dampRatio;
         }
 
+        public string getDebugInfo()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Part: "+part.name);
+            sb.AppendLine("ID: " + part.craftID);
+            sb.AppendLine("Wheels in part: " + wheelData.Length);
+            sb.AppendLine("Spring: " + springRating);
+            sb.AppendLine("Damper: " + dampRatio);
+            sb.AppendLine("Per-Wheel data: ");
+            int len = wheelData.Length;
+            for (int i = 0; i < len; i++)
+            {
+                sb.AppendLine(wheelData[i].getDebugInfo());
+            }
+            return sb.ToString();
+        }
         #endregion
 
         public class KSPWheelData
@@ -968,6 +1219,7 @@ namespace KSPWheel
             public readonly float loadShare;
             public readonly float offset;
             public readonly int indexInDuplicates;
+            public readonly int symmetryIndex;
             public KSPWheelCollider wheel;
             public KSPWheelCollisionData colliderData;
             public Transform wheelTransform;
@@ -993,8 +1245,9 @@ namespace KSPWheel
                 wheelMass = node.GetFloatValue("mass", 0.05f);
                 suspensionTravel = node.GetFloatValue("travel", 0.25f);
                 loadShare = node.GetFloatValue("load", 1f);
-                offset = node.GetFloatValue("offset");
-                indexInDuplicates = node.GetIntValue("indexInDuplicates");
+                offset = node.GetFloatValue("offset", 0f);
+                indexInDuplicates = node.GetIntValue("indexInDuplicates", 0);
+                symmetryIndex = node.GetIntValue("symmetryIndex", 0);
             }
 
             public void locateTransform(Transform root)
@@ -1101,6 +1354,28 @@ namespace KSPWheel
                 {
                     wheel.rpm = float.Parse(vals[1]);
                 }
+            }
+
+            public string getDebugInfo()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Travel: " + wheel.length);
+                sb.AppendLine("Mass  : " + wheel.mass);
+                sb.AppendLine("Share : " + loadShare);
+                sb.AppendLine("Rating: " + loadRating);
+                sb.AppendLine("LdTarg: " + loadTarget);
+                sb.AppendLine("Spring: " + wheel.spring);
+                sb.AppendLine("Damper: " + wheel.damper);
+                sb.AppendLine("SForce: " + wheel.springForce);
+                sb.AppendLine("DampFc: " + wheel.dampForce);
+                sb.AppendLine("HitDst: " + wheel.compressionDistance);
+                sb.AppendLine("FX    : " + wheel.lateralForce);
+                sb.AppendLine("FZ    : " + wheel.longitudinalForce);
+                sb.AppendLine("SX    : " + wheel.lateralSlip);
+                sb.AppendLine("SZ    : " + wheel.longitudinalSlip);
+                sb.AppendLine("SteerA: " + wheel.steeringAngle);
+                sb.AppendLine("Torque: " + wheel.motorTorque);
+                return sb.ToString();
             }
         }
 

@@ -321,6 +321,16 @@ namespace KSPWheel
             this.updateUIFloatRangeControl(nameof(wheelRotation), wheelRotation, minWheelAngle, maxWheelAngle, 0.5f);
         }
 
+        internal override void postControllerSetup()
+        {
+            base.postControllerSetup();
+            if (vessel != null && controller != null)
+            {
+                bool state = vessel.ActionGroups[KSPActionGroup.Gear];
+                vessel.ActionGroups[KSPActionGroup.Gear] = state || controller.wheelState == KSPWheelState.DEPLOYED;
+            }
+        }
+
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
@@ -374,16 +384,16 @@ namespace KSPWheel
                 part.Effect(retractEffect, 0f);
             }
             updateAnimation(animTime);
+            float diff = prevDragUpdateState > animationTime ? prevDragUpdateState - animationTime : animationTime - prevDragUpdateState;
             if (HighLogic.LoadedSceneIsFlight)
             {
-                float time = animationTime;
-                part.DragCubes.SetCubeWeight("Retracted", 1f - time);
-                part.DragCubes.SetCubeWeight("Deployed", time);
-                float diff = prevDragUpdateState > animationTime ? prevDragUpdateState - animationTime : animationTime - prevDragUpdateState;
-                if (diff > 0.1f)
-                {
-                    part.SendMessage("GeometryPartModuleRebuildMeshData");
-                }
+                part.DragCubes.SetCubeWeight("Retracted", 1f - animationTime);
+                part.DragCubes.SetCubeWeight("Deployed", animationTime);
+            }
+            if (diff > 0.1f || (prevDragUpdateState!=animationTime && (animationTime <= 0 || animationTime >= 1)))
+            {
+                part.SendMessage("GeometryPartModuleRebuildMeshData");
+                prevDragUpdateState = animationTime;
             }
         }
 
@@ -394,10 +404,13 @@ namespace KSPWheel
         internal override void onStateChanged(KSPWheelState oldState, KSPWheelState newState)
         {
             base.onStateChanged(oldState, newState);
-            tempCollider.enabled = newState == KSPWheelState.RETRACTING || newState == KSPWheelState.DEPLOYING;
-            if (tempCollider.enabled)
+            if (tempCollider != null)//can be null in the editor?
             {
-                CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
+                tempCollider.enabled = newState == KSPWheelState.RETRACTING || newState == KSPWheelState.DEPLOYING;
+                if (tempCollider.enabled)
+                {
+                    CollisionManager.IgnoreCollidersOnVessel(vessel, tempCollider);
+                }
             }
         }
 

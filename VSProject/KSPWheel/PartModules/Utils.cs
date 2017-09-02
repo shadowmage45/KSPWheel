@@ -77,6 +77,17 @@ namespace KSPWheel
             transform.localRotation = def;
             transform.Rotate(x, y, z, space);
         }
+
+        public static Color GetColorValue(this ConfigNode node, string name)
+        {
+            string val = node.GetValue(name);
+            string[] sp = val.Split(',');
+            Color color = new Color();
+            color.r = float.Parse(sp[0]);
+            color.g = float.Parse(sp[1]);
+            color.b = float.Parse(sp[2]);
+            return color;
+        }
         
         public static String[] GetStringValues(this ConfigNode node, String name)
         {

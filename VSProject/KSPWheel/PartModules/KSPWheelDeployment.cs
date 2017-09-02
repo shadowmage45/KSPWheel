@@ -19,13 +19,13 @@ namespace KSPWheel
         public int animationLayer = 1;
 
         [KSPField]
-        public string tempColliderName = "deployTgt";
+        public string tempColliderName = string.Empty;
 
         [KSPField]
         public float tempColliderOffset = 0f;
 
         [KSPField]
-        public float tempColliderRadius = 0.1f;
+        public Vector3 tempColliderAxis = Vector3.up;
 
         [KSPField]
         public string deployEffect = string.Empty;
@@ -40,6 +40,9 @@ namespace KSPWheel
         public string retractedEffect = string.Empty;
 
         [KSPField]
+        public string actionName = "Gear";
+
+        [KSPField]
         public bool updateDragCubes = true;
 
         [KSPField]
@@ -51,10 +54,16 @@ namespace KSPWheel
         [KSPField]
         public bool invertAnimation = false;
 
+        [KSPField]
+        public bool useFromEVA = false;
+
+        [KSPField]
+        public bool useFromEVAOnly = false;
+
         [Persistent]
         public string configNodeData = String.Empty;
 
-        private CapsuleCollider collider;
+        private SphereCollider collider;
         private Transform tempColliderTransform;
         private WheelAnimationHandler animationControl;
         private ModuleLight lightModule;
@@ -106,9 +115,6 @@ namespace KSPWheel
                 animationControl.setToAnimationState(controller.wheelState, false);
                 if (collider != null)
                 {
-                    float totalHeight = wheel.length + wheel.radius * 2 - wheel.compressionDistance;
-                    collider.height = totalHeight;
-                    collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                     collider.enabled = true;
                 }
                 if (!string.IsNullOrEmpty(retractEffect)) { part.Effect(retractEffect, 1f); }
@@ -123,9 +129,6 @@ namespace KSPWheel
                 animationControl.setToAnimationState(controller.wheelState, false);
                 if (collider != null)
                 {
-                    float totalHeight = wheel.length + wheel.radius * 2;
-                    collider.height = totalHeight;
-                    collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
                     collider.enabled = true;
                 }
                 if (!string.IsNullOrEmpty(retractEffect)) { part.Effect(retractEffect, 0f); }
@@ -145,6 +148,16 @@ namespace KSPWheel
             base.OnLoad(node);
         }
 
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+            Events[nameof(toggleGearEvent)].guiName = "Toggle " + actionName + " Deployment";
+            Actions[nameof(toggleGearAction)].guiName = "Toggle " + actionName + " Deployment";
+            Events[nameof(toggleGearEvent)].guiActiveUncommand = true;
+            Events[nameof(toggleGearEvent)].guiActiveUnfocused = useFromEVA;
+            Events[nameof(toggleGearEvent)].externalToEVAOnly = useFromEVA && useFromEVAOnly;
+        }
+
         public void Update()
         {
             if (animationControl != null)
@@ -154,7 +167,7 @@ namespace KSPWheel
                 if (controller != null)
                 {
                     float time = animationControl.animationTime;
-                    if (invertAnimation) { time = 1 - time; }
+                    //if (invertAnimation) { time = 1 - time; }
                     controller.deployAnimationTime = time;
                 }
             }
@@ -185,9 +198,10 @@ namespace KSPWheel
             {
                 lightModule.LightsOn();
             }
-            if (vessel != null)
+            if (vessel != null && controller != null)
             {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, controller.wheelState == KSPWheelState.DEPLOYED);
+                bool state = vessel.ActionGroups[KSPActionGroup.Gear];
+                vessel.ActionGroups[KSPActionGroup.Gear] = state || controller.wheelState == KSPWheelState.DEPLOYED;
             }
             if (!string.IsNullOrEmpty(tempColliderName))
             {
@@ -202,16 +216,12 @@ namespace KSPWheel
             if (tempColliderTransform != null)
             {
                 GameObject standInCollider = new GameObject("KSPWheelTempCollider");
-                //nest it to the wheel collider, with y+ orientation
                 standInCollider.transform.NestToParent(tempColliderTransform);
-                Vector3 pos = standInCollider.transform.localPosition;
-                pos.y += tempColliderOffset * part.rescaleFactor;
-                standInCollider.transform.localPosition = pos;
+                Vector3 worldAxis = tempColliderTransform.TransformDirection(tempColliderAxis);
+                standInCollider.transform.Translate(worldAxis * tempColliderOffset, Space.World);
                 standInCollider.layer = 26;
-                collider = standInCollider.AddComponent<CapsuleCollider>();
-                collider.radius = tempColliderRadius;
-                collider.height = wheel.length + wheel.radius * 2;
-                collider.center = new Vector3(0, -collider.height * 0.5f + wheel.radius, 0);
+                collider = standInCollider.AddComponent<SphereCollider>();
+                collider.radius = wheel.radius;
                 collider.enabled = controller.wheelState == KSPWheelState.RETRACTING || controller.wheelState == KSPWheelState.DEPLOYING;
                 CollisionManager.IgnoreCollidersOnVessel(vessel, collider);
             }

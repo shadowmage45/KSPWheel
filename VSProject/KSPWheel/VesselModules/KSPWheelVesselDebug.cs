@@ -52,6 +52,10 @@ namespace KSPWheel
                 debugRendering = !debugRendering;
                 enableDebugRendering(debugRendering);
             }
+            if (GUILayout.Button("Dump Wheel Debug Data"))
+            {
+                dumpDebugData();
+            }
 
             //per-wheel instance data view
             scrollPos = GUILayout.BeginScrollView(scrollPos);
@@ -156,6 +160,21 @@ namespace KSPWheel
                     wheels[i].disableDebugRenderers();
                 }
             }
+        }
+
+        public void dumpDebugData()
+        {
+            MonoBehaviour.print("---------------------------------------------------------------------------------");
+            MonoBehaviour.print("KSPWheel Vessel Wheel Debug Data.");
+            int len = wheels.Count;
+            for (int i = 0; i < len; i++)
+            {
+                MonoBehaviour.print("--------------------------------------");
+                MonoBehaviour.print(wheels[i].baseModule.getDebugInfo());
+                MonoBehaviour.print("--------------------------------------");
+            }
+            //TODO
+            MonoBehaviour.print("---------------------------------------------------------------------------------");
         }
     }
 

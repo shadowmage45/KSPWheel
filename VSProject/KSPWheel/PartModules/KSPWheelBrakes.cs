@@ -27,6 +27,9 @@ namespace KSPWheel
          UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 0.5f, suppressEditorShipModified = true)]
         public float brakeLimit = 100f;
 
+        [KSPField]
+        public bool showGUIBrakeLimit = true;
+
         public float torqueOutput;
 
         private float brakeInput;
@@ -66,7 +69,7 @@ namespace KSPWheel
         internal override void onUIControlsUpdated(bool show)
         {
             base.onUIControlsUpdated(show);
-            Fields[nameof(brakeLimit)].guiActive = Fields[nameof(brakeLimit)].guiActiveEditor = show && !brakesLocked;
+            Fields[nameof(brakeLimit)].guiActive = Fields[nameof(brakeLimit)].guiActiveEditor = show && !brakesLocked && showGUIBrakeLimit;
         }
 
         internal override void preWheelPhysicsUpdate()

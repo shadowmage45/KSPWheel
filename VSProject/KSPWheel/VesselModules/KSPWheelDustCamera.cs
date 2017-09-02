@@ -24,6 +24,7 @@ namespace KSPWheel
                 currentTime -= Time.deltaTime;
                 if (currentTime <= 0)
                 {
+                    prevColor = destColor;
                     currentTime = frameTime;
                     destColor = KSPWheelDustCameraRenderer.Instance.getCameraColor(vessel);
                 }

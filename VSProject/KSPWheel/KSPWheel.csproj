@@ -36,9 +36,16 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>libs\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-UnityScript, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\Assembly-UnityScript.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-UnityScript-firstpass">
+      <HintPath>libs\Assembly-UnityScript-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -59,6 +66,7 @@
     <Compile Include="Component\KSPWheelCollider.cs" />
     <Compile Include="Component\KSPWheelComponent.cs" />
     <Compile Include="Component\KSPWheelFrictionCurve.cs" />
+    <Compile Include="PartModules\KFAPUController.cs" />
     <Compile Include="PartModules\KSPWheelAdjustableGear.cs" />
     <Compile Include="PartModules\KSPWheelBase.cs" />
     <Compile Include="PartModules\KSPWheelBogey.cs" />
@@ -78,8 +86,10 @@
     <Compile Include="PartModules\KSPWheelSounds.cs" />
     <Compile Include="PartModules\KSPWheelState.cs" />
     <Compile Include="PartModules\KSPWheelSteering.cs" />
+    <Compile Include="PartModules\KSPWheelStrut.cs" />
     <Compile Include="PartModules\KSPWheelSubmodule.cs" />
     <Compile Include="PartModules\KSPWheelSuspension.cs" />
+    <Compile Include="PartModules\KSPWheelTextureSwitch.cs" />
     <Compile Include="PartModules\KSPWheelTracks.cs" />
     <Compile Include="PartModules\KSPWheelTransformRemoval.cs" />
     <Compile Include="PartModules\KSPWheelWaterPropulsion.cs" />

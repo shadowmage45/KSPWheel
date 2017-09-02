@@ -1,4 +1,6 @@
-﻿namespace KSPWheel
+﻿using System;
+
+namespace KSPWheel
 {
     public class KSPWheelSettings : GameParameters.CustomParameterNode
     {
@@ -24,6 +26,14 @@
         [GameParameters.CustomParameterUI("Enable Debugging", toolTip = "If enabled debug tools will be available in the app-launcher bar..")]
         public bool debugMode = false;
 
+        [GameParameters.CustomParameterUI("Enable Friction Control", toolTip = "If enabled, per-part friction controls will be available.\n "+
+            "WARNING: Adjustments to friction are un-supported, and may cause instability.  You are on your own for support if you adjust these settings.")]
+        public bool enableFrictionControl = false;
+
+        [GameParameters.CustomFloatParameterUI("Global Friction Multiplier", minValue = 0, maxValue = 4, stepCount = 15, displayFormat = "F2", toolTip = "Increases or decreases friction for all wheels/legs. 0 = No friction, 1 = Standard, 2 = 2x standard, etc...\n " +
+            "WARNING: Adjustments to friction are un-supported, and may cause instability.  You are on your own for support if you adjust these settings.")]
+        public float globalFrictionAdjustment = 1f;
+
         public override string Section { get { return "KSPWheel"; } }
 
         public override int SectionOrder { get { return 1; } }
@@ -33,6 +43,8 @@
         public override GameParameters.GameMode GameMode { get { return GameParameters.GameMode.ANY; } }
 
         public override bool HasPresets { get { return false; } }
+
+        public override string DisplaySection { get { return "KSPWheel"; } }
 
     }
 
@@ -76,6 +88,8 @@
 
         public override bool HasPresets { get { return false; } }
 
+        public override string DisplaySection { get { return "KSPWheel"; } }
+
     }
 
     public class KSPWheelWearSettings : GameParameters.CustomParameterNode
@@ -105,6 +119,8 @@
         public override GameParameters.GameMode GameMode { get { return GameParameters.GameMode.ANY; } }
 
         public override bool HasPresets { get { return false; } }
+
+        public override string DisplaySection { get { return "KSPWheel"; } }
 
     }
 

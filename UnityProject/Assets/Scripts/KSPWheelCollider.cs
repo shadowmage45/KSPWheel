@@ -562,7 +562,6 @@ namespace KSPWheel
             wheelRight = -Vector3.Cross(wheelForward, wheelUp);
             prevSuspensionCompression = currentSuspensionCompression;
             prevFSpring = localForce.y;
-            float prevVSpring = vSpring;
             bool prevGrounded = grounded;
             if (checkSuspensionContact())//suspension compression is calculated in the suspension contact check
             {
@@ -603,13 +602,27 @@ namespace KSPWheel
             {
                 integrateUngroundedTorques();
                 grounded = false;
-                vSpring = prevVSpring = prevFSpring = fDamp = prevSuspensionCompression = currentSuspensionCompression = 0;
+                vSpring = prevFSpring = fDamp = prevSuspensionCompression = currentSuspensionCompression = 0;
                 localForce = Vector3.zero;
                 hitNormal = Vector3.zero;
                 hitPoint = Vector3.zero;
                 hitCollider = null;
                 localVelocity = Vector3.zero;
             }
+        }
+
+        /// <summary>
+        /// Should be called whenever the wheel collider is disabled -- clears out internal state data from the previous wheel hit
+        /// </summary>
+        public void clearGroundedState()
+        {
+            grounded = false;
+            vSpring = prevFSpring = fDamp = prevSuspensionCompression = currentSuspensionCompression = 0;
+            localForce = Vector3.zero;
+            hitNormal = Vector3.up;
+            hitPoint = Vector3.zero;
+            localVelocity = Vector3.zero;
+            hitCollider = null;
         }
 
         #endregion ENDREGION - Update methods -- internal, external
@@ -684,10 +697,20 @@ namespace KSPWheel
             // and pray that all the rhs/lhs coordinates are correct...
             float slopeLatDot = Vector3.Dot(upDown, wR);
             agFix = agForce * slopeLatDot * wR * Mathf.Clamp(currentSideFrictionCoef, 0, 1);
-            if (brakeTorque > 0 && Mathf.Abs(motorTorque) < brakeTorque)
+            float vel = Mathf.Abs(localVelocity.z);
+            if (brakeTorque > 0 && Mathf.Abs(motorTorque) < brakeTorque && vel < 4)
             {
+                float mult = 1f;
+                if (vel > 2)
+                {
+                    //if between 2m/s and 4/ms, lerp output force between them
+                    //zero ouput at or above 4m/s, max output at or below 2m/s, intermediate force output inbetween those values
+                    vel -= 2;//clamp to range 0-2
+                    vel *= 0.5f;//clamp to range 0-1
+                    mult = 1-vel;//invert to range 1-0; with 0 being for input velocity of 4
+                }
                 float slopeLongDot = Vector3.Dot(upDown, wF);
-                agFix += agForce * slopeLongDot * wF * Mathf.Clamp(currentFwdFrictionCoef, 0, 1);
+                agFix += agForce * slopeLongDot * wF * Mathf.Clamp(currentFwdFrictionCoef, 0, 1) * mult;
             }
             return agFix;
         }
@@ -755,7 +778,7 @@ namespace KSPWheel
         private bool suspensionSweepRaycast()
         {
             RaycastHit hit;
-            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, suspensionLength + wheelRadius, currentRaycastMask))
+            if (Physics.Raycast(wheel.transform.position, -wheel.transform.up, out hit, suspensionLength + wheelRadius, currentRaycastMask, QueryTriggerInteraction.Ignore))
             {
                 currentSuspensionCompression = suspensionLength + wheelRadius - hit.distance;
                 hitNormal = hit.normal;
@@ -777,7 +800,7 @@ namespace KSPWheel
             RaycastHit hit;
             //need to start cast above max-compression point, to allow for catching the case of @ bump-stop
             float rayOffset = wheelRadius;
-            if (Physics.SphereCast(wheel.transform.position + wheel.transform.up * rayOffset, radius, -wheel.transform.up, out hit, length + rayOffset, currentRaycastMask))
+            if (Physics.SphereCast(wheel.transform.position + wheel.transform.up * rayOffset, radius, -wheel.transform.up, out hit, length + rayOffset, currentRaycastMask, QueryTriggerInteraction.Ignore))
             {
                 currentSuspensionCompression = length + rayOffset - hit.distance;
                 hitNormal = hit.normal;
@@ -820,8 +843,8 @@ namespace KSPWheel
             Vector3 capEnd1 = wheel.transform.position + wheel.transform.forward * capLen;
             Vector3 capEnd2 = wheel.transform.position - wheel.transform.forward * capLen;
             Vector3 capBottom = wheel.transform.position - wheel.transform.up * capLen;
-            hit1b = Physics.CapsuleCast(capEnd1 + worldOffset, capBottom + worldOffset, capRadius, -wheel.transform.up, out hit1, rayLength, currentRaycastMask);
-            hit2b = Physics.CapsuleCast(capEnd2 + worldOffset, capBottom + worldOffset, capRadius, -wheel.transform.up, out hit2, rayLength, currentRaycastMask);
+            hit1b = Physics.CapsuleCast(capEnd1 + worldOffset, capBottom + worldOffset, capRadius, -wheel.transform.up, out hit1, rayLength, currentRaycastMask, QueryTriggerInteraction.Ignore);
+            hit2b = Physics.CapsuleCast(capEnd2 + worldOffset, capBottom + worldOffset, capRadius, -wheel.transform.up, out hit2, rayLength, currentRaycastMask, QueryTriggerInteraction.Ignore);
             if (hit1b || hit2b)
             {
                 if (hit1b && hit2b) { hit = hit1.distance < hit2.distance ? hit1 : hit2; }
@@ -933,7 +956,7 @@ namespace KSPWheel
             if (currentAngularVelocity != 0)
             {
                 float fRollResist = localForce.y * rollingResistanceCoefficient;//rolling resistance force in newtons
-                float tRollResist = fRollResist * radiusInverse;//rolling resistance as a torque
+                float tRollResist = fRollResist * wheelRadius;//rolling resistance as a torque
                 float wRollResist = tRollResist * inertiaInverse * Time.fixedDeltaTime;//rolling resistance angular velocity change
                 wRollResist = Mathf.Min(wRollResist, Mathf.Abs(currentAngularVelocity)) * Mathf.Sign(currentAngularVelocity);
                 currentAngularVelocity -= wRollResist;
