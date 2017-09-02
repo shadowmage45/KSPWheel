@@ -966,7 +966,7 @@ namespace KSPWheel
                         }
                         wheelData[i].bumpStopCollider.material = wheelData[i].bumpStopMat;
                     }
-                    if (newState != KSPWheelState.DEPLOYED && wheelData[i].wheel!=null)
+                    if (newState != KSPWheelState.DEPLOYED && wheelData[i].wheel != null)
                     {
                         wheelData[i].wheel.angularVelocity = 0f;
                         wheelData[i].wheel.motorTorque = 0f;
