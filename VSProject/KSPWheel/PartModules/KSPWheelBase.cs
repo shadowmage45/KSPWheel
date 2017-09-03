@@ -241,6 +241,7 @@ namespace KSPWheel
 
         private float prevVMass = -1f;
         private float prevG = 0f;
+        private bool updateSpring = false;
 
         internal List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
 
@@ -261,6 +262,7 @@ namespace KSPWheel
                     m.dampRatio = dampRatio;
                 }
             });
+            updateSpring = true;
         }
 
         public void onShowUIUpdated(BaseField field, object obj)
@@ -407,6 +409,7 @@ namespace KSPWheel
             }
 
             field = Fields[nameof(springRating)];
+            field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
             rng = (UI_FloatRange)field.uiControlFlight;
             if (rng != null)
             {
@@ -768,10 +771,11 @@ namespace KSPWheel
                 return;
             }
             float g = (float)vessel.gravityForPos.magnitude;
-            if (vesselMass == prevVMass && prevG==g)//only update spring stuff when vessel mass has changed
+            if (vesselMass == prevVMass && prevG==g && !updateSpring)//only update spring stuff when vessel mass has changed
             {
                 return;
             }
+            updateSpring = false;
             prevVMass = vesselMass;
             prevG = g;
 
@@ -838,6 +842,9 @@ namespace KSPWheel
                 {
                     if (wheelData[i].bumpStopCollider == null) { break; }//if one is not present, none will be, as something is not initialized yet;
                     wheelData[i].bumpStopCollider.enabled = currentWheelState == KSPWheelState.DEPLOYED || currentWheelState == KSPWheelState.BROKEN;
+                    wheelData[i].bumpStopMat.dynamicFriction = currentWheelState == KSPWheelState.DEPLOYED ? 0f : 1f;
+                    wheelData[i].bumpStopMat.staticFriction = currentWheelState == KSPWheelState.DEPLOYED ? 0f : 1f;
+                    wheelData[i].bumpStopCollider.material = wheelData[i].bumpStopMat;
                     if (wheelData[i].wheel != null)
                     {
                         wheelData[i].wheel.angularVelocity = 0f;
@@ -1115,6 +1122,7 @@ namespace KSPWheel
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
             public MeshCollider bumpStopCollider;
+            public PhysicMaterial bumpStopMat;
             public float loadRating;
             public float loadTarget;
             public float timeBoostFactor;
@@ -1173,13 +1181,13 @@ namespace KSPWheel
                     //mark as convex
                     bumpStopCollider.convex = true;
 
-                    PhysicMaterial mat = new PhysicMaterial("BumpStopPhysicsMaterial");
-                    mat.bounciness = 0f;
-                    mat.dynamicFriction = 0;
-                    mat.staticFriction = 0;
-                    mat.frictionCombine = PhysicMaterialCombine.Minimum;
-                    mat.bounceCombine = PhysicMaterialCombine.Minimum;
-                    bumpStopCollider.material = mat;
+                    bumpStopMat = new PhysicMaterial("BumpStopPhysicsMaterial");
+                    bumpStopMat.bounciness = 0f;
+                    bumpStopMat.dynamicFriction = 0;
+                    bumpStopMat.staticFriction = 0;
+                    bumpStopMat.frictionCombine = PhysicMaterialCombine.Multiply;
+                    bumpStopMat.bounceCombine = PhysicMaterialCombine.Multiply;
+                    bumpStopCollider.material = bumpStopMat;
                     bumpStopGameObject.transform.NestToParent(wheelTransform);
                     bumpStopGameObject.transform.Rotate(0, 0, 90, Space.Self);//rotate it so that it is in the proper orientation (collider y+ is the flat side, so it needs to point along wheel x+/-)
                 }
