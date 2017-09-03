@@ -72,14 +72,6 @@ namespace KSPWheel
          UI_Toggle(affectSymCounterparts = UI_Scene.All, controlEnabled = true, disabledText = "Hidden", enabledText = "Shown", requireFullControl = false, suppressEditorShipModified = true, scene = UI_Scene.All)]
         public bool showControls = true;
 
-        [KSPField(guiName = "Ride Height", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.2f, maxValue = 0.8f, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float suspensionTarget = 0.5f;
-
-        [KSPField(guiName = "Load Rating", guiActive = true, guiActiveEditor = true, isPersistant = true),
-         UI_FloatRange(minValue = 0.05f, maxValue = 5, stepIncrement = 0.05f, suppressEditorShipModified = true)]
-        public float loadRating = 2.5f;
-
         [KSPField]
         public float minLoadRating = 0.05f;
 
@@ -223,8 +215,6 @@ namespace KSPWheel
         [SerializeField]
         private KSPWheelState currentWheelState = KSPWheelState.DEPLOYED;
 
-        public float springEaseMult = 1f;
-
         public float wheelRepairTimer = 1f;
 
         public float deployAnimationTime = 1f;
@@ -243,15 +233,19 @@ namespace KSPWheel
         [SerializeField]
         private float prevScale = 1f;
 
-        private bool advancedMode = false;
-
         private bool initializedWheels = false;
 
         private bool initializedScaling = false;
 
         private bool prevGrounded = false;
 
+        private float prevVMass = -1f;
+        private float prevG = 0f;
+
         internal List<KSPWheelSubmodule> subModules = new List<KSPWheelSubmodule>();
+
+        //custom physics material set to combine mode, used to create zero-friction bump-stop colliders
+        private static PhysicMaterial customCollisionMaterial;
 
         #endregion
 
@@ -263,30 +257,8 @@ namespace KSPWheel
             {
                 if (m != this)
                 {
-                    m.loadRating = loadRating;
                     m.springRating = springRating;
-                    m.suspensionTarget = suspensionTarget;
                     m.dampRatio = dampRatio;
-                }
-                if (m.advancedMode && m.wheelData != null)
-                {
-                    KSPWheelData wheel;
-                    float suspensionSpring, suspensionDamper;
-                    float rating;
-                    int len = m.wheelData.Length;
-                    for (int i = 0; i < len; i++)
-                    {
-                        wheel = m.wheelData[i];
-                        rating = m.loadRating * wheel.loadShare;
-                        calcSuspension(rating, wheel.suspensionTravel, m.suspensionTarget, m.dampRatio, out suspensionSpring, out suspensionDamper);
-                        if (wheel.wheel != null)
-                        {
-                            wheel.wheel.spring = suspensionSpring;
-                            wheel.wheel.damper = suspensionDamper;
-                        }
-                        m.wheelData[i].loadRating = loadRating;
-                        m.wheelData[i].loadTarget = loadRating;
-                    }
                 }
             });
         }
@@ -298,10 +270,7 @@ namespace KSPWheel
             {
                 subModules[i].onUIControlsUpdated(showControls);
             }
-
-            Fields[nameof(suspensionTarget)].guiActive = Fields[nameof(suspensionTarget)].guiActiveEditor = showControls && advancedMode;
-            Fields[nameof(loadRating)].guiActive = Fields[nameof(loadRating)].guiActiveEditor = showControls && advancedMode;
-            Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && !advancedMode && showGUISpring;
+            Fields[nameof(springRating)].guiActive = Fields[nameof(springRating)].guiActiveEditor = showControls && showGUISpring;
             Fields[nameof(dampRatio)].guiActive = Fields[nameof(dampRatio)].guiActiveEditor = showControls && showGUIDamper;
             Fields[nameof(wheelGroup)].guiActive = Fields[nameof(wheelGroup)].guiActiveEditor = showControls && showGUIWheelGroup;
             Fields[nameof(antiRoll)].guiActive = Fields[nameof(antiRoll)].guiActiveEditor = showControls && showGUIAntiRoll;
@@ -388,7 +357,6 @@ namespace KSPWheel
         {
             base.OnStart(state);
             currentWheelState = (KSPWheelState)Enum.Parse(typeof(KSPWheelState), persistentState);
-            advancedMode = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode;
 
             ConfigNode node = ConfigNode.Parse(configNodeData).nodes[0];
 
@@ -423,28 +391,9 @@ namespace KSPWheel
                 maxSpeed = maxRad * 400f * Mathf.PI * 2 * 0.01666666f;
             }
 
-            BaseField field = Fields[nameof(loadRating)];
+            BaseField field = Fields[nameof(dampRatio)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
             UI_FloatRange rng = (UI_FloatRange)field.uiControlFlight;
-            if (rng != null)
-            {
-                rng.minValue = minLoadRating;
-                rng.maxValue = maxLoadRating;
-                rng.stepIncrement = 0.1f;
-            }
-            rng = (UI_FloatRange)field.uiControlEditor;
-            if (rng != null)
-            {
-                rng.minValue = minLoadRating;
-                rng.maxValue = maxLoadRating;
-                rng.stepIncrement = 0.1f;
-            }
-            if (loadRating > maxLoadRating) { loadRating = maxLoadRating; }
-            field.guiActive = field.guiActiveEditor = advancedMode;
-
-            field = Fields[nameof(dampRatio)];
-            field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
-            rng = (UI_FloatRange)field.uiControlFlight;
             if (rng != null)
             {
                 rng.minValue = minDampRatio;
@@ -470,10 +419,6 @@ namespace KSPWheel
                 rng.minValue = minSpringRating;
                 rng.maxValue = maxSpringRating;
             }
-
-            field = Fields[nameof(suspensionTarget)];
-            field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onLoadUpdated;
-            field.guiActive = field.guiActiveEditor = advancedMode;
 
             field = Fields[nameof(showControls)];
             field.uiControlEditor.onFieldChanged = field.uiControlFlight.onFieldChanged = onShowUIUpdated;
@@ -533,6 +478,12 @@ namespace KSPWheel
                 Utils.setPartColliderField(part);
             }
             initializeScaling();
+
+            if (customCollisionMaterial == null)
+            {
+                customCollisionMaterial = new PhysicMaterial("SlideMaterial");
+                customCollisionMaterial.frictionCombine = PhysicMaterialCombine.Multiply;
+            }
         }
 
         public void Start()
@@ -613,10 +564,6 @@ namespace KSPWheel
                     {
                         wheelData[i].wheel.rigidbody = rb;
                     }
-                    if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().advancedMode)
-                    {
-                        onLoadUpdated(null, null);
-                    }
                     if (part.collisionEnhancer != null)
                     {
                         part.collisionEnhancer.OnTerrainPunchThrough = CollisionEnhancerBehaviour.DO_NOTHING;
@@ -648,10 +595,7 @@ namespace KSPWheel
                 {
                     subModules[i].preWheelSuspensionCalc();
                 }
-                if (!advancedMode)
-                {
-                    updateSuspension();
-                }
+                updateSuspension();
                 for (int i = 0; i < subLen; i++)
                 {
                     subModules[i].preWheelPhysicsUpdate();
@@ -662,6 +606,12 @@ namespace KSPWheel
                     wheel = wheelData[i].wheel;
                     wheel.gravityVector = vessel.gravityForPos;
                     wheel.updateWheel();
+                    if (wheel.contactColliderHit != null)
+                    {
+                        PhysicMaterial pm = wheel.contactColliderHit.material;
+                        if (pm == null) { wheel.contactColliderHit.material = customCollisionMaterial; }
+                        pm.frictionCombine = PhysicMaterialCombine.Multiply;
+                    }
                 }
                 if (antiRoll > 0)
                 {
@@ -706,6 +656,11 @@ namespace KSPWheel
                 {
                     subModules[i].postWheelPhysicsUpdate();
                 }
+            }
+
+            if (wheelRepairTimer < 1)
+            {
+                wheelRepairTimer = Mathf.MoveTowards(wheelRepairTimer, 1, Time.fixedDeltaTime);
             }
 
             updateLandedState();
@@ -803,108 +758,46 @@ namespace KSPWheel
 
         private void updateSuspension()
         {
+            if (wheelData == null || wheelData[0].wheel==null)
+            {
+                return;
+            }
             float vesselMass = 0;
             if (vessel == null || (vesselMass = (float)vessel.totalMass) <= 0)
             {
                 return;
             }
-            vesselMass *= springEaseMult;
-            if (vesselMass <= 0)
-            {
-                MonoBehaviour.print("ERROR: Calculated vessel mass <=0: " + vesselMass);
-                vesselMass = 0.001f;
-            }
             float g = (float)vessel.gravityForPos.magnitude;
+            if (vesselMass == prevVMass && prevG==g)//only update spring stuff when vessel mass has changed
+            {
+                return;
+            }
+            prevVMass = vesselMass;
+            prevG = g;
+
             float spring, damper, springLoad, natFreq, criticalDamping;
-            float compression = 0;
             float lengthCorrectedMass;
             int len = wheelData.Length;
             KSPWheelData data;
             for (int i = 0; i < len; i++)
             {
                 data = wheelData[i];
-                compression = data.wheel.compressionDistance / data.wheel.length;
-                lengthCorrectedMass = vesselMass / data.wheel.length * data.loadShare;
-                if (wheelRepairTimer < 1)
+                lengthCorrectedMass = data.wheel.length <= 0 ? 0 : vesselMass / data.wheel.length * data.loadShare;//allows for a wheel to support full vessel mass at full compression
+                spring = lengthCorrectedMass * springRating * g * wheelRepairTimer * wheelRepairTimer;
+                if (spring > 0)
                 {
-                    data.timeBoostFactor = 0f;
-                    spring = lengthCorrectedMass * springRating * 10f * wheelRepairTimer * wheelRepairTimer;//reduce spring by repair timer, exponentially
-                    if (spring > 0)
-                    {
-                        springLoad = spring * data.wheel.length * 0.5f * 0.1f;//target load for damper calc is spring at half compression
-                        natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
-                        criticalDamping = 2 * springLoad * natFreq;//critical damping
-                        damper = criticalDamping * dampRatio * wheelRepairTimer;//add an -additiona- reduction to damper based on repair timer, ensure it is essentially nil for the first tick after repaired
-                    }
-                    else
-                    {
-                        damper = 0f;
-                    }
+                    springLoad = spring * data.wheel.length * 0.5f * 1 / g;//target load for damper calc is spring at half compression
+                    natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
+                    criticalDamping = 2 * springLoad * natFreq;//critical damping
+                    damper = criticalDamping * dampRatio * wheelRepairTimer;
                 }
                 else
                 {
-                    float target = 0f;
-                    float rate = 0.1f;
-                    if (compression > 0.8f)
-                    {
-                        target = 1;
-                        rate = 0.25f;
-                    }
-                    data.timeBoostFactor = Mathf.MoveTowards(data.timeBoostFactor, target, Time.fixedDeltaTime * rate);
-                    data.timeBoostFactor = Mathf.Clamp(data.timeBoostFactor, -1, 1);
-                    spring = lengthCorrectedMass * calculateSpring(compression, data.timeBoostFactor) * springRating * g;
-                    if (spring > 0)
-                    {
-                        springLoad = spring * data.wheel.length * 0.5f * 1 / g;//target load for damper calc is spring at half compression
-                        natFreq = Mathf.Sqrt(spring / springLoad);//natural frequency
-                        criticalDamping = 2 * springLoad * natFreq;//critical damping
-                        damper = criticalDamping * dampRatio;
-                    }
-                    else
-                    {
-                        damper = 0f;
-                    }
+                    damper = 0f;
                 }
                 data.wheel.spring = spring;
                 data.wheel.damper = damper;
             }
-            if (wheelRepairTimer < 1)
-            {
-                wheelRepairTimer = Mathf.MoveTowards(wheelRepairTimer, 1, Time.fixedDeltaTime);
-            }
-        }
-
-        /// <summary>
-        /// Comp = 0-1 compression
-        /// Time = 0-1 time factor, based on response to compression (1 means overcompressed or undercompressed for duration, 0 means no duration of over/under compression)
-        /// Lower = lower stability bounds, below this compression it is considered 'undercompressed' and spring value is lowered
-        /// Upper = upper stability bounds, above this compression it is considered 'overcompressed' and spring value is raised
-        /// </summary>
-        /// <returns></returns>
-        private float calculateSpring(float comp, float time)
-        {
-            if (comp <= 0) { return 0.0001f; }
-            float compFactor = 0;
-            float compPow = 3;
-            if (comp < 0.5)
-            {
-                if (comp < 0.2)
-                {
-                    float c5 = comp * 5;//brings it to a 0-1 range
-                    compFactor = Mathf.Pow((-1 + comp * 2), compPow) * c5 * c5;
-                }
-            }
-            else
-            {
-                compFactor = Mathf.Pow((-1 + comp * 2), compPow);// * compFactor * compFactor;
-            }
-            float timeFactor = time * time * time;
-            float combinedFactor = (2 + timeFactor + compFactor) * 0.5f;
-            float power = 3;
-            float curveOutput = Mathf.Pow(combinedFactor, power);
-            float output = curveOutput;
-            output = Mathf.Clamp(output, 0.0001f, 100f);
-            return output;
         }
 
         internal void addSubmodule(KSPWheelSubmodule module)

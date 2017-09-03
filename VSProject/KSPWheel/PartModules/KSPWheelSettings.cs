@@ -5,9 +5,6 @@ namespace KSPWheel
     public class KSPWheelSettings : GameParameters.CustomParameterNode
     {
 
-        [GameParameters.CustomParameterUI("Manual Suspension Configuration", toolTip = "If enabled wheels use manual setup for suspension tuning and must be configured on a per-wheel basis.")]
-        public bool advancedMode = false;
-
         [GameParameters.CustomParameterUI("Manual Gear Selection", toolTip = "If enabled motors will have multiple gear ratios available (configurable).")]
         public bool manualGearing = true;
 
