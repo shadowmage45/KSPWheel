@@ -973,41 +973,7 @@ namespace KSPWheel
                 landedBiomeName = string.Empty;
                 if (collider != null)//something was hit, set new values depending on what it was
                 {
-                    if (collider.gameObject.layer == 0)//possibly a part
-                    {
-                        //check for if same vessel
-                        Part hitPart = collider.gameObject.GetComponentUpwards<Part>();
-                        if (hitPart != null)
-                        {
-                            if (hitPart.vessel == vessel)//ignore same vessel collision data, treat as ungrounded
-                            {
-                                //noop, handled by defaults for no hit above
-                            }
-                            else if (hitPart.vessel != null)//not same vessel, use hit vessels grounded state
-                            {
-                                landedOnVessel = hitPart.vessel;
-                                landedBiomeName = landedOnVessel.landedAt;
-                                grounded = landedOnVessel.LandedOrSplashed;
-                            }
-                            else//null vessel, not sure why/when this would occur, but treat as undefined
-                            {
-                                collider = null;//setting collider to null will cause it to be re-checked next update if the same object is hit
-                            }
-                        }
-                        //else -- not a part, undefined, use default 'no hit' data from above
-                    }
-                    else if (collider.gameObject.layer == 15)//scenery
-                    {
-                        if (string.IsNullOrEmpty(collider.gameObject.tag) || collider.gameObject.tag == "Untagged")
-                        {
-                            landedBiomeName = string.Empty;
-                        }
-                        else
-                        {
-                            landedBiomeName = collider.gameObject.tag;
-                        }
-                        grounded = true;
-                    }
+                    setLandedat(ref collider, out landedOnVessel, out landedBiomeName, out grounded);
                 }
             }
             else if (landedOnVessel != null)//else nothing changed, but should update the vessel landed on, if any
@@ -1039,6 +1005,11 @@ namespace KSPWheel
                 //TODO -- does stock code fully handle splashed setting?
                 //unknown...
             }
+            else if (collider != null && string.IsNullOrEmpty(vessel.landedAt))
+            {
+                setLandedat(ref collider, out landedOnVessel, out landedBiomeName, out grounded);
+                updateVesselLandedState = true;
+            }
             prevCollider = collider;
             prevGrounded = grounded;
             part.GroundContact = grounded;
@@ -1050,6 +1021,48 @@ namespace KSPWheel
             else if (grounded && !string.IsNullOrEmpty(landedBiomeName))
             {
                 vessel.SetLandedAt(landedBiomeName);//has to run every tick, else stock code clobbers it during init
+            }
+        }
+
+        private void setLandedat(ref Collider collider, out Vessel landedOnVessel, out string landedBiomeName, out bool grounded)
+        {
+            landedOnVessel = null;
+            landedBiomeName = string.Empty;
+            grounded = false;
+            if (collider.gameObject.layer == 0)//possibly a part
+            {
+                //check for if same vessel
+                Part hitPart = collider.gameObject.GetComponentUpwards<Part>();
+                if (hitPart != null)
+                {
+                    if (hitPart.vessel == vessel)//ignore same vessel collision data, treat as ungrounded
+                    {
+                        //noop, handled by defaults for no hit above
+                    }
+                    else if (hitPart.vessel != null)//not same vessel, use hit vessels grounded state
+                    {
+                        landedOnVessel = hitPart.vessel;
+                        landedBiomeName = landedOnVessel.landedAt;
+                        grounded = landedOnVessel.LandedOrSplashed;
+                    }
+                    else//null vessel, not sure why/when this would occur, but treat as undefined
+                    {
+                        collider = null;//setting collider to null will cause it to be re-checked next update if the same object is hit
+                    }
+                }
+                //else -- not a part, undefined, use default 'no hit' data from above
+            }
+            else if (collider.gameObject.layer == 15)//scenery
+            {
+                if (string.IsNullOrEmpty(collider.gameObject.tag) || collider.gameObject.tag == "Untagged")
+                {
+                    landedBiomeName = string.Empty;
+                }
+                else
+                {
+                    landedBiomeName = collider.gameObject.tag;
+                }
+                grounded = true;
             }
         }
 
