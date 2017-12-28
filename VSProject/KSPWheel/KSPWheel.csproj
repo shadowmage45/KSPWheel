@@ -80,6 +80,7 @@
     <Compile Include="PartModules\KSPWheelExtension.cs" />
     <Compile Include="PartModules\KSPWheelMotor.cs" />
     <Compile Include="PartModules\KSPWheelAnimationState.cs" />
+    <Compile Include="PartModules\KSPWheelMultiMotorUI.cs" />
     <Compile Include="PartModules\KSPWheelRepulsor.cs" />
     <Compile Include="PartModules\KSPWheelRotation.cs" />
     <Compile Include="PartModules\KSPWheelSettings.cs" />

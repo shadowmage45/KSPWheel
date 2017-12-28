@@ -237,6 +237,19 @@ namespace KSPWheel
             return GetIntValue(node, name, 0);
         }
 
+        public static int[] parseIntCSV(string input)
+        {
+            int[] output = null;
+            string[] splits = input.Split(',');
+            int len = splits.Length;
+            output = new int[len];
+            for (int i = 0; i < len; i++)
+            {
+                output[i] = int.Parse(splits[i].Trim());
+            }
+            return output;
+        }
+
         public static Vector3 GetVector3(this ConfigNode node, String name, Vector3 defaultValue)
         {
             String value = node.GetValue(name);
