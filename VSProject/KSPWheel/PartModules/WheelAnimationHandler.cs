@@ -9,17 +9,22 @@ namespace KSPWheel
     /// </summary>
     public class WheelAnimationHandler
     {
-        private readonly KSPWheelDeployment module;
+        private readonly KSPWheelSubmodule module;
+        private readonly WheelAnimationCallback callback;
         private KSPWheelState currentAnimState;
         List<AnimationData> animationData = new List<AnimationData>();
         //private AnimationData animationData;
         private float animTime = 0f;
+        private float animSpeed = 1f;
         //private AnimationData[] secondaryAnimationData = new AnimationData[0];
         private bool invertAnimation;
 
-        public WheelAnimationHandler(KSPWheelDeployment module, string animationName, float animationSpeed, int animationLayer, KSPWheelState initialState, bool invertAnimation)
+        internal KSPWheelState state { get { return currentAnimState; } }
+
+        public WheelAnimationHandler(KSPWheelSubmodule module, string animationName, float animationSpeed, int animationLayer, KSPWheelState initialState, bool invertAnimation, WrapMode wrapMode)
         {
             this.module = module;
+            callback = (WheelAnimationCallback)module;//dirty, but whatever...
             this.currentAnimState = initialState;
             this.invertAnimation = invertAnimation;
             this.animationData.Add(new AnimationData(module.part, animationName, animationSpeed, animationLayer));
@@ -111,7 +116,7 @@ namespace KSPWheel
             }
 
             this.currentAnimState = state;
-            if (callback) { module.onAnimationStateChanged(state); }
+            if (callback) { this.callback.onAnimationStateChanged(state); }
         }
 
         private void playAnimation()
@@ -134,7 +139,10 @@ namespace KSPWheel
 
         private void setAnimTime(float time)
         {
-            if (invertAnimation) time = 1f - time;
+            if (invertAnimation)
+            {
+                time = 1f - time;
+            }
             int len = animationData.Count;
             for (int i = 0; i < len; i++)
             {
@@ -142,15 +150,34 @@ namespace KSPWheel
             }
         }
 
-        private void setAnimSpeed(float speed)
+        internal void setAnimSpeed(float speed)
         {
-            if (invertAnimation) speed *= -1;
+            this.animSpeed = speed;
+            if (invertAnimation)
+            {
+                speed *= -1;
+            }
             int len = animationData.Count;
             for (int i = 0; i < len; i++)
             {
                 animationData[i].setAnimSpeed(speed);
             }
         }
+
+        internal void setAnimInvert(bool value)
+        {
+            if (value != invertAnimation)
+            {
+                invertAnimation = value;
+                setAnimSpeed(animSpeed);
+            }
+        }
+
+    }
+
+    public interface WheelAnimationCallback
+    {
+        void onAnimationStateChanged(KSPWheelState state);
     }
 
     public class AnimationData
@@ -162,12 +189,12 @@ namespace KSPWheel
 
         public float time = 0f;
 
-        public AnimationData(Part part, string name, float speed, int layer)
+        public AnimationData(Part part, string name, float speed, int layer, WrapMode wrapMode = WrapMode.Once)
         {
             animationName = name;
             animationSpeed = speed;
             animationLayer = layer;
-            anims = setupAnimation(part, name, speed, layer);
+            anims = setupAnimation(part, name, speed, layer, wrapMode);
         }
 
         public AnimationData(Part part, ConfigNode node)
@@ -181,7 +208,7 @@ namespace KSPWheel
             anims = setupAnimation(part, name, speed, layer);
         }
 
-        private Animation[] setupAnimation(Part part, string name, float speed, int layer)
+        private Animation[] setupAnimation(Part part, string name, float speed, int layer, WrapMode wrapMode = WrapMode.Once)
         {
             Animation[] animsBase = part.gameObject.GetComponentsInChildren<Animation>(true);
             List<Animation> al = new List<Animation>();
@@ -201,8 +228,8 @@ namespace KSPWheel
             foreach (Animation a in anims)
             {
                 a[animationName].layer = animationLayer;
-                a[animationName].wrapMode = WrapMode.Once;
-                a.wrapMode = WrapMode.Once;
+                a[animationName].wrapMode = wrapMode;
+                a.wrapMode = wrapMode;
             }
             return anims;
         }

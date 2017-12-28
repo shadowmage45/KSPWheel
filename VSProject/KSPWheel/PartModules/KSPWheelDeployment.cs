@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace KSPWheel
 {
-    public class KSPWheelDeployment : KSPWheelSubmodule, IMultipleDragCube
+    public class KSPWheelDeployment : KSPWheelSubmodule, IMultipleDragCube, WheelAnimationCallback
     {
 
         [KSPField]
@@ -175,7 +175,7 @@ namespace KSPWheel
 
         private void setupAnimationController()
         {
-            animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState, invertAnimation);
+            animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState, invertAnimation, WrapMode.Once);
             ConfigNode node = ConfigNode.Parse(configNodeData);
             if (node != null)
             {
