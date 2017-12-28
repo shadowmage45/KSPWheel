@@ -22,16 +22,7 @@ namespace KSPWheel
         public string effectName = string.Empty;
 
         [KSPField]
-        public string actionName = "Drive";
-
-        [KSPField]
-        public bool updateDragCubes = false;
-
-        [KSPField]
         public bool invertAnimation = false;
-
-        [KSPField]
-        public bool automaticStart = true;
 
         /// <summary>
         /// true = 'wrap', false = 'ping-pong'
