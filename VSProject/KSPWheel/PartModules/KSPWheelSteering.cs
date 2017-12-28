@@ -48,6 +48,12 @@ namespace KSPWheel
         [KSPField(guiName = "Steering Bias", guiActive = true, guiActiveEditor = true, isPersistant = true),
          UI_FloatRange(minValue = -1, maxValue = 1, stepIncrement = 0.025f, suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
         public float steeringBias = 0f;
+
+        /// <summary>
+        /// If true, will update the wheels internal steering values.  If false, will only update the visible steering mesh (if specified).
+        /// </summary>
+        [KSPField]
+        public bool updateWheelSteering = true;
         
         /// <summary>
         /// The local axis of the steering transform to rotate around.  Defaults to 0, 1, 0 -- rotate around y+ axis, with z+ facing forward.
@@ -188,7 +194,10 @@ namespace KSPWheel
             {
                 limit *= steeringCurve.Evaluate(perc);
             }
-            wheel.steeringAngle = maxSteeringAngle * rotInput * limit;
+            if (updateWheelSteering)
+            {
+                wheel.steeringAngle = maxSteeringAngle * rotInput * limit;
+            }
         }
 
         public void Update()
