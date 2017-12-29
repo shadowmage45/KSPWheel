@@ -430,7 +430,7 @@ namespace KSPWheel
         /// <summary>
         /// Seriously... don't ask where this math came from.... (days of spreadsheet work)
         /// </summary>
-        private void calcPowerStats()
+        internal void calcPowerStats()
         {
             //setup the scaled max values for torque and RPM based on the currently configured scale settings and current scale
             scaledMaxTorque = maxMotorTorque * controller.motorTorqueScalingFactor;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace KSPWheel
 {
@@ -108,89 +109,89 @@ namespace KSPWheel
         {
             base.OnStart(state);
 
-            UI_FloatEdit motorLimitField = (UI_FloatEdit)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(motorOutput)].uiControlEditor : Fields[nameof(motorOutput)].uiControlFlight);
+            UI_FloatRange motorLimitField = (UI_FloatRange)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(motorOutput)].uiControlEditor : Fields[nameof(motorOutput)].uiControlFlight);
             motorLimitField.onFieldChanged = (a , b) =>
             {
-                int len = motorModules.Length;
-                for (int i = 0; i < len; i++)
+                this.symmetryUpdate(m =>
                 {
-                    this.symmetryUpdate(m => 
+                    m.motorOutput = motorOutput;
+                    int len = m.motorModules.Length;
+                    for (int i = 0; i < len; i++)
                     {
-                        m.motorOutput = motorOutput;
                         m.motorModules[i].motorOutput = motorOutput;
-                    });
-                }
+                    }
+                });
             };
 
             UI_Toggle invertMotorField = (UI_Toggle)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(invertMotor)].uiControlEditor : Fields[nameof(invertMotor)].uiControlFlight);
             invertMotorField.onFieldChanged = (a, b) =>
             {
-                int len = motorModules.Length;
-                for (int i = 0; i < len; i++)
+                this.symmetryUpdate(m =>
                 {
-                    this.symmetryUpdate(m =>
+                    m.invertMotor = invertMotor;
+                    int len = m.motorModules.Length;
+                    for (int i = 0; i < len; i++)
                     {
-                        m.invertMotor = invertMotor;
                         m.motorModules[i].invertMotor = !m.motorModules[i].invertMotor;
-                    });
-                }
+                    }
+                });
             };
 
             UI_Toggle motorLockedField = (UI_Toggle)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(motorLocked)].uiControlEditor : Fields[nameof(motorLocked)].uiControlFlight);
             motorLockedField.onFieldChanged = (a, b) =>
             {
-                int len = motorModules.Length;
-                for (int i = 0; i < len; i++)
+                this.symmetryUpdate(m =>
                 {
-                    this.symmetryUpdate(m =>
+                    m.motorLocked = motorLocked;
+                    int len = m.motorModules.Length;
+                    for (int i = 0; i < len; i++)
                     {
-                        m.motorLocked = motorLocked;
                         m.motorModules[i].motorLocked = !m.motorModules[i].motorLocked;
-                        m.updatePowerStats();
-                    });
-                }
+                    }
+                    m.updatePowerStats();
+                });
             };
 
             UI_Toggle invertSteeringField = (UI_Toggle)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(invertSteering)].uiControlEditor : Fields[nameof(invertSteering)].uiControlFlight);
             invertSteeringField.onFieldChanged = (a, b) =>
             {
-                int len = motorModules.Length;
-                for (int i = 0; i < len; i++)
+                this.symmetryUpdate(m =>
                 {
-                    this.symmetryUpdate(m =>
+                    m.invertSteering = invertSteering;
+                    int len = m.motorModules.Length;
+                    for (int i = 0; i < len; i++)
                     {
-                        m.invertSteering = invertSteering;
                         m.motorModules[i].invertSteering = !m.motorModules[i].invertSteering;
-                    });
-                }
+                    }
+                });
             };
 
             UI_Toggle steeringLockedField = (UI_Toggle)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(steeringLocked)].uiControlEditor : Fields[nameof(steeringLocked)].uiControlFlight);
             steeringLockedField.onFieldChanged = (a, b) =>
             {
-                int len = motorModules.Length;
-                for (int i = 0; i < len; i++)
+                this.symmetryUpdate(m =>
                 {
-                    this.symmetryUpdate(m =>
+                    m.steeringLocked = steeringLocked;
+                    int len = m.motorModules.Length;
+                    for (int i = 0; i < len; i++)
                     {
-                        m.steeringLocked = steeringLocked;
                         m.motorModules[i].steeringLocked = !m.motorModules[i].steeringLocked;
-                    });
-                }
+                    }
+                });
             };
 
             UI_Toggle halfTrackSteeringField = (UI_Toggle)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(halfTrackSteering)].uiControlEditor : Fields[nameof(halfTrackSteering)].uiControlFlight);
             halfTrackSteeringField.onFieldChanged = (a, b) =>
             {
-                int len = motorModules.Length;
-                for (int i = 0; i < len; i++)
+                this.symmetryUpdate(m =>
                 {
-                    this.symmetryUpdate(m =>
+                    m.halfTrackSteering = halfTrackSteering;
+                    int len = m.motorModules.Length;
+                    for (int i = 0; i < len; i++)
                     {
-                        m.halfTrackSteering = halfTrackSteering;
                         m.motorModules[i].halfTrackSteering = !m.motorModules[i].halfTrackSteering;
-                    });
-                }
+                    }
+                });
             };
 
             UI_FloatEdit gearRatioField = (UI_FloatEdit)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(gearRatio)].uiControlEditor : Fields[nameof(gearRatio)].uiControlFlight);
@@ -198,18 +199,18 @@ namespace KSPWheel
             gearRatioField.maxValue = maxGearRatio;
             gearRatioField.onFieldChanged = (a, b) =>
             {
-                int len = motorModules.Length;
-                for (int i = 0; i < len; i++)
+                this.symmetryUpdate(m =>
                 {
-                    this.symmetryUpdate(m =>
+                    m.gearRatio = gearRatio;
+                    int len = m.motorModules.Length;
+                    for (int i = 0; i < len; i++)
                     {
-                        m.gearRatio = gearRatio;
-                        m.motorModules[i].gearRatio = gearRatio;
-                        m.updatePowerStats();
-                    });
-                }
+                        m.motorModules[i].gearRatio = m.gearRatio;
+                        m.motorModules[i].calcPowerStats();
+                    }
+                    m.updatePowerStats();
+                });
             };
-
         }
 
         internal override void onUIControlsUpdated(bool show)
