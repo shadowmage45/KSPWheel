@@ -47,15 +47,14 @@ namespace KSPWheel
             base.OnLoad(node);
         }
 
-        internal override void postControllerSetup()
+        public override void OnStart(StartState state)
         {
-            base.postControllerSetup();
-            setupAnimationController();
+            base.OnStart(state);
         }
 
-        internal override void preWheelFrameUpdate()
+        public void Update()
         {
-            base.preWheelFrameUpdate();
+            if (controller == null || wheel == null) { return; }
             if (controller.wheelState == KSPWheelState.DEPLOYED)
             {
                 if (animationControl.state != KSPWheelState.DEPLOYED)
@@ -71,18 +70,31 @@ namespace KSPWheel
                 }
                 speed /= len;
                 speed /= controller.maxSpeed;
-                speed *= this.animationSpeed;
-                animationControl.setAnimSpeed(speed);
+                speed *= Mathf.Sign(wheel.rpm);
+                if (invertAnimation) { speed = -speed; }
+                animationControl.setAnimSpeedMult(speed);
                 //update the effect for the current 'speed percent' value
                 if (!string.IsNullOrEmpty(effectName))
                 {
                     part.Effect(effectName, speed);
                 }
+                animationControl.updateAnimationState();
             }
             else
             {
                 if (!string.IsNullOrEmpty(effectName)) { part.Effect(effectName, 0f); }
             }
+        }
+
+        internal override void postControllerSetup()
+        {
+            base.postControllerSetup();
+            setupAnimationController();
+        }
+
+        internal override void preWheelFrameUpdate()
+        {
+            base.preWheelFrameUpdate();
         }
 
         internal override void onStateChanged(KSPWheelState oldState, KSPWheelState newState)
@@ -104,7 +116,7 @@ namespace KSPWheel
 
         private void setupAnimationController()
         {
-            animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState, invertAnimation, wrap? WrapMode.Loop : WrapMode.PingPong);
+            animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState, false, wrap? WrapMode.Loop : WrapMode.PingPong);
             ConfigNode node = ConfigNode.Parse(configNodeData);
             if (node != null)
             {
@@ -115,7 +127,7 @@ namespace KSPWheel
                     animationControl.loadSecondaryAnimations(animNodes);
                 }
             }
-            animationControl.setToAnimationState(controller.wheelState, false);
+            animationControl.setToAnimationState(controller.wheelState==KSPWheelState.DEPLOYED?KSPWheelState.DEPLOYED : KSPWheelState.RETRACTED, false);
         }
 
         /// <summary>
@@ -124,7 +136,7 @@ namespace KSPWheel
         /// <param name="state"></param>
         public void onAnimationStateChanged(KSPWheelState state)
         {
-            if (state != KSPWheelState.DEPLOYED)
+            if (state != KSPWheelState.DEPLOYING)
             {
                 if (!string.IsNullOrEmpty(effectName)) { part.Effect(effectName, 0f); }
             }
