@@ -124,7 +124,7 @@ namespace KSPWheel
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
 
-        [KSPField]
+        [KSPField(guiName = "Max EC/s")]
         public float maxECDraw = 0f;
 
         [KSPField]
@@ -317,6 +317,7 @@ namespace KSPWheel
             Fields[nameof(powerInKW)].guiActive = Fields[nameof(powerInKW)].guiActiveEditor = show && showGUIStats;
             Fields[nameof(powerEff)].guiActive = Fields[nameof(powerEff)].guiActiveEditor = show && showGUIStats;
             Fields[nameof(guiResourceUse)].guiActive = Fields[nameof(guiResourceUse)].guiActiveEditor = show && showGUIStats;
+            Fields[nameof(maxECDraw)].guiActiveEditor = show && showGUIStats;
         }
 
         internal override void preWheelPhysicsUpdate()
