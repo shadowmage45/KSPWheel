@@ -15,6 +15,7 @@ namespace KSPWheel
         List<AnimationData> animationData = new List<AnimationData>();
         private float animTime = 0f;
         private bool invertAnimation;
+        private WrapMode wrapMode;
 
         internal KSPWheelState state { get { return currentAnimState; } }
 
@@ -24,6 +25,7 @@ namespace KSPWheel
             callback = (WheelAnimationCallback)module;//dirty, but whatever...
             this.currentAnimState = initialState;
             this.invertAnimation = invertAnimation;
+            this.wrapMode = wrapMode;
             this.animationData.Add(new AnimationData(module.part, animationName, animationSpeed, animationLayer, wrapMode));
         }
 
@@ -103,7 +105,10 @@ namespace KSPWheel
                         setAnimTime(0);
                         setAnimSpeedMult(-1);
                         playAnimation();
-                        stopAnimation();
+                        if (wrapMode != WrapMode.Once)
+                        {
+                            stopAnimation();
+                        }
                         break;
                     }
                 case KSPWheelState.BROKEN:
@@ -139,7 +144,7 @@ namespace KSPWheel
         /// Performs an sample() operation to set transforms to the new state.
         /// </summary>
         /// <param name="time"></param>
-        private void setAnimTime(float time)
+        internal void setAnimTime(float time)
         {
             if (invertAnimation)
             {
@@ -175,6 +180,15 @@ namespace KSPWheel
             for (int i = 0; i < len; i++)
             {
                 animationData[i].setAnimSpeedBase(speed);
+            }
+        }
+
+        internal void sample()
+        {
+            int len = animationData.Count;
+            for (int i = 0; i < len; i++)
+            {
+                animationData[i].sample();
             }
         }
 
@@ -237,8 +251,6 @@ namespace KSPWheel
             {
                 a[animationName].layer = animationLayer;
                 a[animationName].wrapMode = wrapMode;
-                //TODO -- this was likely causing the animation issues, setting the entire animation component to the wrap mode rather than a specific clip
-                //a.wrapMode = wrapMode;
             }
             return anims;
         }
@@ -297,7 +309,7 @@ namespace KSPWheel
             float totalSpeed = speedMult * animationSpeed;
             for (int i = 0; i < len; i++)
             {
-                anims[i][animationName].speed = speedMult * animationSpeed;
+                anims[i][animationName].speed = totalSpeed;
             }
         }
 
@@ -305,6 +317,15 @@ namespace KSPWheel
         {
             animationSpeed = speed;
             setAnimSpeedMultiplier(speedMult);
+        }
+
+        public void sample()
+        {
+            int len = anims.Length;
+            for (int i = 0; i < len; i++)
+            {
+                anims[i].Sample();
+            }
         }
 
     }
