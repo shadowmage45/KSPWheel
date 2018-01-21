@@ -8,7 +8,7 @@ namespace KSPWheel
     /// Replacement for stock wheel motor module.<para/>
     /// Manages wheel motor input and resource use.
     /// </summary>
-    public class KSPWheelMotor : KSPWheelSubmodule
+    public class KSPWheelMotor : KSPWheelSubmodule, IContractObjectiveModule
     {
         
         /// <summary>
@@ -278,6 +278,16 @@ namespace KSPWheel
             UI_FloatEdit fe = (UI_FloatEdit)(HighLogic.LoadedSceneIsEditor ? Fields[nameof(gearRatio)].uiControlEditor : Fields[nameof(gearRatio)].uiControlFlight);
             fe.minValue = minGearRatio;
             fe.maxValue = maxGearRatio;
+        }
+
+        public string GetContractObjectiveType()
+        {
+            return "Wheel";
+        }
+
+        public bool CheckContractObjectiveValidity()
+        {
+            return true;
         }
 
         internal override string getModuleInfo()
