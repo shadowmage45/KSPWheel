@@ -173,9 +173,9 @@ namespace KSPWheel
             int len = cols.Length;
             for (int i = 0; i < len; i++)
             {
-                r += cols[0].r;
-                g += cols[0].g;
-                b += cols[0].b;
+                r += cols[i].r;
+                g += cols[i].g;
+                b += cols[i].b;
             }
             Color outColor = new Color();
             outColor.r = r / len;
