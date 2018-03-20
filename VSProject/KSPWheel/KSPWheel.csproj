@@ -79,6 +79,7 @@
     <Compile Include="PartModules\KSPWheelDeployCollider.cs" />
     <Compile Include="PartModules\KSPWheelDeployment.cs" />
     <Compile Include="PartModules\KSPWheelDustEffects.cs" />
+    <Compile Include="PartModules\KSPWheelDustEffectsOld.cs" />
     <Compile Include="PartModules\KSPWheelExtension.cs" />
     <Compile Include="PartModules\KSPWheelMotor.cs" />
     <Compile Include="PartModules\KSPWheelAnimationState.cs" />
