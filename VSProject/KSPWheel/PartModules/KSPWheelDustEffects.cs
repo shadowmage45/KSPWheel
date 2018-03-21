@@ -83,11 +83,11 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
-            GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
-            GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
-            dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
-            setupDustEmitters();
+            //GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
+            //GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
+            //GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
+            //dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
+            //setupDustEmitters();
         }
 
         public override void OnDestroy()
@@ -109,9 +109,9 @@ namespace KSPWheel
             //        GameObject.Destroy(waterObjects[i]);
             //    }
             //}
-            GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
-            GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
-            GameEvents.onFloatingOriginShift.Remove(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
+            //GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
+            //GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
+            //GameEvents.onFloatingOriginShift.Remove(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
         }
 
         private void onGamePause()
@@ -183,42 +183,42 @@ namespace KSPWheel
         private void setupDustEmitters()
         {
             int len = controller.wheelData.Length;
-            dustEmitters = new ParticleSystem[len];
-            waterEmitters = new ParticleSystem[len];
+            //dustEmitters = new ParticleSystem[len];
+            //waterEmitters = new ParticleSystem[len];
 
-            Texture2D dustParticleTexture = GameDatabase.Instance.GetTexture(this.dustParticleTexture, false);
-            Texture2D waterParticleTexture = GameDatabase.Instance.GetTexture(this.waterParticleTexture, false);
+            //Texture2D dustParticleTexture = GameDatabase.Instance.GetTexture(this.dustParticleTexture, false);
+            //Texture2D waterParticleTexture = GameDatabase.Instance.GetTexture(this.waterParticleTexture, false);
 
-            Shader particleShader = Shader.Find("Particles/Additive");
+            //Shader particleShader = Shader.Find("Particles/Additive");
 
-            Material dustMaterial = new Material(particleShader);
-            dustMaterial.mainTexture = dustParticleTexture;
+            //Material dustMaterial = new Material(particleShader);
+            //dustMaterial.mainTexture = dustParticleTexture;
 
-            Material waterMaterial = new Material(particleShader);
-            waterMaterial.mainTexture = waterParticleTexture;
+            //Material waterMaterial = new Material(particleShader);
+            //waterMaterial.mainTexture = waterParticleTexture;
 
-            for (int i = 0; i < len; i++)
-            {
-                GameObject dustParticleObject = new GameObject("DustEmitter");
-                dustParticleObject.transform.parent = wheel.transform;
-                dustParticleObject.transform.position = wheel.transform.position;
-                dustParticleObject.transform.rotation = wheel.transform.rotation;
+            //for (int i = 0; i < len; i++)
+            //{
+            //    GameObject dustParticleObject = new GameObject("DustEmitter");
+            //    dustParticleObject.transform.parent = wheel.transform;
+            //    dustParticleObject.transform.position = wheel.transform.position;
+            //    dustParticleObject.transform.rotation = wheel.transform.rotation;
 
-                ParticleSystem dustParticleSystem = dustParticleObject.AddComponent<ParticleSystem>();
-                dustEmitters[i] = dustParticleSystem;
-                ParticleSystemRenderer dustParticleRenderer = dustParticleObject.GetComponent<ParticleSystemRenderer>();
-                dustParticleRenderer.material = dustMaterial;
+            //    ParticleSystem dustParticleSystem = dustParticleObject.AddComponent<ParticleSystem>();
+            //    dustEmitters[i] = dustParticleSystem;
+            //    ParticleSystemRenderer dustParticleRenderer = dustParticleObject.GetComponent<ParticleSystemRenderer>();
+            //    dustParticleRenderer.material = dustMaterial;
                 
-                GameObject waterParticleObject = new GameObject("DustEmitter");
-                waterParticleObject.transform.parent = wheel.transform;
-                waterParticleObject.transform.position = wheel.transform.position;
-                waterParticleObject.transform.rotation = wheel.transform.rotation;
+            //    GameObject waterParticleObject = new GameObject("DustEmitter");
+            //    waterParticleObject.transform.parent = wheel.transform;
+            //    waterParticleObject.transform.position = wheel.transform.position;
+            //    waterParticleObject.transform.rotation = wheel.transform.rotation;
 
-                ParticleSystem waterParticleSystem = waterParticleObject.AddComponent<ParticleSystem>();
-                waterEmitters[i] = waterParticleSystem;
-                ParticleSystemRenderer waterParticleRenderer = dustParticleObject.GetComponent<ParticleSystemRenderer>();
-                waterParticleRenderer.material = waterMaterial;
-            }
+            //    ParticleSystem waterParticleSystem = waterParticleObject.AddComponent<ParticleSystem>();
+            //    waterEmitters[i] = waterParticleSystem;
+            //    ParticleSystemRenderer waterParticleRenderer = dustParticleObject.GetComponent<ParticleSystemRenderer>();
+            //    waterParticleRenderer.material = waterMaterial;
+            //}
             ////one dust and one water effect emitter per wheel collider ..
             //int len = controller.wheelData.Length;
             //dustObjects = new GameObject[len];
@@ -266,73 +266,73 @@ namespace KSPWheel
         {
 
             //TODO remove this per-tick component lookup; source say to cache the vessel->module map in a static map in the vessel-module class; add/remove by the start/etc methods on the vessel-module
-            KSPWheelDustCamera cm = vessel.GetComponent<KSPWheelDustCamera>();
-            updateColorArray(cm.cameraColor);
+            //KSPWheelDustCamera cm = vessel.GetComponent<KSPWheelDustCamera>();
+            //updateColorArray(cm.cameraColor);
 
-            int len = dustEmitters.Length;
+            //int len = dustEmitters.Length;
 
-            KSPWheelCollider wheel;
-            KSPWheelBase.KSPWheelData data;
-            float springForce = 1f;
-            float speedForce = 1f;
-            float slipForce = 1f;
-            float mult = 0f;
-            for (int i = 0; i < len; i++)
-            {
-                data = controller.wheelData[i];
-                wheel = data.wheel;
-                if (dustPower <= 0)
-                {
-                    dustEmitters[i].ext_emissionEnable(false);
-                    waterEmitters[i].ext_emissionEnable(false);
-                }
-                else if (data.waterMode)
-                {
-                    //springForce = data.waterEffectSize;
-                    //mult = data.waterEffectForce * dustSpeedMult;
-                    //waterObjects[i].transform.position = data.waterEffectPos;
-                    //waterObjects[i].transform.rotation = wheel.transform.rotation;
-                    //if (mult > 0)
-                    //{
-                    //    waterEmitters[i].localVelocity = Vector3.up * mult;
-                    //    waterEmitters[i].minEmission = dustMinEmission * dustPower;
-                    //    waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
-                    //    waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
-                    //    waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-                    //    waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
-                    //    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
-                    //    waterEmitters[i].ext_emissionEnable(true);
-                    //}
-                    //else
-                    //{
-                    //    waterEmitters[i].ext_emissionEnable(false);
-                    //}
-                    //dustEmitters[i].ext_emissionEnable(false);
-                }
-                else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
-                {
-                    //dustEmitters[i].ext_emissionEnable(true);
-                    //waterEmitters[i].ext_emissionEnable(false);
-                    //springForce = wheel.springForce * 0.1f * dustForceMult;
-                    //speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
-                    //slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
-                    //mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
-                    //dustObjects[i].transform.position = wheel.worldHitPos;
-                    //dustObjects[i].transform.rotation = wheel.transform.rotation;
-                    //dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
-                    //dustEmitters[i].minEmission = dustMinEmission * dustPower;
-                    //dustEmitters[i].maxEmission = dustMaxEmission * dustPower;
-                    //dustEmitters[i].minEnergy = dustMinEnergy * dustPower;
-                    //dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-                    //dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
-                    //dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
-                }
-                else
-                {
-                    dustEmitters[i].ext_emissionEnable(false);
-                    waterEmitters[i].ext_emissionEnable(false);
-                }
-            }
+            //KSPWheelCollider wheel;
+            //KSPWheelBase.KSPWheelData data;
+            //float springForce = 1f;
+            //float speedForce = 1f;
+            //float slipForce = 1f;
+            //float mult = 0f;
+            //for (int i = 0; i < len; i++)
+            //{
+            //    data = controller.wheelData[i];
+            //    wheel = data.wheel;
+            //    if (dustPower <= 0)
+            //    {
+            //        dustEmitters[i].ext_emissionEnable(false);
+            //        waterEmitters[i].ext_emissionEnable(false);
+            //    }
+            //    else if (data.waterMode)
+            //    {
+            //        //springForce = data.waterEffectSize;
+            //        //mult = data.waterEffectForce * dustSpeedMult;
+            //        //waterObjects[i].transform.position = data.waterEffectPos;
+            //        //waterObjects[i].transform.rotation = wheel.transform.rotation;
+            //        //if (mult > 0)
+            //        //{
+            //        //    waterEmitters[i].localVelocity = Vector3.up * mult;
+            //        //    waterEmitters[i].minEmission = dustMinEmission * dustPower;
+            //        //    waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
+            //        //    waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
+            //        //    waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
+            //        //    waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
+            //        //    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+            //        //    waterEmitters[i].ext_emissionEnable(true);
+            //        //}
+            //        //else
+            //        //{
+            //        //    waterEmitters[i].ext_emissionEnable(false);
+            //        //}
+            //        //dustEmitters[i].ext_emissionEnable(false);
+            //    }
+            //    else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
+            //    {
+            //        //dustEmitters[i].ext_emissionEnable(true);
+            //        //waterEmitters[i].ext_emissionEnable(false);
+            //        //springForce = wheel.springForce * 0.1f * dustForceMult;
+            //        //speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
+            //        //slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
+            //        //mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
+            //        //dustObjects[i].transform.position = wheel.worldHitPos;
+            //        //dustObjects[i].transform.rotation = wheel.transform.rotation;
+            //        //dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
+            //        //dustEmitters[i].minEmission = dustMinEmission * dustPower;
+            //        //dustEmitters[i].maxEmission = dustMaxEmission * dustPower;
+            //        //dustEmitters[i].minEnergy = dustMinEnergy * dustPower;
+            //        //dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
+            //        //dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
+            //        //dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+            //    }
+            //    else
+            //    {
+            //        dustEmitters[i].ext_emissionEnable(false);
+            //        waterEmitters[i].ext_emissionEnable(false);
+            //    }
+            //}
         }
 
         /// <summary>

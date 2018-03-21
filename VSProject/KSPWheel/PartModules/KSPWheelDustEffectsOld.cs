@@ -237,7 +237,7 @@ namespace KSPWheel
         private void updateDustEmission()
         {
             int len = dustObjects.Length;
-            if (HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustCamera)
+            if (false/**HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustCamera**/)
             {
                 //TODO remove this per-tick component lookup; source say to cache the vessel->module map in a static map in the vessel-module class; add/remove by the start/etc methods on the vessel-module
                 KSPWheelDustCamera cm = vessel.GetComponent<KSPWheelDustCamera>();

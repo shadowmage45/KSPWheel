@@ -68,10 +68,6 @@ namespace KSPWheel
         private void updateActiveStatus()
         {
             cameraActive = false;
-            if (!HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustCamera)
-            {
-                return;
-            }
             int len = vessel.Parts.Count;
             KSPWheelDustEffects fx;
             for (int i = 0; i < len; i++)
