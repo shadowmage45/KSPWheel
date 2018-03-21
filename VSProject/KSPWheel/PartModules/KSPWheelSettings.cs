@@ -11,9 +11,6 @@ namespace KSPWheel
         [GameParameters.CustomParameterUI("Wheel Dust Effects", toolTip = "If enabled wheels will kick up dust when traversing terrain.")]
         public bool wheelDustEffects = true;
 
-        [GameParameters.CustomParameterUI("Wheel Dust Camera", toolTip = "If enabled the dust system will use real-time camera rendering data to determine dust colors.  If disabled dust colors will fall-back to the pre-defined lookup map.")]
-        public bool wheelDustCamera = true;
-
         [GameParameters.CustomFloatParameterUI("Wheel Dust Power", minValue = 0, maxValue = 4, stepCount = 15, displayFormat = "F2", toolTip = "Increases or decreases dust emission rate. 1=standard, 0=off")]
         public float wheelDustPower = 1f;
 
