@@ -64,6 +64,8 @@ namespace KSPWheel
 
         private bool gamePaused = false;
 
+        private bool dustEnabled = false;
+
         private float dustPower = 1f;
 
         private float colorUpdateTime = 1f;
@@ -72,60 +74,51 @@ namespace KSPWheel
         private ParticleSystem[] dustEmitters;
         private ParticleSystem[] waterEmitters;
 
-        //public override void OnStart(StartState state)
-        //{
-        //    base.OnStart(state);
-        //    ParticleSystem particleSystem = null;//create particle system components on wheel collider transforms -at runtime-
-        //    ParticleSystemRenderer psr = null;// tr.getComponent<ParticleSystemRenderer>(); ParticleSystem auto adds these components?
-        //    psr.material = null;//create a new material 
-        //}
-
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            //GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
-            //GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
-            //GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
-            //dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
-            //setupDustEmitters();
+            GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
+            GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
+            GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
+            dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
+            dustEnabled = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustEffects;
+            if (dustEnabled)
+            {
+                setupDustEmitters();
+            }
         }
 
         public override void OnDestroy()
         {
             base.OnDestroy();
-            //if (dustObjects != null)
-            //{
-            //    dustEmitters = null;
-            //    dustAnimators = null;
-            //    waterEmitters = null;
-            //    waterAnimators = null;
-            //    int len = dustObjects.Length;
-            //    for (int i = 0; i < len; i++)
-            //    {
-            //        GameObject.Destroy(dustObjects[i]);
-            //    }
-            //    for (int i = 0; i < len; i++)
-            //    {
-            //        GameObject.Destroy(waterObjects[i]);
-            //    }
-            //}
-            //GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
-            //GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
-            //GameEvents.onFloatingOriginShift.Remove(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
+            if (dustEnabled)
+            {
+                int len = dustEmitters.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    GameObject.Destroy(dustEmitters[i].gameObject);
+                    GameObject.Destroy(waterEmitters[i].gameObject);
+                }
+                dustEmitters = null;
+                waterEmitters = null;
+            }
+            GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
+            GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
+            GameEvents.onFloatingOriginShift.Remove(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
         }
 
         private void onGamePause()
         {
             gamePaused = true;
-            //if (dustEmitters != null)
-            //{
-            //    int len = dustEmitters.Length;
-            //    for (int i = 0; i < len; i++)
-            //    {
-            //        dustEmitters[i].emit = false;
-            //        waterEmitters[i].emit = false;
-            //    }
-            //}
+            if (dustEmitters != null)
+            {
+                int len = dustEmitters.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    dustEmitters[i].ext_setEmissionEnable(false);
+                    waterEmitters[i].ext_setEmissionEnable(false);
+                }
+            }
         }
 
         private void onGameUnpause()
@@ -135,6 +128,28 @@ namespace KSPWheel
 
         private void onOriginShift(Vector3d o, Vector3d n)
         {
+            if (!dustEnabled) { return; }
+            int len = dustEmitters.Length;
+            for (int i = 0; i < len; i++)
+            {
+                ParticleSystem.Particle[] ps = new ParticleSystem.Particle[dustEmitters[i].main.maxParticles];
+                dustEmitters[i].GetParticles(ps);
+                int len2 = dustEmitters[i].particleCount;
+                for (int k = 0; k < len2; k++)
+                {
+                    Vector3 pos = ps[k].position;
+                    pos += (n - o);
+                    ps[k].position = pos;
+                }
+                waterEmitters[i].GetParticles(ps);
+                len2 = waterEmitters[i].particleCount;
+                for (int k = 0; k < len2; k++)
+                {
+                    Vector3 pos = ps[k].position;
+                    pos += (n - o);
+                    ps[k].position = pos;
+                }
+            }
             //if (dustEmitters == null) { return; }
             //Vector3 d = n - o;
             //Vector3 pos;
@@ -183,42 +198,44 @@ namespace KSPWheel
         private void setupDustEmitters()
         {
             int len = controller.wheelData.Length;
-            //dustEmitters = new ParticleSystem[len];
-            //waterEmitters = new ParticleSystem[len];
+            dustEmitters = new ParticleSystem[len];
+            waterEmitters = new ParticleSystem[len];
 
-            //Texture2D dustParticleTexture = GameDatabase.Instance.GetTexture(this.dustParticleTexture, false);
-            //Texture2D waterParticleTexture = GameDatabase.Instance.GetTexture(this.waterParticleTexture, false);
+            Texture2D dustParticleTexture = GameDatabase.Instance.GetTexture(this.dustParticleTexture, false);
+            Texture2D waterParticleTexture = GameDatabase.Instance.GetTexture(this.waterParticleTexture, false);
 
-            //Shader particleShader = Shader.Find("Particles/Additive");
+            Shader particleShader = Shader.Find("Particles/Additive");
 
-            //Material dustMaterial = new Material(particleShader);
-            //dustMaterial.mainTexture = dustParticleTexture;
+            Material dustMaterial = new Material(particleShader);
+            dustMaterial.mainTexture = dustParticleTexture;
 
-            //Material waterMaterial = new Material(particleShader);
-            //waterMaterial.mainTexture = waterParticleTexture;
+            Material waterMaterial = new Material(particleShader);
+            waterMaterial.mainTexture = waterParticleTexture;
 
-            //for (int i = 0; i < len; i++)
-            //{
-            //    GameObject dustParticleObject = new GameObject("DustEmitter");
-            //    dustParticleObject.transform.parent = wheel.transform;
-            //    dustParticleObject.transform.position = wheel.transform.position;
-            //    dustParticleObject.transform.rotation = wheel.transform.rotation;
+            for (int i = 0; i < len; i++)
+            {
+                GameObject dustParticleObject = new GameObject("DustEmitter");
+                dustParticleObject.transform.parent = wheel.transform;
+                dustParticleObject.transform.position = wheel.transform.position;
+                dustParticleObject.transform.rotation = wheel.transform.rotation;
 
-            //    ParticleSystem dustParticleSystem = dustParticleObject.AddComponent<ParticleSystem>();
-            //    dustEmitters[i] = dustParticleSystem;
-            //    ParticleSystemRenderer dustParticleRenderer = dustParticleObject.GetComponent<ParticleSystemRenderer>();
-            //    dustParticleRenderer.material = dustMaterial;
-                
-            //    GameObject waterParticleObject = new GameObject("DustEmitter");
-            //    waterParticleObject.transform.parent = wheel.transform;
-            //    waterParticleObject.transform.position = wheel.transform.position;
-            //    waterParticleObject.transform.rotation = wheel.transform.rotation;
+                ParticleSystem dustParticleSystem = dustParticleObject.AddComponent<ParticleSystem>();
+                dustEmitters[i] = dustParticleSystem;
+                dustEmitters[i].ext_setCoordinateSpace(ParticleSystemSimulationSpace.World);
+                dustEmitters[i].ext_setMaterial(dustMaterial);
 
-            //    ParticleSystem waterParticleSystem = waterParticleObject.AddComponent<ParticleSystem>();
-            //    waterEmitters[i] = waterParticleSystem;
-            //    ParticleSystemRenderer waterParticleRenderer = dustParticleObject.GetComponent<ParticleSystemRenderer>();
-            //    waterParticleRenderer.material = waterMaterial;
-            //}
+                GameObject waterParticleObject = new GameObject("WaterEmitter");
+                waterParticleObject.transform.parent = wheel.transform;
+                waterParticleObject.transform.position = wheel.transform.position;
+                waterParticleObject.transform.rotation = wheel.transform.rotation;
+
+                ParticleSystem waterParticleSystem = waterParticleObject.AddComponent<ParticleSystem>();
+                waterEmitters[i] = waterParticleSystem;
+                waterEmitters[i].ext_setCoordinateSpace(ParticleSystemSimulationSpace.World);
+                waterEmitters[i].ext_setMaterial(waterMaterial);
+            }
+
+
             ////one dust and one water effect emitter per wheel collider ..
             //int len = controller.wheelData.Length;
             //dustObjects = new GameObject[len];
@@ -264,75 +281,80 @@ namespace KSPWheel
 
         private void updateDustEmission()
         {
-
+            if (!dustEnabled) { return; }
             //TODO remove this per-tick component lookup; source say to cache the vessel->module map in a static map in the vessel-module class; add/remove by the start/etc methods on the vessel-module
-            //KSPWheelDustCamera cm = vessel.GetComponent<KSPWheelDustCamera>();
-            //updateColorArray(cm.cameraColor);
+            KSPWheelDustCamera cm = vessel.GetComponent<KSPWheelDustCamera>();
+            updateColorArray(cm.cameraColor);
 
-            //int len = dustEmitters.Length;
+            int len = dustEmitters.Length;
 
-            //KSPWheelCollider wheel;
-            //KSPWheelBase.KSPWheelData data;
-            //float springForce = 1f;
-            //float speedForce = 1f;
-            //float slipForce = 1f;
-            //float mult = 0f;
-            //for (int i = 0; i < len; i++)
-            //{
-            //    data = controller.wheelData[i];
-            //    wheel = data.wheel;
-            //    if (dustPower <= 0)
-            //    {
-            //        dustEmitters[i].ext_emissionEnable(false);
-            //        waterEmitters[i].ext_emissionEnable(false);
-            //    }
-            //    else if (data.waterMode)
-            //    {
-            //        //springForce = data.waterEffectSize;
-            //        //mult = data.waterEffectForce * dustSpeedMult;
-            //        //waterObjects[i].transform.position = data.waterEffectPos;
-            //        //waterObjects[i].transform.rotation = wheel.transform.rotation;
-            //        //if (mult > 0)
-            //        //{
-            //        //    waterEmitters[i].localVelocity = Vector3.up * mult;
-            //        //    waterEmitters[i].minEmission = dustMinEmission * dustPower;
-            //        //    waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
-            //        //    waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
-            //        //    waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-            //        //    waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
-            //        //    waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
-            //        //    waterEmitters[i].ext_emissionEnable(true);
-            //        //}
-            //        //else
-            //        //{
-            //        //    waterEmitters[i].ext_emissionEnable(false);
-            //        //}
-            //        //dustEmitters[i].ext_emissionEnable(false);
-            //    }
-            //    else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
-            //    {
-            //        //dustEmitters[i].ext_emissionEnable(true);
-            //        //waterEmitters[i].ext_emissionEnable(false);
-            //        //springForce = wheel.springForce * 0.1f * dustForceMult;
-            //        //speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
-            //        //slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
-            //        //mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
-            //        //dustObjects[i].transform.position = wheel.worldHitPos;
-            //        //dustObjects[i].transform.rotation = wheel.transform.rotation;
-            //        //dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
-            //        //dustEmitters[i].minEmission = dustMinEmission * dustPower;
-            //        //dustEmitters[i].maxEmission = dustMaxEmission * dustPower;
-            //        //dustEmitters[i].minEnergy = dustMinEnergy * dustPower;
-            //        //dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-            //        //dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
-            //        //dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
-            //    }
-            //    else
-            //    {
-            //        dustEmitters[i].ext_emissionEnable(false);
-            //        waterEmitters[i].ext_emissionEnable(false);
-            //    }
-            //}
+            Vector3 antiGravity = (-vessel.gravityForPos).normalized;
+
+            KSPWheelCollider wheel;
+            KSPWheelBase.KSPWheelData data;
+            float springForce = 1f;
+            float speedForce = 1f;
+            float slipForce = 1f;
+            float mult = 0f;
+            for (int i = 0; i < len; i++)
+            {
+                data = controller.wheelData[i];
+                wheel = data.wheel;
+                if (dustPower <= 0)//dust disabled via game settings, really should never branch to this, but might if someone set dust to enabled, with dust power at zero
+                {
+                    dustEmitters[i].ext_setEmissionEnable(false);
+                    waterEmitters[i].ext_setEmissionEnable(false);
+                }
+                else if (data.waterMode)
+                {
+                    springForce = data.waterEffectSize;
+                    mult = data.waterEffectForce * dustSpeedMult;
+                    waterEmitters[i].transform.position = data.waterEffectPos;
+                    waterEmitters[i].transform.rotation = wheel.transform.rotation;
+                    if (mult > 0)
+                    {
+                        waterEmitters[i].ext_setVelocity(antiGravity * mult);
+                        //waterEmitters[i].localVelocity = Vector3.up * mult;
+                        waterEmitters[i].ext_setEmissionMinMax(dustMinEmission * dustPower, dustMaxEmission * dustPower);
+                        //waterEmitters[i].minEmission = dustMinEmission * dustPower;
+                        //waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
+                        waterEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
+                        //waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
+                        //waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
+                        waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
+                        waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+                        waterEmitters[i].ext_setEmissionEnable(true);
+                    }
+                    else
+                    {
+                        waterEmitters[i].ext_setEmissionEnable(false);
+                    }
+                    dustEmitters[i].ext_setEmissionEnable(false);
+                }
+                else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
+                {
+                    //dustEmitters[i].ext_setEmissionEnable(true);
+                    //waterEmitters[i].ext_setEmissionEnable(false);
+                    //springForce = wheel.springForce * 0.1f * dustForceMult;
+                    //speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
+                    //slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
+                    //mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
+                    //dustObjects[i].transform.position = wheel.worldHitPos;
+                    //dustObjects[i].transform.rotation = wheel.transform.rotation;
+                    //dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
+                    //dustEmitters[i].minEmission = dustMinEmission * dustPower;
+                    //dustEmitters[i].maxEmission = dustMaxEmission * dustPower;
+                    //dustEmitters[i].minEnergy = dustMinEnergy * dustPower;
+                    //dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
+                    //dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
+                    //dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+                }
+                else//not grounded
+                {
+                    dustEmitters[i].ext_setEmissionEnable(false);
+                    waterEmitters[i].ext_setEmissionEnable(false);
+                }
+            }
         }
 
         /// <summary>
@@ -356,16 +378,99 @@ namespace KSPWheel
             //    waterAnimators[i].colorAnimation = waterColorArray;
             //}
         }
-
-
+        
     }
 
+    /// <summary>
+    /// Yep, an entire set of extension methods, just to remove the retarded implementation that Unity used on particles.<para/>
+    /// Probably terrible for performance, but fuck Unity and their asinine system designs.
+    /// </summary>
     public static class ParticleSystemExtensions
     {
-        public static void ext_emissionEnable(this ParticleSystem ps, bool value)
+
+        public static void ext_setEmissionEnable(this ParticleSystem ps, bool value)
         {
-            var fuckingUnityBullshitCanBlowMe = ps.emission;
-            fuckingUnityBullshitCanBlowMe.enabled = value;
+            var bs = ps.emission;
+            bs.enabled = value;
         }
+
+        public static bool ext_getEmissionEnable(this ParticleSystem ps)
+        {
+            return ps.emission.enabled;
+        }
+
+        public static void ext_setEmissionMinMax(this ParticleSystem ps, float min, float max)
+        {
+            var bs = ps.emission.rateOverTime;
+            bs.constantMin = min;
+            bs.constantMax = max;
+            bs.mode = ParticleSystemCurveMode.TwoConstants;
+        }
+
+        public static void ext_setEnergyMinMax(this ParticleSystem ps, float min, float max)
+        {
+            var bs = ps.main;
+            bs.startLifetime = new ParticleSystem.MinMaxCurve(min, max);
+        }
+
+        public static void ext_setCoordinateSpace(this ParticleSystem ps, ParticleSystemSimulationSpace space)
+        {
+            var bs = ps.main;
+            bs.simulationSpace = space;
+        }
+
+        public static ParticleSystemSimulationSpace ext_getCoordinateSpace(this ParticleSystem ps)
+        {
+            return ps.main.simulationSpace;
+        }
+
+        public static void ext_setMaterial(this ParticleSystem ps, Material mat)
+        {
+            var bs = ps.gameObject.GetComponent<ParticleSystemRenderer>();
+            bs.material = mat;
+        }
+
+        public static Material ext_getMaterial(this ParticleSystem ps)
+        {
+            var bs = ps.gameObject.GetComponent<ParticleSystemRenderer>();
+            return bs.material;
+        }
+
+        public static void ext_setRenderMode(this ParticleSystem ps, ParticleSystemRenderMode mode)
+        {
+            var bs = ps.gameObject.GetComponent<ParticleSystemRenderer>();
+            bs.renderMode = mode;
+        }
+
+        public static ParticleSystemRenderMode ext_getRenderMode(this ParticleSystem ps)
+        {
+            var bs = ps.gameObject.GetComponent<ParticleSystemRenderer>();
+            return bs.renderMode;
+        }
+
+        public static void ext_setSizeGrow(this ParticleSystem ps, float sg)
+        {
+            var bs = ps.sizeOverLifetime;
+            bs.separateAxes = false;
+            bs.x = sg;
+        }
+
+        public static void ext_setVelocity(this ParticleSystem ps, Vector3 vel)
+        {
+            var bs = ps.velocityOverLifetime;
+            bs.enabled = true;
+            bs.space = ParticleSystemSimulationSpace.World;
+            bs.x = vel.x;
+            bs.y = vel.y;
+            bs.z = vel.z;
+        }
+
+        public static void ext_setInheritVelocity(this ParticleSystem ps, bool val)
+        {
+            var bs = ps.inheritVelocity;
+            bs.enabled = val;
+            bs.mode = ParticleSystemInheritVelocityMode.Initial;
+        }
+
     }
 }
