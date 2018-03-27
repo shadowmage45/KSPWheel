@@ -284,7 +284,7 @@ namespace KSPWheel
             if (!dustEnabled) { return; }
             //TODO remove this per-tick component lookup; source say to cache the vessel->module map in a static map in the vessel-module class; add/remove by the start/etc methods on the vessel-module
             KSPWheelDustCamera cm = vessel.GetComponent<KSPWheelDustCamera>();
-            updateColorArray(cm.cameraColor);
+            Color color = cm.cameraColor;
 
             int len = dustEmitters.Length;
 
@@ -314,15 +314,9 @@ namespace KSPWheel
                     if (mult > 0)
                     {
                         waterEmitters[i].ext_setVelocity(antiGravity * mult);
-                        //waterEmitters[i].localVelocity = Vector3.up * mult;
                         waterEmitters[i].ext_setEmissionMinMax(dustMinEmission * dustPower, dustMaxEmission * dustPower);
-                        //waterEmitters[i].minEmission = dustMinEmission * dustPower;
-                        //waterEmitters[i].maxEmission = dustMaxEmission * dustPower;
                         waterEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
-                        //waterEmitters[i].minEnergy = dustMinEnergy * dustPower;
-                        //waterEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-                        waterEmitters[i].minSize = dustMinSize * springForce * dustPower;
-                        waterEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+                        waterEmitters[i].ext_setSizeMinMax(dustMinSize * springForce * dustPower, dustMaxSize * springForce * dustPower);
                         waterEmitters[i].ext_setEmissionEnable(true);
                     }
                     else
@@ -333,21 +327,18 @@ namespace KSPWheel
                 }
                 else if (wheel.isGrounded && wheel.wheelLocalVelocity.magnitude >= minDustSpeed)
                 {
-                    //dustEmitters[i].ext_setEmissionEnable(true);
-                    //waterEmitters[i].ext_setEmissionEnable(false);
-                    //springForce = wheel.springForce * 0.1f * dustForceMult;
-                    //speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
-                    //slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
-                    //mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
-                    //dustObjects[i].transform.position = wheel.worldHitPos;
-                    //dustObjects[i].transform.rotation = wheel.transform.rotation;
-                    //dustEmitters[i].localVelocity = Vector3.up * (speedForce + slipForce);
-                    //dustEmitters[i].minEmission = dustMinEmission * dustPower;
-                    //dustEmitters[i].maxEmission = dustMaxEmission * dustPower;
-                    //dustEmitters[i].minEnergy = dustMinEnergy * dustPower;
-                    //dustEmitters[i].maxEnergy = dustMaxEnergy * mult * dustPower;
-                    //dustEmitters[i].minSize = dustMinSize * springForce * dustPower;
-                    //dustEmitters[i].maxSize = dustMaxSize * springForce * dustPower;
+                    dustEmitters[i].ext_setEmissionEnable(true);
+                    waterEmitters[i].ext_setEmissionEnable(false);
+                    springForce = wheel.springForce * 0.1f * dustForceMult;
+                    speedForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.z) / maxDustSpeed, 0, 1);
+                    slipForce = Mathf.Clamp(Mathf.Abs(wheel.wheelLocalVelocity.x) / maxDustSpeed, 0, 1);
+                    mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
+                    dustEmitters[i].transform.position = wheel.worldHitPos;
+                    dustEmitters[i].transform.rotation = wheel.transform.rotation;
+                    dustEmitters[i].ext_setVelocity(antiGravity * (speedForce + slipForce));
+                    dustEmitters[i].ext_setEmissionMinMax(dustMinEmission * dustPower, dustMaxEmission * dustPower);
+                    dustEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
+                    dustEmitters[i].ext_setSizeMinMax(dustMinSize * springForce * dustPower, dustMaxSize * springForce * dustPower);
                 }
                 else//not grounded
                 {
@@ -388,29 +379,86 @@ namespace KSPWheel
     public static class ParticleSystemExtensions
     {
 
+        /// <summary>
+        /// Extension method to enable/disable emission.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="value"></param>
         public static void ext_setEmissionEnable(this ParticleSystem ps, bool value)
         {
             var bs = ps.emission;
             bs.enabled = value;
         }
 
+        /// <summary>
+        /// Extension method to return the current emission enabled status
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <returns></returns>
         public static bool ext_getEmissionEnable(this ParticleSystem ps)
         {
             return ps.emission.enabled;
         }
 
+        /// <summary>
+        /// Extension method to set the emission min and max parameters
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
         public static void ext_setEmissionMinMax(this ParticleSystem ps, float min, float max)
         {
-            var bs = ps.emission.rateOverTime;
-            bs.constantMin = min;
-            bs.constantMax = max;
-            bs.mode = ParticleSystemCurveMode.TwoConstants;
+            var bs = ps.emission;
+            bs.rateOverTime = new ParticleSystem.MinMaxCurve(min, max);
         }
 
+        /// <summary>
+        /// Extension method to set the force-over lifetime to the specified min and max values
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
         public static void ext_setEnergyMinMax(this ParticleSystem ps, float min, float max)
         {
+            var bs = ps.forceOverLifetime;
+            bs.enabled = true;
+            bs.x = bs.y = bs.z = new ParticleSystem.MinMaxCurve(min, max);          
+        }
+
+        /// <summary>
+        /// Extension method to set the size over liftime to the specified min and max values
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        public static void ext_setSizeMinMax(this ParticleSystem ps, float min, float max)
+        {
             var bs = ps.main;
-            bs.startLifetime = new ParticleSystem.MinMaxCurve(min, max);
+            bs.startSize = new ParticleSystem.MinMaxCurve(min, max);
+        }
+
+        /// <summary>
+        /// Extension method to set the color over lifetime to the input start and end colors
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        public static void ext_setColors(this ParticleSystem ps, Color a, Color b)
+        {
+            var bs = ps.colorOverLifetime;
+            bs.enabled = true;
+            bs.color = new ParticleSystem.MinMaxGradient(Color.red, Color.blue);
+        }
+
+        /// <summary>
+        /// Extension method to set the main/primary/start color.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="a"></param>
+        public static void ext_setColor(this ParticleSystem ps, Color a)
+        {
+            var bs = ps.main;
+            bs.startColor = a;//explicitly set it to a constant color, the input color, (a)
         }
 
         public static void ext_setCoordinateSpace(this ParticleSystem ps, ParticleSystemSimulationSpace space)
