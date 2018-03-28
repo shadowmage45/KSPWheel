@@ -66,6 +66,8 @@ namespace KSPWheel
 
         private bool dustEnabled = false;
 
+        private bool setupEmitters = false;
+
         private float dustPower = 1f;
 
         private float colorUpdateTime = 1f;
@@ -110,7 +112,7 @@ namespace KSPWheel
         private void onGamePause()
         {
             gamePaused = true;
-            if (dustEmitters != null)
+            if (setupEmitters)
             {
                 int len = dustEmitters.Length;
                 for (int i = 0; i < len; i++)
@@ -141,6 +143,8 @@ namespace KSPWheel
                     pos += (n - o);
                     ps[k].position = pos;
                 }
+                dustEmitters[i].SetParticles(ps, len2);
+
                 waterEmitters[i].GetParticles(ps);
                 len2 = waterEmitters[i].particleCount;
                 for (int k = 0; k < len2; k++)
@@ -149,50 +153,23 @@ namespace KSPWheel
                     pos += (n - o);
                     ps[k].position = pos;
                 }
+                waterEmitters[i].SetParticles(ps, len2);
             }
-            //if (dustEmitters == null) { return; }
-            //Vector3 d = n - o;
-            //Vector3 pos;
-            //int len = dustEmitters.Length;
-            //int len2;
-            //Particle[] particles;
-            //for (int i = 0; i < len; i++)
-            //{
-            //    particles = dustEmitters[i].particles;
-            //    len2 = particles.Length;
-            //    for (int k = 0; k < len2; k++)
-            //    {
-            //        pos = particles[k].position;
-            //        pos = pos + d;
-            //        particles[k].position = pos;
-            //    }
-            //    dustEmitters[i].particles = particles;
-
-            //    particles = waterEmitters[i].particles;
-            //    len2 = particles.Length;
-            //    for (int k = 0; k < len2; k++)
-            //    {
-            //        pos = particles[k].position;
-            //        pos = pos + d;
-            //        particles[k].position = pos;
-            //    }
-            //    waterEmitters[i].particles = particles;
-            //}
         }
 
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            //if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || wheel == null || gamePaused || controller.wheelState != KSPWheelState.DEPLOYED || !HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustEffects)
-            //{
-            //    return;
-            //}
-            //if (!setupEmitters)
-            //{
-            //    setupEmitters = true;
-            //    setupDustEmitters();
-            //}
-            //updateDustEmission();
+            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || wheel == null || gamePaused || controller.wheelState != KSPWheelState.DEPLOYED || !HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustEffects)
+            {
+                return;
+            }
+            if (!setupEmitters)
+            {
+                setupEmitters = true;
+                setupDustEmitters();
+            }
+            updateDustEmission();
         }
 
         private void setupDustEmitters()
@@ -214,6 +191,7 @@ namespace KSPWheel
 
             for (int i = 0; i < len; i++)
             {
+                //setup dust particle emitter, including all persistent parameters
                 GameObject dustParticleObject = new GameObject("DustEmitter");
                 dustParticleObject.transform.parent = wheel.transform;
                 dustParticleObject.transform.position = wheel.transform.position;
@@ -221,9 +199,21 @@ namespace KSPWheel
 
                 ParticleSystem dustParticleSystem = dustParticleObject.AddComponent<ParticleSystem>();
                 dustEmitters[i] = dustParticleSystem;
-                dustEmitters[i].ext_setCoordinateSpace(ParticleSystemSimulationSpace.World);
                 dustEmitters[i].ext_setMaterial(dustMaterial);
+                dustEmitters[i].ext_setCoordinateSpace(ParticleSystemSimulationSpace.World);
+                dustEmitters[i].ext_setInheritVelocity(true);
+                dustEmitters[i].ext_setNoiseEnabled(true);
+                dustEmitters[i].ext_setupColorGradient();
+                dustEmitters[i].ext_setCone(10);
 
+                dustEmitters[i].ext_setSizeMinMax(8f, 12f);
+                dustEmitters[i].ext_setSizeGrow(0.25f, 1f);
+                dustEmitters[i].ext_setSpeed(2.5f, 4f);                
+
+                dustEmitters[i].ext_setEmissionEnable(false);
+
+
+                //setup water particle emitter, including all persistent parameters
                 GameObject waterParticleObject = new GameObject("WaterEmitter");
                 waterParticleObject.transform.parent = wheel.transform;
                 waterParticleObject.transform.position = wheel.transform.position;
@@ -232,51 +222,15 @@ namespace KSPWheel
                 ParticleSystem waterParticleSystem = waterParticleObject.AddComponent<ParticleSystem>();
                 waterEmitters[i] = waterParticleSystem;
                 waterEmitters[i].ext_setCoordinateSpace(ParticleSystemSimulationSpace.World);
+                waterEmitters[i].ext_setInheritVelocity(true);
                 waterEmitters[i].ext_setMaterial(waterMaterial);
+
+                waterEmitters[i].ext_setSizeMinMax(8f, 12f);
+                waterEmitters[i].ext_setSizeGrow(0.25f, 1f);
+                waterEmitters[i].ext_setCone(10);
+
+                waterEmitters[i].ext_setEmissionEnable(false);
             }
-
-
-            ////one dust and one water effect emitter per wheel collider ..
-            //int len = controller.wheelData.Length;
-            //dustObjects = new GameObject[len];
-            //dustEmitters = new ParticleEmitter[len];
-            //dustAnimators = new ParticleAnimator[len];
-            //waterObjects = new GameObject[len];
-            //waterEmitters = new ParticleEmitter[len];
-            //waterAnimators = new ParticleAnimator[len];
-            //KSPWheelCollider wheel;
-            //for (int i = 0; i < len; i++)
-            //{
-            //    wheel = controller.wheelData[i].wheel;
-            //    //TODO -- clean up loading code; load once, clone many times
-            //    dustObjects[i] = (GameObject)GameObject.Instantiate(Resources.Load(dustParticleEffect));
-            //    dustObjects[i].transform.position = wheel.transform.position;
-            //    dustObjects[i].transform.rotation = wheel.transform.rotation;
-            //    dustEmitters[i] = dustObjects[i].GetComponent<ParticleEmitter>();
-            //    dustAnimators[i] = dustEmitters[i].GetComponent<ParticleAnimator>();
-            //    dustAnimators[i].colorAnimation = dustColorArray;
-            //    dustAnimators[i].sizeGrow = 0.5f;
-            //    dustEmitters[i].useWorldSpace = true;
-            //    dustEmitters[i].localVelocity = Vector3.zero;
-            //    dustEmitters[i].emit = false;
-
-            //    waterObjects[i] = (GameObject)GameObject.Instantiate(Resources.Load(waterParticleEffect));
-            //    waterObjects[i].transform.position = wheel.transform.position;
-            //    waterObjects[i].transform.rotation = wheel.transform.rotation;
-            //    waterEmitters[i] = waterObjects[i].GetComponent<ParticleEmitter>();
-            //    waterAnimators[i] = waterEmitters[i].GetComponent<ParticleAnimator>();
-            //    waterAnimators[i].colorAnimation = waterColorArray;
-            //    waterAnimators[i].doesAnimateColor = true;
-            //    waterAnimators[i].sizeGrow = 0.5f;
-            //    waterEmitters[i].useWorldSpace = true;
-            //    waterEmitters[i].localVelocity = Vector3.zero;
-            //    waterEmitters[i].emit = false;
-            //}
-            //for (int i = 0; i < 5; i++)
-            //{
-            //    float percent = (1f - ((float)i / 5f));
-            //    waterColorArray[i] = new Color(0.75f * percent, 0.75f * percent, 0.80f * percent, percent * 0.0125f);
-            //}
         }
 
         private void updateDustEmission()
@@ -315,7 +269,7 @@ namespace KSPWheel
                     {
                         waterEmitters[i].ext_setVelocity(antiGravity * mult);
                         waterEmitters[i].ext_setEmissionMinMax(dustMinEmission * dustPower, dustMaxEmission * dustPower);
-                        waterEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
+                        //waterEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
                         waterEmitters[i].ext_setSizeMinMax(dustMinSize * springForce * dustPower, dustMaxSize * springForce * dustPower);
                         waterEmitters[i].ext_setEmissionEnable(true);
                     }
@@ -337,7 +291,7 @@ namespace KSPWheel
                     dustEmitters[i].transform.rotation = wheel.transform.rotation;
                     dustEmitters[i].ext_setVelocity(antiGravity * (speedForce + slipForce));
                     dustEmitters[i].ext_setEmissionMinMax(dustMinEmission * dustPower, dustMaxEmission * dustPower);
-                    dustEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
+                    //dustEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
                     dustEmitters[i].ext_setSizeMinMax(dustMinSize * springForce * dustPower, dustMaxSize * springForce * dustPower);
                 }
                 else//not grounded
@@ -346,28 +300,6 @@ namespace KSPWheel
                     waterEmitters[i].ext_setEmissionEnable(false);
                 }
             }
-        }
-
-        /// <summary>
-        /// Updates the color array used by the color animator for dust
-        /// TODO add some randomization factors to each of the colors in the array, perhaps reducing color and alpha in the later array indices
-        /// This will require instantiating the colors into the array originally as custom colors and then manually setting their RBGA values to avoid per-tick 'new' color allocations
-        /// </summary>
-        /// <param name="inputColor"></param>
-        private void updateColorArray(Color inputColor)
-        {
-            //Color color = inputColor;
-            //dustColorArray[0] = color;
-            //dustColorArray[1] = color;
-            //dustColorArray[2] = color;
-            //dustColorArray[3] = color;
-            //dustColorArray[4] = color;
-            //int len = dustAnimators.Length;
-            //for (int i = 0; i < len; i++)
-            //{
-            //    dustAnimators[i].colorAnimation = dustColorArray;
-            //    waterAnimators[i].colorAnimation = waterColorArray;
-            //}
         }
         
     }
@@ -413,19 +345,6 @@ namespace KSPWheel
         }
 
         /// <summary>
-        /// Extension method to set the force-over lifetime to the specified min and max values
-        /// </summary>
-        /// <param name="ps"></param>
-        /// <param name="min"></param>
-        /// <param name="max"></param>
-        public static void ext_setEnergyMinMax(this ParticleSystem ps, float min, float max)
-        {
-            var bs = ps.forceOverLifetime;
-            bs.enabled = true;
-            bs.x = bs.y = bs.z = new ParticleSystem.MinMaxCurve(min, max);          
-        }
-
-        /// <summary>
         /// Extension method to set the size over liftime to the specified min and max values
         /// </summary>
         /// <param name="ps"></param>
@@ -435,6 +354,18 @@ namespace KSPWheel
         {
             var bs = ps.main;
             bs.startSize = new ParticleSystem.MinMaxCurve(min, max);
+        }
+
+        /// <summary>
+        /// Extension method to set the starting velocity of the particles
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        public static void ext_setSpeed(this ParticleSystem ps, float min, float max)
+        {
+            var bs = ps.main;
+            bs.startSpeed = (min == max ? new ParticleSystem.MinMaxCurve(min) : new ParticleSystem.MinMaxCurve(min, max));
         }
 
         /// <summary>
@@ -459,6 +390,35 @@ namespace KSPWheel
         {
             var bs = ps.main;
             bs.startColor = a;//explicitly set it to a constant color, the input color, (a)
+        }
+
+        /// <summary>
+        /// Extension method to set the emitter to 'cone' emission style, with the specified cone angle
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="angle"></param>
+        public static void ext_setCone(this ParticleSystem ps, float angle)
+        {
+            var bs = ps.shape;
+            bs.shapeType = ParticleSystemShapeType.Cone;
+            bs.angle = angle;
+        }
+
+        /// <summary>
+        /// Extension method to enable/disable the 'noise' module.  Does not change any of the noise parameters.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="value"></param>
+        public static void ext_setNoiseEnabled(this ParticleSystem ps, bool value)
+        {
+            var bs = ps.noise;
+            bs.enabled = true;
+        }
+
+        public static void ext_setLifetime(this ParticleSystem ps, float min, float max)
+        {
+            var bs = ps.main;
+            bs.startLifetime = (min == max ? new ParticleSystem.MinMaxCurve(min) : new ParticleSystem.MinMaxCurve(min, max));
         }
 
         public static void ext_setCoordinateSpace(this ParticleSystem ps, ParticleSystemSimulationSpace space)
@@ -496,11 +456,33 @@ namespace KSPWheel
             return bs.renderMode;
         }
 
-        public static void ext_setSizeGrow(this ParticleSystem ps, float sg)
+        public static void ext_setSizeGrow(this ParticleSystem ps, float min, float max)
         {
+            AnimationCurve c = new AnimationCurve();
+            c.AddKey(0, min);
+            c.AddKey(1, max);
             var bs = ps.sizeOverLifetime;
             bs.separateAxes = false;
-            bs.x = sg;
+            bs.x = new ParticleSystem.MinMaxCurve(1, c);
+        }
+
+        public static void ext_setupColorGradient(this ParticleSystem ps)
+        {
+            Gradient gr = new Gradient();
+            gr.mode = GradientMode.Blend;
+            gr.alphaKeys = new GradientAlphaKey[3];
+            gr.alphaKeys[0] = new GradientAlphaKey(0, 0);
+            gr.alphaKeys[1] = new GradientAlphaKey(0.125f, 0.15f);
+            gr.alphaKeys[2] = new GradientAlphaKey(0, 1);
+
+            gr.colorKeys = new GradientColorKey[2];
+            gr.colorKeys[0] = new GradientColorKey(Color.white, 0);
+            gr.colorKeys[1] = new GradientColorKey(Color.black, 1);
+
+            var bs = ps.colorOverLifetime;
+            bs.enabled = true;
+
+            bs.color = new ParticleSystem.MinMaxGradient(gr);
         }
 
         public static void ext_setVelocity(this ParticleSystem ps, Vector3 vel)
