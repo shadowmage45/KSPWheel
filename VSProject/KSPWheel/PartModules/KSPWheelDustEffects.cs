@@ -70,9 +70,6 @@ namespace KSPWheel
 
         private float dustPower = 1f;
 
-        private float colorUpdateTime = 1f;
-        private float colorUpdateTimer = 0f;
-
         private ParticleSystem[] dustEmitters;
         private ParticleSystem[] waterEmitters;
 
@@ -181,7 +178,7 @@ namespace KSPWheel
             Texture2D dustParticleTexture = GameDatabase.Instance.GetTexture(this.dustParticleTexture, false);
             Texture2D waterParticleTexture = GameDatabase.Instance.GetTexture(this.waterParticleTexture, false);
 
-            Shader particleShader = Shader.Find("Particles/Additive");
+            Shader particleShader = Shader.Find("Particles/Additive (Soft)");
 
             Material dustMaterial = new Material(particleShader);
             dustMaterial.mainTexture = dustParticleTexture;
@@ -206,9 +203,9 @@ namespace KSPWheel
                 dustEmitters[i].ext_setupColorGradient();
                 dustEmitters[i].ext_setCone(10);
 
-                dustEmitters[i].ext_setSizeMinMax(8f, 12f);
+                dustEmitters[i].ext_setSpeed(2.5f, 4f);
+                dustEmitters[i].ext_setSize(8f, 12f);
                 dustEmitters[i].ext_setSizeGrow(0.25f, 1f);
-                dustEmitters[i].ext_setSpeed(2.5f, 4f);                
 
                 dustEmitters[i].ext_setEmissionEnable(false);
 
@@ -225,7 +222,7 @@ namespace KSPWheel
                 waterEmitters[i].ext_setInheritVelocity(true);
                 waterEmitters[i].ext_setMaterial(waterMaterial);
 
-                waterEmitters[i].ext_setSizeMinMax(8f, 12f);
+                waterEmitters[i].ext_setSize(8f, 12f);
                 waterEmitters[i].ext_setSizeGrow(0.25f, 1f);
                 waterEmitters[i].ext_setCone(10);
 
@@ -267,10 +264,10 @@ namespace KSPWheel
                     waterEmitters[i].transform.rotation = wheel.transform.rotation;
                     if (mult > 0)
                     {
-                        waterEmitters[i].ext_setVelocity(antiGravity * mult);
+                        waterEmitters[i].ext_setVelocity(antiGravity * mult, Vector3.zero);
                         waterEmitters[i].ext_setEmissionMinMax(dustMinEmission * dustPower, dustMaxEmission * dustPower);
                         //waterEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
-                        waterEmitters[i].ext_setSizeMinMax(dustMinSize * springForce * dustPower, dustMaxSize * springForce * dustPower);
+                        waterEmitters[i].ext_setSize(dustMinSize * springForce * dustPower, dustMaxSize * springForce * dustPower);
                         waterEmitters[i].ext_setEmissionEnable(true);
                     }
                     else
@@ -289,10 +286,10 @@ namespace KSPWheel
                     mult = Mathf.Sqrt(speedForce * speedForce * dustSpeedMult + slipForce * slipForce * dustSlipMult);
                     dustEmitters[i].transform.position = wheel.worldHitPos;
                     dustEmitters[i].transform.rotation = wheel.transform.rotation;
-                    dustEmitters[i].ext_setVelocity(antiGravity * (speedForce + slipForce));
+                    dustEmitters[i].ext_setVelocity(antiGravity * (speedForce + slipForce), Vector3.zero);
                     dustEmitters[i].ext_setEmissionMinMax(dustMinEmission * dustPower, dustMaxEmission * dustPower);
                     //dustEmitters[i].ext_setEnergyMinMax(dustMinEnergy * dustPower, dustMaxEnergy * mult * dustPower);
-                    dustEmitters[i].ext_setSizeMinMax(dustMinSize * springForce * dustPower, dustMaxSize * springForce * dustPower);
+                    dustEmitters[i].ext_setSize(dustMinSize * springForce * dustPower, dustMaxSize * springForce * dustPower);
                 }
                 else//not grounded
                 {
@@ -305,8 +302,8 @@ namespace KSPWheel
     }
 
     /// <summary>
-    /// Yep, an entire set of extension methods, just to remove the retarded implementation that Unity used on particles.<para/>
-    /// Probably terrible for performance, but fuck Unity and their asinine system designs.
+    /// Wrappers around the terrible particle system module implementation from Unity.<para/>
+    /// Gives a slightly cleaner interface to set common particle emitter properties.
     /// </summary>
     public static class ParticleSystemExtensions
     {
@@ -333,7 +330,7 @@ namespace KSPWheel
         }
 
         /// <summary>
-        /// Extension method to set the emission min and max parameters
+        /// Extension method to set the emission output of the emitter (# of particles/second).  A random value between min and max is used.  If min==max, a single constant value is used.
         /// </summary>
         /// <param name="ps"></param>
         /// <param name="min"></param>
@@ -345,19 +342,19 @@ namespace KSPWheel
         }
 
         /// <summary>
-        /// Extension method to set the size over liftime to the specified min and max values
+        /// Extension method to set the size of the particles.  A random value between min and max is used.  If min==max, a single constant value is used.
         /// </summary>
         /// <param name="ps"></param>
         /// <param name="min"></param>
         /// <param name="max"></param>
-        public static void ext_setSizeMinMax(this ParticleSystem ps, float min, float max)
+        public static void ext_setSize(this ParticleSystem ps, float min, float max)
         {
             var bs = ps.main;
             bs.startSize = new ParticleSystem.MinMaxCurve(min, max);
         }
 
         /// <summary>
-        /// Extension method to set the starting velocity of the particles
+        /// Extension method to set the starting velocity of the particles.  A random value between min and max is used.  If min==max, a single constant value is used.
         /// </summary>
         /// <param name="ps"></param>
         /// <param name="min"></param>
@@ -366,19 +363,6 @@ namespace KSPWheel
         {
             var bs = ps.main;
             bs.startSpeed = (min == max ? new ParticleSystem.MinMaxCurve(min) : new ParticleSystem.MinMaxCurve(min, max));
-        }
-
-        /// <summary>
-        /// Extension method to set the color over lifetime to the input start and end colors
-        /// </summary>
-        /// <param name="ps"></param>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        public static void ext_setColors(this ParticleSystem ps, Color a, Color b)
-        {
-            var bs = ps.colorOverLifetime;
-            bs.enabled = true;
-            bs.color = new ParticleSystem.MinMaxGradient(Color.red, Color.blue);
         }
 
         /// <summary>
@@ -415,12 +399,23 @@ namespace KSPWheel
             bs.enabled = true;
         }
 
+        /// <summary>
+        /// Extension method to set the particle lifetime.  Uses a random value between min and max.  If min==max, a sigle constant value is used.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
         public static void ext_setLifetime(this ParticleSystem ps, float min, float max)
         {
             var bs = ps.main;
             bs.startLifetime = (min == max ? new ParticleSystem.MinMaxCurve(min) : new ParticleSystem.MinMaxCurve(min, max));
         }
 
+        /// <summary>
+        /// Extension method to set the particle system to use the specified coordinate system.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="space"></param>
         public static void ext_setCoordinateSpace(this ParticleSystem ps, ParticleSystemSimulationSpace space)
         {
             var bs = ps.main;
@@ -432,6 +427,11 @@ namespace KSPWheel
             return ps.main.simulationSpace;
         }
 
+        /// <summary>
+        /// Extension method to set the material used by the particle system renderer.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="mat"></param>
         public static void ext_setMaterial(this ParticleSystem ps, Material mat)
         {
             var bs = ps.gameObject.GetComponent<ParticleSystemRenderer>();
@@ -444,6 +444,11 @@ namespace KSPWheel
             return bs.material;
         }
 
+        /// <summary>
+        /// Extension method to set the rendering type of the particle emitter (billboard/etc).
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="mode"></param>
         public static void ext_setRenderMode(this ParticleSystem ps, ParticleSystemRenderMode mode)
         {
             var bs = ps.gameObject.GetComponent<ParticleSystemRenderer>();
@@ -456,6 +461,14 @@ namespace KSPWheel
             return bs.renderMode;
         }
 
+        /// <summary>
+        /// Extension method to set the size-grow parameter of the particles.<para/>
+        /// Min = size multiplier at start of lifetime, Max = size multiplier at end of lifetime.<para/>
+        /// These function as multipliers against the basic 'start size' parameter.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
         public static void ext_setSizeGrow(this ParticleSystem ps, float min, float max)
         {
             AnimationCurve c = new AnimationCurve();
@@ -466,6 +479,11 @@ namespace KSPWheel
             bs.x = new ParticleSystem.MinMaxCurve(1, c);
         }
 
+        /// <summary>
+        /// Sets up a predefined color gradient for dust particles.<para/>
+        /// Starts with no alpha (transparent), quickly lerps to low alpha (0.15), and tapers off slowly back to no alpha.
+        /// </summary>
+        /// <param name="ps"></param>
         public static void ext_setupColorGradient(this ParticleSystem ps)
         {
             Gradient gr = new Gradient();
@@ -485,16 +503,27 @@ namespace KSPWheel
             bs.color = new ParticleSystem.MinMaxGradient(gr);
         }
 
-        public static void ext_setVelocity(this ParticleSystem ps, Vector3 vel)
+        /// <summary>
+        /// Extension method to set the world-space velocity-over-lifetime of the particles, given a start and end velocity.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="velStart"></param>
+        public static void ext_setVelocity(this ParticleSystem ps, Vector3 velStart, Vector3 velEnd)
         {
             var bs = ps.velocityOverLifetime;
             bs.enabled = true;
             bs.space = ParticleSystemSimulationSpace.World;
-            bs.x = vel.x;
-            bs.y = vel.y;
-            bs.z = vel.z;
+            bs.x = velStart.x;
+            bs.y = velStart.y;
+            bs.z = velStart.z;
         }
 
+        /// <summary>
+        /// Extension method to enable/disable 'inherit velocity' on the particle system.<para/>
+        /// Uses world-space velocity inheritance when enabled.
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <param name="val"></param>
         public static void ext_setInheritVelocity(this ParticleSystem ps, bool val)
         {
             var bs = ps.inheritVelocity;
