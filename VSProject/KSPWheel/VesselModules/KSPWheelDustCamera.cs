@@ -39,7 +39,7 @@ namespace KSPWheel
                     cameraColor.r = Mathf.Lerp(prevColor.r, destColor.r, p);
                     cameraColor.g = Mathf.Lerp(prevColor.g, destColor.g, p);
                     cameraColor.b = Mathf.Lerp(prevColor.b, destColor.b, p);
-                    cameraColor.a = 0.014f;
+                    cameraColor.a = 1.0f;
                 }
             }
         }
@@ -177,7 +177,7 @@ namespace KSPWheel
             outColor.r = r / len;
             outColor.g = g / len;
             outColor.b = b / len;
-            outColor.a = 0.014f;
+            outColor.a = 1f;
             return outColor;
         }
 
