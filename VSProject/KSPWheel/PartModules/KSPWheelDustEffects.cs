@@ -76,14 +76,17 @@ namespace KSPWheel
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
-            GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
-            GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
-            dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
             dustEnabled = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustEffects;
-            if (dustEnabled && controller!=null && controller.wheelData!=null && wheel!=null)
+            if (dustEnabled)
             {
-                setupDustEmitters();
+                dustPower = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustPower;
+                GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
+                GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
+                GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
+                if (controller != null && controller.wheelData != null && wheel != null)
+                {
+                    setupDustEmitters();
+                }
             }
         }
 
@@ -100,10 +103,10 @@ namespace KSPWheel
                 }
                 dustEmitters = null;
                 waterEmitters = null;
+                GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
+                GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
+                GameEvents.onFloatingOriginShift.Remove(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
             }
-            GameEvents.onGamePause.Remove(new EventVoid.OnEvent(onGamePause));
-            GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(onGameUnpause));
-            GameEvents.onFloatingOriginShift.Remove(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
         }
 
         private void onGamePause()
@@ -127,7 +130,8 @@ namespace KSPWheel
 
         private void onOriginShift(Vector3d o, Vector3d n)
         {
-            if (!dustEnabled) { return; }
+            if (!dustEnabled) { return; }//should not happen, event is not subscribed unless dust was enabled during onStart
+            if (dustEmitters == null || waterEmitters == null){ return; }
             int len = dustEmitters.Length;
             for (int i = 0; i < len; i++)
             {
@@ -157,7 +161,7 @@ namespace KSPWheel
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-            if (!HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || wheel == null || gamePaused || controller.wheelState != KSPWheelState.DEPLOYED || !HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().wheelDustEffects)
+            if (!dustEnabled || !HighLogic.LoadedSceneIsFlight || !FlightGlobals.ready || wheel == null || gamePaused || controller.wheelState != KSPWheelState.DEPLOYED)
             {
                 return;
             }
@@ -171,21 +175,17 @@ namespace KSPWheel
 
         private void setupDustEmitters()
         {
-            MonoBehaviour.print("Setting up dust emitters");
             int len = controller.wheelData.Length;
             dustEmitters = new ParticleSystem[len];
             waterEmitters = new ParticleSystem[len];
 
             Texture2D dustParticleTexture = GameDatabase.Instance.GetTexture(this.dustParticleTexture, false);
             Texture2D waterParticleTexture = GameDatabase.Instance.GetTexture(this.waterParticleTexture, false);
-            MonoBehaviour.print("Texture: " + dustParticleTexture);
 
             Shader particleShader = Shader.Find("Particles/Additive (Soft)");
-            MonoBehaviour.print("Shader: " + particleShader);
 
             Material dustMaterial = new Material(particleShader);
             dustMaterial.mainTexture = dustParticleTexture;
-            MonoBehaviour.print("Material: " + dustMaterial);
 
             Material waterMaterial = new Material(particleShader);
             waterMaterial.mainTexture = waterParticleTexture;
@@ -542,4 +542,5 @@ namespace KSPWheel
         }
 
     }
+
 }
