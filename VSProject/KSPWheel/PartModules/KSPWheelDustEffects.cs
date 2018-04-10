@@ -83,6 +83,7 @@ namespace KSPWheel
                 GameEvents.onGamePause.Add(new EventVoid.OnEvent(onGamePause));
                 GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(onGameUnpause));
                 GameEvents.onFloatingOriginShift.Add(new EventData<Vector3d, Vector3d>.OnEvent(onOriginShift));
+                //controller will likely always be null at this point, but... w/e
                 if (controller != null && controller.wheelData != null && wheel != null)
                 {
                     setupDustEmitters();
@@ -131,7 +132,7 @@ namespace KSPWheel
         private void onOriginShift(Vector3d o, Vector3d n)
         {
             if (!dustEnabled) { return; }//should not happen, event is not subscribed unless dust was enabled during onStart
-            if (dustEmitters == null || waterEmitters == null){ return; }
+            if (!setupEmitters || dustEmitters == null || waterEmitters == null) { return; }//may happen on inactive vessels
             int len = dustEmitters.Length;
             for (int i = 0; i < len; i++)
             {
