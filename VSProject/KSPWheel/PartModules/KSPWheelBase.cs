@@ -175,6 +175,21 @@ namespace KSPWheel
 
         [KSPField]
         public bool showGUIWheelGroup = true;
+                
+        [KSPField]
+        public float exSlipPoint = 0.06f;
+
+        [KSPField]
+        public float exSlipVal = 1.0f;
+
+        [KSPField]
+        public float asSlipPoint = 0.08f;
+
+        [KSPField]
+        public float asSlipVal = 1.2f;
+
+        [KSPField]
+        public float tailSlipVal = 0.6f;
 
         #endregion
 
@@ -498,6 +513,8 @@ namespace KSPWheel
             {
                 wheelData[i].locateTransform(part.transform);
                 wheelData[i].setupWheel(null, raycastMask, part.rescaleFactor * scale);
+                wheelData[i].wheel.forwardFrictionCurve = new KSPWheelFrictionCurve(exSlipPoint, exSlipVal, asSlipPoint, asSlipVal, tailSlipVal);
+                wheelData[i].wheel.sidewaysFrictionCurve = new KSPWheelFrictionCurve(exSlipPoint, exSlipVal, asSlipPoint, asSlipVal, tailSlipVal);
                 if (HighLogic.LoadedSceneIsFlight)
                 {
                     CollisionManager.IgnoreCollidersOnVessel(vessel, wheelData[i].bumpStopCollider);

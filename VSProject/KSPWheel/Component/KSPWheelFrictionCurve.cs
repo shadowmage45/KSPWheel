@@ -136,15 +136,23 @@ namespace KSPWheel
             //entry frame
             keyframes[0].time = 0;
             keyframes[0].value = 0;
+            keyframes[0].inTangent = 0f;
+            keyframes[0].outTangent = 0f;
             //extremum frame
             keyframes[1].time = extSlip;
             keyframes[1].value = extVal;
+            keyframes[1].inTangent = 0f;
+            keyframes[1].outTangent = 0f;
             //asymptote frame
             keyframes[2].time = asSlip;
             keyframes[2].value = asVal;
+            keyframes[2].inTangent = 0f;
+            keyframes[2].outTangent = 0f;
             //tail frame
             keyframes[3].time = 1;
             keyframes[3].value = tailVal;
+            keyframes[3].inTangent = 0f;
+            keyframes[3].outTangent = 0f;
 
             //clear current data from the curve
             int len = curveData.length;
