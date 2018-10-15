@@ -18,6 +18,14 @@ namespace KSPWheel
         [KSPField]
         public int smrIndex = 0;
 
+        [KSPField(guiName = "Invert Track Surface Direction", guiActive = false, guiActiveEditor = true, isPersistant = true),
+         UI_Toggle(scene = UI_Scene.Editor, controlEnabled = true, requireFullControl = false, disabledText = "Standard", enabledText = "Inverted", affectSymCounterparts = UI_Scene.None, suppressEditorShipModified = true)]
+        public bool invertTrackTexture = false;
+
+        [KSPField(guiName = "Display Fwd Rotation", guiActive = false, guiActiveEditor = true, isPersistant = false),
+         UI_Toggle(enabledText = "True", disabledText = "False", suppressEditorShipModified = true, affectSymCounterparts = UI_Scene.Editor)]
+        public bool editorRotation = false;
+
         private float factorSum;
         private float[] shares;
         private SkinnedMeshRenderer smr;
@@ -25,26 +33,17 @@ namespace KSPWheel
         private Material mat;
         private float trackVelocity = 0f;//velocity of the track surface, in m/s
 
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+            Fields[nameof(invertTrackTexture)].uiControlEditor.onFieldChanged = invertTrackTextureClicked;
+        }
+
         internal override void postWheelCreated()
         {
             base.postWheelCreated();
+            updateTrackTextureScale();
             if (HighLogic.LoadedSceneIsEditor) { return; }
-            SkinnedMeshRenderer[] smrs = part.GetComponentsInChildren<SkinnedMeshRenderer>();
-            if (smrs != null && smrs.Length > 0)
-            {
-                smr = part.GetComponentsInChildren<SkinnedMeshRenderer>()[smrIndex];
-                if (smr != null)
-                {
-                    mat = smr.material;
-                    if (mat != null)
-                    {
-                        Vector2 scaling = mat.mainTextureScale;
-                        scaling.x *= trackDir;
-                        mat.SetTextureScale("_MainTex", scaling);
-                        mat.SetTextureScale("_BumpMap", scaling);
-                    }
-                }
-            }
             updateScaleValues();
         }
 
@@ -53,9 +52,23 @@ namespace KSPWheel
             base.preWheelFrameUpdate();
             if (mat != null && controller.wheelState==KSPWheelState.DEPLOYED)
             {
-                offset.x += (-trackVelocity * Time.deltaTime * trackDir) / (trackLength * part.rescaleFactor * controller.scale); ;
+                offset.x += (-trackVelocity * Time.deltaTime * trackDir) / (trackLength * part.rescaleFactor * controller.scale) * (invertTrackTexture ? -1 : 1);
                 mat.SetTextureOffset("_MainTex", offset);
                 mat.SetTextureOffset("_BumpMap", offset);
+            }
+        }
+
+        public void Update()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                if (editorRotation && mat != null && controller.wheelState == KSPWheelState.DEPLOYED)
+                {
+                    float trackVelocity = invertMotor? -1 : 1;
+                    offset.x += (-trackVelocity * Time.deltaTime * trackDir) / (trackLength * part.rescaleFactor * controller.scale) * (invertTrackTexture ? -1 : 1);
+                    mat.SetTextureOffset("_MainTex", offset);
+                    mat.SetTextureOffset("_BumpMap", offset);
+                }
             }
         }
 
@@ -108,6 +121,31 @@ namespace KSPWheel
                 wheel.angularVelocity = shares[i] * totalSystemTorque / wheel.momentOfInertia;
             }
             trackVelocity = this.wheel.linearVelocity;
+        }
+
+        private void invertTrackTextureClicked(BaseField a, System.Object b)
+        {
+            updateTrackTextureScale();
+        }
+
+        private void updateTrackTextureScale()
+        {
+            SkinnedMeshRenderer[] smrs = part.GetComponentsInChildren<SkinnedMeshRenderer>();
+            if (smrs != null && smrs.Length > 0)
+            {
+                smr = part.GetComponentsInChildren<SkinnedMeshRenderer>()[smrIndex];
+                if (smr != null)
+                {
+                    mat = smr.material;
+                    if (mat != null)
+                    {
+                        Vector2 scaling = mat.mainTextureScale;
+                        scaling.x = trackDir * (invertTrackTexture ? -1 : 1);
+                        mat.SetTextureScale("_MainTex", scaling);
+                        mat.SetTextureScale("_BumpMap", scaling);
+                    }
+                }
+            }
         }
 
     }
