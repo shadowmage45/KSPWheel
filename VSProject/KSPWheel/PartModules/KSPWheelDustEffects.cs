@@ -94,7 +94,7 @@ namespace KSPWheel
         public override void OnDestroy()
         {
             base.OnDestroy();
-            if (dustEnabled)
+            if (dustEnabled && dustEmitters!=null && waterEmitters!=null)
             {
                 int len = dustEmitters.Length;
                 for (int i = 0; i < len; i++)
