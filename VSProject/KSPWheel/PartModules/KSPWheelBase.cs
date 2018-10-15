@@ -1148,6 +1148,7 @@ namespace KSPWheel
             public readonly float offset;
             public readonly int indexInDuplicates;
             public readonly int symmetryIndex;
+            public readonly string colliderType;
             public KSPWheelCollider wheel;
             public Transform wheelTransform;
             public GameObject bumpStopGameObject;
@@ -1165,6 +1166,7 @@ namespace KSPWheel
             public KSPWheelData(ConfigNode node)
             {
                 wheelColliderName = node.GetStringValue("colliderName", "WheelCollider");
+                colliderType = node.GetStringValue("colliderType", "RAY");
                 wheelRadius = node.GetFloatValue("radius", 0.25f);
                 wheelWidth = node.GetFloatValue("width", wheelRadius * 0.2f);
                 wheelMass = node.GetFloatValue("mass", 0.05f);
@@ -1191,6 +1193,14 @@ namespace KSPWheel
                 wheel.mass = scaledMass(scaleFactor);
                 wheel.length = scaledLength(scaleFactor);
                 wheel.raycastMask = raycastMask;
+                try
+                {
+                    wheel.sweepType = (KSPWheelSweepType)Enum.Parse(typeof(KSPWheelSweepType), colliderType);
+                }
+                catch (Exception e)
+                {
+                    wheel.sweepType = KSPWheelSweepType.RAY;
+                }
 
                 if (HighLogic.LoadedSceneIsFlight)
                 {
