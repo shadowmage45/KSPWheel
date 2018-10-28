@@ -142,7 +142,8 @@ namespace KSPWheel
                         Vector2 scaling = mat.mainTextureScale;
                         scaling.x = trackDir * (invertTrackTexture ? -1 : 1);
                         mat.SetTextureScale("_MainTex", scaling);
-                        mat.SetTextureScale("_BumpMap", scaling);
+                        //special feature of TU shaders to flip the X coordinate of the normal map, fixes lighting issues with negative UV scaling
+                        mat.SetFloat("_NormalFlipX", scaling.x);
                     }
                 }
             }
