@@ -39,26 +39,28 @@ namespace KSPWheel
         public int animAxis = 1;
 
         [KSPField]
-        public string gridName = String.Empty;
+        public string repulsorEffectTransform = string.Empty;
 
         [KSPField]
         public string repulsorSoundEffect = String.Empty;
+
+        [KSPField]
+        public string repulsorParticleTexture = "KSPWheel/Assets/particle";
 
         [KSPField]
         public bool showGUIHeight = true;
 
         private Transform gimbalTransform;
 
-        private Material gridMaterial;
-        private Vector2 offset = Vector2.zero;
-
+        private RepulsorParticles particles;
+        
         private float curLen;
 
         private void repulsorToggled(BaseField field, System.Object obj)
         {
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m => 
             {
-                m.repulsorEnabled = repulsorEnabled;
+                m.setRepulsorEnabled(repulsorEnabled);
                 if (m.repulsorEnabled)
                 {
                     m.changeWheelState(KSPWheelState.DEPLOYED);
@@ -72,13 +74,14 @@ namespace KSPWheel
             this.wheelGroupUpdate(int.Parse(controller.wheelGroup), m =>
             {
                 m.repulsorHeight = repulsorHeight;
+                if (m.particles != null) { m.particles.setSpeed(m.repulsorHeight * m.maxHeight); }
             });
         }
 
         [KSPAction(guiName = "Toggle Repulsor Power")]
         public void repuslorPowerAction(KSPActionParam p)
         {
-            repulsorEnabled = !repulsorEnabled;
+            setRepulsorEnabled(!repulsorEnabled);
             if (repulsorEnabled)
             {
                 changeWheelState(KSPWheelState.DEPLOYED);
@@ -122,20 +125,6 @@ namespace KSPWheel
             Fields[nameof(repulsorEnabled)].uiControlFlight.onFieldChanged = repulsorToggled;
             Fields[nameof(repulsorHeight)].uiControlFlight.onFieldChanged = Fields[nameof(repulsorHeight)].uiControlEditor.onFieldChanged = repulsorHeightUpdated;
             curLen = repulsorEnabled ? repulsorHeight : 0.0001f;
-            if (!string.IsNullOrEmpty(gridName) && HighLogic.LoadedSceneIsFlight)
-            {
-                Transform gridMesh = part.transform.FindRecursive(gridName);
-                if (gridMesh != null)
-                {
-                    Renderer rend = gridMesh.GetComponent<Renderer>();
-                    if (rend != null)
-                    {
-                        //TODO -- grabbing a material reference from an object creates a -new- allocation somewhere in the process
-                        //can shared material be used in this case, as we are only grabbing the material in the flight scene? or is that shared material still 'shared' with the prefab and icon parts?
-                        gridMaterial = rend.material;
-                    }
-                }
-            }
         }
 
         internal override void postWheelCreated()
@@ -145,27 +134,34 @@ namespace KSPWheel
             //TODO adjust configs in dust module on repulsors to set min-speed to 0
             //dustModule = part.GetComponent<KSPWheelDustEffects>();
             //if (dustModule != null) { dustModule.minDustSpeed = 0.0f; }
+            if (particles == null && !string.IsNullOrEmpty(repulsorEffectTransform))
+            {
+                GameObject root = part.transform.FindRecursive("model").FindRecursive(repulsorEffectTransform).gameObject;
+                GameObject particlesRoot = new GameObject("RepulsorParticles");
+                particlesRoot.transform.parent = root.transform;
+                particlesRoot.transform.NestToParent(root.transform);
+                particlesRoot.transform.Rotate(-90, 0, 0);
+                
+                Texture2D tex = GameDatabase.Instance.GetTexture(this.repulsorParticleTexture, false);
+                Shader particleShader = Shader.Find("Particles/Additive (Soft)");
+
+                Material material = new Material(particleShader);
+                material.mainTexture = tex;
+
+                particles = new RepulsorParticles(particlesRoot, material);
+                particles.createParticles();
+                particles.setSpeed(repulsorHeight * maxHeight);
+
+                if (repulsorEnabled)
+                {
+                    particles.setEnabled(true);                    
+                }
+            }
         }
 
         internal override void preWheelFrameUpdate()
         {
             base.preWheelFrameUpdate();
-
-            if (gridMaterial != null)
-            {
-                //TODO update texture offsets for grid texture animation
-                if (animAxis == 0)
-                {
-                    offset.x += animSpeed * Time.deltaTime * guiEnergyUse * 0.25f;
-                }
-                else
-                {
-                    offset.y += animSpeed * Time.deltaTime * guiEnergyUse * 0.25f;
-                }
-                gridMaterial.SetTextureOffset("_MainTex", offset);
-                gridMaterial.SetTextureOffset("_BumpMap", offset);
-                gridMaterial.SetTextureOffset("_Emissive", offset);
-            }
             if (!string.IsNullOrEmpty(repulsorSoundEffect))
             {
                 part.Effect(repulsorSoundEffect, Time.deltaTime * guiEnergyUse);
@@ -284,7 +280,7 @@ namespace KSPWheel
             float used = part.RequestResource("ElectricCharge", ecPerTick);
             if (used < ecPerTick)
             {
-                repulsorEnabled = false;
+                setRepulsorEnabled(false);
                 //TODO - print to screen that there was a power failure in the repulsor
             }
             guiEnergyUse = ecPerSecond;
@@ -297,5 +293,123 @@ namespace KSPWheel
             Fields[nameof(repulsorEnabled)].guiActive = Fields[nameof(repulsorEnabled)].guiActiveEditor = show;
         }
 
+        private void setRepulsorEnabled(bool enabled)
+        {
+            repulsorEnabled = enabled;
+            if (particles != null)
+            {
+                particles.setSpeed(repulsorHeight*maxHeight);
+                particles.setEnabled(enabled);
+            }
+        }
+
     }
+
+
+    public class RepulsorParticles
+    {
+
+        public GameObject Parent { get; private set; }
+        public Material ParticleMaterial { get; private set; }
+        public ParticleSystem ParticleSystem { get; private set; }
+
+        public RepulsorParticles(GameObject parent, Material material)
+        {
+            Parent = parent;
+            ParticleMaterial = material;
+        }
+
+        public void setEnabled(bool enabled)
+        {
+            if (enabled) { ParticleSystem.Play(); }
+            else { ParticleSystem.Stop(); }
+        }
+
+        public void setSpeed(float repulsorHeight)
+        {
+            if (ParticleSystem != null)
+            {
+
+                float speed = repulsorHeight / 2.5f;
+
+                float mainSpeed = speed;
+                float velSpeed = speed * 2f;
+
+                ParticleSystem.MainModule main = ParticleSystem.main;
+                main.startSpeed = speed;
+
+                ParticleSystem.VelocityOverLifetimeModule velocity = ParticleSystem.velocityOverLifetime;
+                velocity.z = new ParticleSystem.MinMaxCurve(velSpeed);
+            }
+        }
+
+        public void createParticles()
+        {
+            ParticleSystem = Parent.GetComponent<ParticleSystem>();
+            if (ParticleSystem == null) { ParticleSystem = Parent.AddComponent<ParticleSystem>(); }
+            ParticleSystem.ext_setMaterial(ParticleMaterial);
+
+            ParticleSystem.MainModule main = ParticleSystem.main;
+            main.duration = 0.5f;
+            main.loop = true;
+            main.prewarm = false;
+            main.startLifetime = 1f;
+            main.startSpeed = 1f;
+            main.startSize = 0.25f;
+            main.startRotation = 0f;
+            main.randomizeRotationDirection = 0f;
+            main.startColor = new Color(0, 1, 0.95f, 0.07058f);
+            main.gravityModifier = 0;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.simulationSpeed = 1f;
+            main.scalingMode = ParticleSystemScalingMode.Local;
+            main.playOnAwake = false;//must be played explicitly
+            main.emitterVelocityMode = ParticleSystemEmitterVelocityMode.Transform;
+            main.maxParticles = 1000;
+
+            ParticleSystem.EmissionModule emission = ParticleSystem.emission;
+            emission.rateOverTime = 0f;
+            emission.rateOverDistance = 0f;
+            ParticleSystem.Burst[] bursts = new ParticleSystem.Burst[5];
+            bursts[0] = new ParticleSystem.Burst(0.0f, 50, 50, 1, 0.01f);
+            bursts[1] = new ParticleSystem.Burst(0.1f, 50, 50, 1, 0.01f);
+            bursts[2] = new ParticleSystem.Burst(0.2f, 50, 50, 1, 0.01f);
+            bursts[3] = new ParticleSystem.Burst(0.3f, 50, 50, 1, 0.01f);
+            bursts[4] = new ParticleSystem.Burst(0.4f, 50, 50, 1, 0.01f);
+            emission.SetBursts(bursts);
+            emission.enabled = true;
+
+            ParticleSystem.ShapeModule shape = ParticleSystem.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.1f;
+            shape.radiusThickness = 1f;
+            shape.arc = 360f;
+            shape.arcMode = ParticleSystemShapeMultiModeValue.BurstSpread;
+            shape.arcSpread = 0f;
+            shape.rotation = Vector3.zero;
+            shape.position = Vector3.zero;
+            shape.scale = Vector3.one;
+            shape.enabled = true;
+
+            ParticleSystem.VelocityOverLifetimeModule velocity = ParticleSystem.velocityOverLifetime;
+            velocity.z = new ParticleSystem.MinMaxCurve(2f);
+            velocity.space = ParticleSystemSimulationSpace.Local;
+            velocity.enabled = true;
+
+            ParticleSystem.ColorOverLifetimeModule color = ParticleSystem.colorOverLifetime;
+            color.color = new ParticleSystem.MinMaxGradient(Color.white, new Color(1, 1, 1, 0));
+            color.enabled = true;
+
+            //ParticleSystem.SizeOverLifetimeModule size = ParticleSystem.sizeOverLifetime;
+            //size.size = new ParticleSystem.MinMaxCurve(1, 0);
+
+            //ParticleSystem.InheritVelocityModule iv = ParticleSystem.inheritVelocity;
+            //iv.mode = ParticleSystemInheritVelocityMode.Initial;
+
+        }
+
+
+
+    }
+
 }

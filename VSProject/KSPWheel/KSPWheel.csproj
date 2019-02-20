@@ -97,6 +97,7 @@
     <Compile Include="PartModules\KSPWheelTextureSwitch.cs" />
     <Compile Include="PartModules\KSPWheelTracks.cs" />
     <Compile Include="PartModules\KSPWheelTransformRemoval.cs" />
+    <Compile Include="PartModules\KSPWheelTreadDirection.cs" />
     <Compile Include="PartModules\KSPWheelWaterPropulsion.cs" />
     <Compile Include="PartModules\Utils.cs" />
     <Compile Include="PartModules\WheelAnimationHandler.cs" />
