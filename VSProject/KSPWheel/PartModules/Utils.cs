@@ -433,14 +433,28 @@ namespace KSPWheel
             int len = t.part.symmetryCounterparts.Count;
             T[] ts;
             int len2;
+            int idx = t.part.Modules.IndexOf(t);
             for (int i = 0; i < len; i++)
             {
-                ts = t.part.symmetryCounterparts[i].GetComponents<T>();
-                len2 = ts.Length;
-                for (int k = 0; k < len2; k++)
+                Part symPart = t.part.symmetryCounterparts[i];
+                PartModule pm1 = symPart.Modules[idx];//if this crashes...then there are things seriously wrong with the part/modules setups
+                T t1 = pm1 as T;
+                if (t1 != null)
                 {
-                    act(ts[k]);
+                    act(t1);
                 }
+                else
+                {
+                    //also things seriously wrong here...
+                    MonoBehaviour.print("ERROR: Could not find symmetry partmodules during update.");
+                }
+                //this was wrong, as it hit -every- module of that type with the update, rather than the actual symmetry module
+                //ts = t.part.symmetryCounterparts[i].GetComponents<T>();
+                //len2 = ts.Length;
+                //for (int k = 0; k < len2; k++)
+                //{
+                //    act(ts[k]);
+                //}
             }
         }
 
