@@ -43,7 +43,6 @@ namespace KSPWheel
         /// </summary>
         public void updateAnimationState()
         {
-            animTime = 0f;
             if (currentAnimState == KSPWheelState.RETRACTING || currentAnimState == KSPWheelState.DEPLOYING)
             {
                 bool playing = false;
@@ -53,7 +52,7 @@ namespace KSPWheel
                 {
                     data = animationData[i];
                     if (data.updateAnimations()) { playing = true; }
-                    if (data.time > animTime) { animTime = data.time; }
+                    if ((data.time > animTime && currentAnimState==KSPWheelState.DEPLOYING)||(data.time < animTime && currentAnimState==KSPWheelState.RETRACTING)) { animTime = data.time; }
                 }
                 //if no longer playing, set the new animation state and inform the callback of the change
                 if (!playing)
@@ -61,6 +60,14 @@ namespace KSPWheel
                     KSPWheelState newState = currentAnimState == KSPWheelState.RETRACTING ? KSPWheelState.RETRACTED : KSPWheelState.DEPLOYED;
                     setToAnimationState(newState, true);
                 }
+            }
+            else if (currentAnimState == KSPWheelState.DEPLOYED)
+            {
+                animTime = 1f;
+            }
+            else if (currentAnimState == KSPWheelState.RETRACTED)
+            {
+                animTime = 0f;
             }
         }
 
