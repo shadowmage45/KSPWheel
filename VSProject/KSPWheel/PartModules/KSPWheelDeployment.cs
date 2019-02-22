@@ -60,6 +60,24 @@ namespace KSPWheel
         [KSPField]
         public bool useFromEVAOnly = false;
 
+        [KSPField]
+        public bool useResourceDeploy = false;
+
+        [KSPField]
+        public bool useResourceRetract = false;
+
+        [KSPField]
+        public float deployResourceCost = 0f;
+
+        [KSPField]
+        public float retractResourceCost = 0f;
+
+        [KSPField]
+        public string deployResourceName = string.Empty;
+
+        [KSPField]
+        public string retractResourceName = string.Empty;
+
         [Persistent]
         public string configNodeData = String.Empty;
 
@@ -109,7 +127,7 @@ namespace KSPWheel
                 return;
             }
             if (oneShotAnimation && oneShotTriggered) { return; }
-            if (controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING)
+            if ((controller.wheelState == KSPWheelState.DEPLOYED || controller.wheelState == KSPWheelState.DEPLOYING) && checkResourceUse(KSPWheelState.RETRACTING))
             {
                 changeWheelState(KSPWheelState.RETRACTING);
                 animationControl.setToAnimationState(controller.wheelState, false);
@@ -123,8 +141,9 @@ namespace KSPWheel
                 if (!string.IsNullOrEmpty(deployedEffect)) { part.Effect(deployedEffect, 0f); }
                 oneShotTriggered = oneShotTriggered || HighLogic.LoadedSceneIsFlight;
             }
-            else if (controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING)
+            else if ((controller.wheelState == KSPWheelState.RETRACTED || controller.wheelState == KSPWheelState.RETRACTING) && checkResourceUse(KSPWheelState.DEPLOYING))
             {
+
                 changeWheelState(KSPWheelState.DEPLOYING);
                 animationControl.setToAnimationState(controller.wheelState, false);
                 if (collider != null)
@@ -274,6 +293,36 @@ namespace KSPWheel
             part.DragCubes.SetCubeWeight("Deployed", time);
         }
 
+        /// <summary>
+        /// Checks for AND CONSUMES resources for change to the specified state.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        private bool checkResourceUse(KSPWheelState state)
+        {
+            if (state == KSPWheelState.DEPLOYING && useResourceDeploy && !string.IsNullOrEmpty(deployResourceName) && deployResourceCost > 0)
+            {
+                double used = part.RequestResource(deployResourceName, (double)deployResourceCost);
+                if (used < deployResourceCost)//if not sufficient, return it to the part
+                {
+                    part.RequestResource(deployResourceName, -used);
+                    return false;
+                }
+                return true;
+            }
+            else if(state==KSPWheelState.RETRACTING && useResourceRetract && !string.IsNullOrEmpty(retractResourceName) && retractResourceCost > 0)
+            {
+                double used = part.RequestResource(retractResourceName, (double)retractResourceCost);
+                if (used < retractResourceCost)//if not sufficient, return it to the part
+                {
+                    part.RequestResource(retractResourceName, -used);
+                    return false;
+                }
+                return true;
+            }
+            return true;
+        }
+
         public string[] GetDragCubeNames()
         {
             if (!updateDragCubes) { return new String[] { "Default" }; }
@@ -300,5 +349,6 @@ namespace KSPWheel
         {
             return false;
         }
+
     }
 }
