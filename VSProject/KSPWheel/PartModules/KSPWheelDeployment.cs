@@ -104,7 +104,10 @@ namespace KSPWheel
         [KSPEvent(guiName = "Toggle Gear", guiActive = true, guiActiveEditor = true)]
         public void toggleGearEvent()
         {
-            toggleDeploy();
+            this.symmetryUpdate(m =>
+            {
+                m.toggleDeploy();
+            });
         }
 
         public void deploy()
