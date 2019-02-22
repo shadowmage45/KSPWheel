@@ -67,6 +67,7 @@
     <Compile Include="Component\KSPWheelComponent.cs" />
     <Compile Include="Component\KSPWheelFrictionCurve.cs" />
     <Compile Include="PartModules\KFAPUController.cs" />
+    <Compile Include="PartModules\KSPWheelAdjustableDeployment.cs" />
     <Compile Include="PartModules\KSPWheelAdjustableGear.cs" />
     <Compile Include="PartModules\KSPWheelAnimation.cs" />
     <Compile Include="PartModules\KSPWheelAnimationRemoval.cs" />

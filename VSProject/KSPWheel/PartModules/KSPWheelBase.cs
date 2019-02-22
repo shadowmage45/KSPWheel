@@ -885,7 +885,6 @@ namespace KSPWheel
         {
             if (value != deployAnimationTime)
             {
-                MonoBehaviour.print("Deploy time updated: " + value);
                 deployAnimationTime = value;
                 int len = subModules.Count;
                 for (int i = 0; i < len; i++)
