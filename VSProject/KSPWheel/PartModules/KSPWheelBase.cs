@@ -232,7 +232,8 @@ namespace KSPWheel
 
         public float wheelRepairTimer = 1f;
 
-        public float deployAnimationTime = 1f;
+        [SerializeField]
+        internal float deployAnimationTime = 1f;
 
         internal float partMassScaleFactor = 1;
         internal float partCostScaleFactor = 1;
@@ -880,6 +881,20 @@ namespace KSPWheel
             }
         }
 
+        internal void setDeployTime(float value)
+        {
+            if (value != deployAnimationTime)
+            {
+                MonoBehaviour.print("Deploy time updated: " + value);
+                deployAnimationTime = value;
+                int len = subModules.Count;
+                for (int i = 0; i < len; i++)
+                {
+                    subModules[i].onDeployTimeUpdated(value);
+                }
+            }
+        }
+
         private void onScaleUpdated()
         {
             if (HighLogic.CurrentGame != null)//should not happen for on start
@@ -1139,6 +1154,7 @@ namespace KSPWheel
 
         public class KSPWheelData
         {
+
             public readonly String wheelColliderName;
             public readonly float wheelRadius;
             public readonly float wheelWidth;
@@ -1298,6 +1314,7 @@ namespace KSPWheel
                 sb.AppendLine("Torque: " + wheel.motorTorque);
                 return sb.ToString();
             }
+
         }
 
     }

@@ -137,6 +137,11 @@ namespace KSPWheel
             return string.Empty;
         }
 
+        internal virtual void onDeployTimeUpdated(float value)
+        {
+
+        }
+
         internal void changeWheelState(KSPWheelState newState, bool selfCallback = false)
         {
             if (controller != null)

@@ -345,6 +345,13 @@ namespace KSPWheel
 
         public void createParticles()
         {
+            /**
+            All of this is simply because it does not appear that PartTools supports exporting .mu model files
+            (for prefab particles) that use the new ParticleSystem components.  To investigate is how SmokeScreen
+            was converted to use the new ParticleSystem, and if something similar may be used here.  Another path
+            for investigation is into exporting of the particles from Unity through an AssetBundle and instantiating
+            and applying them through plugin code.
+            **/
             ParticleSystem = Parent.GetComponent<ParticleSystem>();
             if (ParticleSystem == null) { ParticleSystem = Parent.AddComponent<ParticleSystem>(); }
             ParticleSystem.ext_setMaterial(ParticleMaterial);
@@ -407,8 +414,6 @@ namespace KSPWheel
             //iv.mode = ParticleSystemInheritVelocityMode.Initial;
 
         }
-
-
 
     }
 

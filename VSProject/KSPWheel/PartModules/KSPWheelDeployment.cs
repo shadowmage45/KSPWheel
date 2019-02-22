@@ -168,7 +168,7 @@ namespace KSPWheel
                 {
                     float time = animationControl.animationTime;
                     //if (invertAnimation) { time = 1 - time; }
-                    controller.deployAnimationTime = time;
+                    controller.setDeployTime(time);
                 }
             }
         }
