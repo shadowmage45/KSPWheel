@@ -50,8 +50,6 @@ namespace KSPWheel
         [KSPField]
         public bool showGUIHeight = true;
 
-        private Transform gimbalTransform;
-
         private RepulsorParticles particles;
         
         private float curLen;
@@ -150,12 +148,11 @@ namespace KSPWheel
 
                 particles = new RepulsorParticles(particlesRoot, material);
                 particles.createParticles();
+            }
+            if (particles != null)
+            {
                 particles.setSpeed(repulsorHeight * maxHeight);
-
-                if (repulsorEnabled)
-                {
-                    particles.setEnabled(true);                    
-                }
+                particles.setEnabled(repulsorEnabled);
             }
         }
 
@@ -277,7 +274,7 @@ namespace KSPWheel
             base.preWheelPhysicsUpdate();
             float ecPerSecond = wheel.springForce * 0.1f * energyUse;
             float ecPerTick = ecPerSecond * Time.fixedDeltaTime;
-            float used = part.RequestResource("ElectricCharge", ecPerTick);
+            float used = (float)part.RequestResource("ElectricCharge", (double)ecPerTick);
             if (used < ecPerTick)
             {
                 setRepulsorEnabled(false);
