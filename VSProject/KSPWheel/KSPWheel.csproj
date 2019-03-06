@@ -66,6 +66,7 @@
     <Compile Include="Component\KSPWheelCollider.cs" />
     <Compile Include="Component\KSPWheelComponent.cs" />
     <Compile Include="Component\KSPWheelFrictionCurve.cs" />
+    <Compile Include="Effects\KSPWheelParticleEffect.cs" />
     <Compile Include="PartModules\KFAPUController.cs" />
     <Compile Include="PartModules\KSPWheelAdjustableDeployment.cs" />
     <Compile Include="PartModules\KSPWheelAdjustableGear.cs" />
