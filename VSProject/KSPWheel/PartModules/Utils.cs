@@ -237,19 +237,6 @@ namespace KSPWheel
             return GetIntValue(node, name, 0);
         }
 
-        public static int[] parseIntCSV(string input)
-        {
-            int[] output = null;
-            string[] splits = input.Split(',');
-            int len = splits.Length;
-            output = new int[len];
-            for (int i = 0; i < len; i++)
-            {
-                output[i] = int.Parse(splits[i].Trim());
-            }
-            return output;
-        }
-
         public static Vector3 GetVector3(this ConfigNode node, String name, Vector3 defaultValue)
         {
             String value = node.GetValue(name);
@@ -325,6 +312,93 @@ namespace KSPWheel
                 curve.Add(1, 1);
             }
             return curve;
+        }
+
+        public static int[] parseIntCSV(string input)
+        {
+            int[] output = null;
+            string[] splits = input.Split(',');
+            int len = splits.Length;
+            output = new int[len];
+            for (int i = 0; i < len; i++)
+            {
+                output[i] = int.Parse(splits[i].Trim());
+            }
+            return output;
+        }
+
+        public static Vector3 safeParseVector3(string input, Vector3 defaultValue)
+        {
+            Vector3 val;
+            return TryParse(input, out val) ? val : defaultValue;
+        }
+
+        public static bool TryParse(string value, out Vector3 returnValue)
+        {
+            string[] csv = value.Split(',');
+            if (csv.Length != 3)
+            {
+                returnValue = new Vector3(0, 0, 0);
+                return false;
+            }
+            float x, y, z;
+            if (!float.TryParse(csv[0], out x))
+            {
+                returnValue = new Vector3(0, 0, 0);
+                return false;
+            }
+            if (!float.TryParse(csv[1], out y))
+            {
+                returnValue = new Vector3(0, 0, 0);
+                return false;
+            }
+            if (!float.TryParse(csv[2], out z))
+            {
+                returnValue = new Vector3(0, 0, 0);
+                return false;
+            }
+            returnValue = new Vector3(x,y, z);
+            return true;
+        }
+
+        public static Quaternion safeParseQuaternion(string input, Quaternion defaultValue)
+        {
+            Quaternion val;
+            return TryParse(input, out val) ? val : defaultValue;
+        }
+
+        public static bool TryParse(string value, out Quaternion returnValue)
+        {
+            string[] csv = value.Split(',');
+            if (csv.Length != 4)
+            {
+                returnValue = new Quaternion(0, 0, 0, 0);
+                MonoBehaviour.print("ERROR: Too few inputs for parsing Quaternion");
+                return false;
+            }
+            float x, y, z, w;
+            if (!float.TryParse(csv[0], out x))
+            {
+                returnValue = new Quaternion(0, 0, 0, 0);
+                return false;
+            }
+            if (!float.TryParse(csv[1], out y))
+            {
+                returnValue = new Quaternion(0, 0, 0, 0);
+                return false;
+            }
+            if (!float.TryParse(csv[2], out z))
+            {
+                returnValue = new Quaternion(0, 0, 0, 0);
+                return false;
+            }
+            if (!float.TryParse(csv[3], out w))
+            {
+                returnValue = new Quaternion(0, 0, 0, 0);
+                return false;
+            }
+            returnValue = new Quaternion(x, y, z, w);
+            return true;
         }
 
         public static void printHierarchy(GameObject go)
