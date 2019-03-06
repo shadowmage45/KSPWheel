@@ -9,7 +9,8 @@ namespace KSPWheel
     public class KSPWheelTracks : KSPWheelMotor
     {
 
-        [KSPField]
+        [KSPField(guiName = "Track Length Adjust", guiActive =false, guiActiveEditor = false)
+         ,UI_FloatEdit(minValue = -100f, maxValue = 100f, incrementLarge = 5f, incrementSmall = 1f, incrementSlide = 0.1f)]
         public float trackLength = 10f;
 
         [KSPField]
@@ -37,6 +38,7 @@ namespace KSPWheel
         {
             base.OnStart(state);
             Fields[nameof(invertTrackTexture)].uiControlEditor.onFieldChanged = invertTrackTextureClicked;
+            Fields[nameof(trackLength)].guiActiveEditor = HighLogic.CurrentGame.Parameters.CustomParams<KSPWheelSettings>().debugMode;
         }
 
         internal override void postWheelCreated()
