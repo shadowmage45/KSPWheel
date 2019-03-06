@@ -39,11 +39,13 @@ namespace KSPWheel
         the part prefab, the starting data for the specified transform will be cached,
         and the users selected values will be applied from that cached starting state.
 
-            TODO -- bloody hell, apparently when parts are cloned in the editor...
-            TODO -- none of the inner class values are serialized properly
-            TODO -- so... somehow need to reset the cloned transforms into prefab state, or
-            TODO -- otherwise persist the control values to 'rewind' the controls back
-            TODO -- to a known 'default' value
+        ------------------------------------------------------------------------------
+        Future additions will include the ability to create entirely custom animations
+        using this module.  Not yet implemented.  Functions to be added will include:
+            * Specify a TRANSFORM block to be not controllable by user (deploy anim)
+            * Specify full animation curves for each transform.
+            * Optional shorthand curve format for basic change in start/stop times
+            * Secondary module to add an empty proxy animation to part
         */
 
         [KSPField]
@@ -61,12 +63,23 @@ namespace KSPWheel
          UI_FloatEdit(minValue =0, maxValue =1, incrementLarge = 0.25f, incrementSmall = 0.05f, incrementSlide = 0.01f, suppressEditorShipModified = true, sigFigs = 2)]
         public float ControlValue = 0f;
 
+        /// <summary>
+        /// Stores the config node data, loaded at prefab; workaround to Unity/KSP
+        /// serialization issues with custom classes.
+        /// </summary>
         [Persistent]
         public string configNodeData;
 
+        /// <summary>
+        /// Stores default orientation data.  Loaded by the first module to have 'OnStart' called on it (editor/flight), which should always give a clean and consistent state.<para/>
+        /// As these transforms should not be manipulated by animations, this should always be its default state as it exists in the model prefab.
+        /// Used by symmetry/cloned modules to reload proper default orientation data.
+        /// </summary>
+        [Persistent]
+        public string defaultTransformData;
+
         private TransformData[] transformData;
         private bool initialized = false;
-
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
@@ -113,12 +126,21 @@ namespace KSPWheel
             ConfigNode[] trNodes = node.GetNodes("TRANSFORM");
             int len = trNodes.Length;
             transformData = new TransformData[len];
+            string[] trData = string.IsNullOrEmpty(defaultTransformData) ? new string[len] : defaultTransformData.Split(';');
             for (int i = 0; i < len; i++)
             {
                 transformData[i] = new TransformData(this, trNodes[i]);
-                transformData[i].initializeTransform(!(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor));
-                transformData[i].onAnimationUpdated(controller.deployAnimationTime);
-                transformData[i].onUserControlUpdated(ControlValue);
+                transformData[i].initializeTransform(ControlValue, useDeployModule? controller.deployAnimationTime : 1.0f, trData[i]);
+            }
+            if (string.IsNullOrEmpty(defaultTransformData))
+            {
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < len; i++)
+                {
+                    if (i > 0) { builder.Append(';'); }
+                    builder.Append(transformData[i].savePersistentData());
+                }
+                defaultTransformData = builder.ToString();
             }
         }
 
@@ -221,35 +243,48 @@ namespace KSPWheel
             /// Load the 'transform' and grab default values for pos/rot/scale
             /// </summary>
             /// <param name="prefab"></param>
-            public void initializeTransform(bool prefab)
+            public void initializeTransform(float control, float anim, string defaultData)
             {
                 this.Transform = parent.part.transform.FindRecursive("model").FindRecursive(transformName);
                 if (this.Transform == null)
                 {
                     MonoBehaviour.print("ERROR: Could not locate transform for name: " + transformName);
-                    return;
                 }
-                DefaultLocalPosition = Transform.localPosition;
-                DefaultLocalScale = Transform.localScale;
-                DefaultLocalRotation = Transform.localRotation;
+                if (string.IsNullOrEmpty(defaultData))
+                {
+                    //use unadjusted values from the model
+                    DefaultLocalPosition = Transform.localPosition;
+                    DefaultLocalRotation = Transform.localRotation;
+                    DefaultLocalScale = Transform.localScale;
+                }
+                else
+                {
+                    //load the default values from the input string
+                    string[] trs = defaultData.Split(':');
+                    if (trs.Length != 3)
+                    {
+                        MonoBehaviour.print("ERROR: Could not load transform default data...");
+                    }
+                    DefaultLocalPosition = Utils.safeParseVector3(trs[0], Transform.localPosition);
+                    DefaultLocalRotation = Utils.safeParseQuaternion(trs[1], Transform.localRotation);
+                    DefaultLocalScale = Utils.safeParseVector3(trs[2], Transform.localScale);
+                }
+                userControlValue = control;
+                animationControlValue = anim;
+                updateTransform();
             }
 
             /// <summary>
-            /// Load any persistent data from the input string.  TODO
-            /// </summary>
-            /// <param name="rawData"></param>
-            public void loadPersistentData(string rawData)
-            {
-
-            }
-
-            /// <summary>
-            /// Return a string containing the persistent data for this transform.  TODO
+            /// Return a string containing the persistent data for this transform.
             /// </summary>
             /// <returns></returns>
             public string savePersistentData()
             {
-                return string.Empty;
+                StringBuilder builder = new StringBuilder();
+                builder.Append(DefaultLocalPosition.x).Append(',').Append(DefaultLocalPosition.y).Append(',').Append(DefaultLocalPosition.z).Append(':');
+                builder.Append(DefaultLocalRotation.x).Append(',').Append(DefaultLocalRotation.y).Append(',').Append(DefaultLocalRotation.z).Append(',').Append(DefaultLocalRotation.w).Append(':');
+                builder.Append(DefaultLocalScale.x).Append(',').Append(DefaultLocalScale.y).Append(',').Append(DefaultLocalScale.z);
+                return builder.ToString();
             }
 
             /// <summary>
