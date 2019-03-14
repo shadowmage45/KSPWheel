@@ -274,7 +274,7 @@ namespace KSPWheel
             base.preWheelPhysicsUpdate();
             float ecPerSecond = wheel.springForce * 0.1f * energyUse;
             float ecPerTick = ecPerSecond * Time.fixedDeltaTime;
-            float used = (float)part.RequestResource("ElectricCharge", (double)ecPerTick);
+            float used = part.RequestResource("ElectricCharge", ecPerTick);
             if (used < ecPerTick)
             {
                 setRepulsorEnabled(false);
@@ -310,6 +310,8 @@ namespace KSPWheel
         public Material ParticleMaterial { get; private set; }
         public ParticleSystem ParticleSystem { get; private set; }
 
+        private static GameObject prefab { get; set; }
+
         public RepulsorParticles(GameObject parent, Material material)
         {
             Parent = parent;
@@ -342,74 +344,14 @@ namespace KSPWheel
 
         public void createParticles()
         {
-            /**
-            All of this is simply because it does not appear that PartTools supports exporting .mu model files
-            (for prefab particles) that use the new ParticleSystem components.  To investigate is how SmokeScreen
-            was converted to use the new ParticleSystem, and if something similar may be used here.  Another path
-            for investigation is into exporting of the particles from Unity through an AssetBundle and instantiating
-            and applying them through plugin code.
-            **/
-            ParticleSystem = Parent.GetComponent<ParticleSystem>();
-            if (ParticleSystem == null) { ParticleSystem = Parent.AddComponent<ParticleSystem>(); }
-            ParticleSystem.ext_setMaterial(ParticleMaterial);
-
-            ParticleSystem.MainModule main = ParticleSystem.main;
-            main.duration = 0.5f;
-            main.loop = true;
-            main.prewarm = false;
-            main.startLifetime = 1f;
-            main.startSpeed = 1f;
-            main.startSize = 0.25f;
-            main.startRotation = 0f;
-            main.randomizeRotationDirection = 0f;
-            main.startColor = new Color(0, 1, 0.95f, 0.07058f);
-            main.gravityModifier = 0;
-            main.simulationSpace = ParticleSystemSimulationSpace.Local;
-            main.simulationSpeed = 1f;
-            main.scalingMode = ParticleSystemScalingMode.Local;
-            main.playOnAwake = false;//must be played explicitly
-            main.emitterVelocityMode = ParticleSystemEmitterVelocityMode.Transform;
-            main.maxParticles = 1000;
-
-            ParticleSystem.EmissionModule emission = ParticleSystem.emission;
-            emission.rateOverTime = 0f;
-            emission.rateOverDistance = 0f;
-            ParticleSystem.Burst[] bursts = new ParticleSystem.Burst[5];
-            bursts[0] = new ParticleSystem.Burst(0.0f, 50, 50, 1, 0.01f);
-            bursts[1] = new ParticleSystem.Burst(0.1f, 50, 50, 1, 0.01f);
-            bursts[2] = new ParticleSystem.Burst(0.2f, 50, 50, 1, 0.01f);
-            bursts[3] = new ParticleSystem.Burst(0.3f, 50, 50, 1, 0.01f);
-            bursts[4] = new ParticleSystem.Burst(0.4f, 50, 50, 1, 0.01f);
-            emission.SetBursts(bursts);
-            emission.enabled = true;
-
-            ParticleSystem.ShapeModule shape = ParticleSystem.shape;
-            shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = 0.1f;
-            shape.radiusThickness = 1f;
-            shape.arc = 360f;
-            shape.arcMode = ParticleSystemShapeMultiModeValue.BurstSpread;
-            shape.arcSpread = 0f;
-            shape.rotation = Vector3.zero;
-            shape.position = Vector3.zero;
-            shape.scale = Vector3.one;
-            shape.enabled = true;
-
-            ParticleSystem.VelocityOverLifetimeModule velocity = ParticleSystem.velocityOverLifetime;
-            velocity.z = new ParticleSystem.MinMaxCurve(2f);
-            velocity.space = ParticleSystemSimulationSpace.Local;
-            velocity.enabled = true;
-
-            ParticleSystem.ColorOverLifetimeModule color = ParticleSystem.colorOverLifetime;
-            color.color = new ParticleSystem.MinMaxGradient(Color.white, new Color(1, 1, 1, 0));
-            color.enabled = true;
-
-            //ParticleSystem.SizeOverLifetimeModule size = ParticleSystem.sizeOverLifetime;
-            //size.size = new ParticleSystem.MinMaxCurve(1, 0);
-
-            //ParticleSystem.InheritVelocityModule iv = ParticleSystem.inheritVelocity;
-            //iv.mode = ParticleSystemInheritVelocityMode.Initial;
-
+            if (prefab == null)
+            {
+                prefab = KSPWheelParticleEffect.loadFromDisk("KerbalFoundries/Effects/KF-RepulsorEffect");
+            }
+            GameObject particle = GameObject.Instantiate(prefab);
+            particle.transform.NestToParent(Parent.transform);
+            particle.SetActive(true);
+            ParticleSystem = particle.GetComponentInChildren<ParticleSystem>();
         }
 
     }

@@ -71,6 +71,7 @@ namespace KSPWheel
         public override void OnEvent(float power)
         {
             //MonoBehaviour.print("KSPWHEELFX-OnEvent: "+power);
+            if (effectData == null) { return; }
             int len = effectData.Length;
             for (int i = 0; i < len; i++)
             {
@@ -100,7 +101,7 @@ namespace KSPWheel
             MonoBehaviour.print("KSPWHEELFX-OnSave:\n" + node);
         }
 
-        private GameObject loadFromDisk(string modelName)
+        public static GameObject loadFromDisk(string modelName)
         {
             MonoBehaviour.print("KSPWHEELFX-loadFromDisk: " + modelName);
             AssetBundle bundle = AssetBundle.LoadFromFile(KSPUtil.ApplicationRootPath + "GameData/" + modelName + ".kfx");
@@ -157,7 +158,7 @@ namespace KSPWheel
 
                         //apply stats scaling
                         //what stats should be scaled with power?
-                        emission.rateOverTimeMultiplier = power;
+                        //emission.rateOverTimeMultiplier = power;
                     }
                     power = val;
                 }
