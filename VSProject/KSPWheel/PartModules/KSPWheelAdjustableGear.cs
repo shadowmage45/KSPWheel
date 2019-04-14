@@ -157,6 +157,24 @@ namespace KSPWheel
         [KSPField(isPersistant = true)]
         public bool isFlipped = false;
 
+        [KSPField]
+        public bool useResourceDeploy = false;
+
+        [KSPField]
+        public bool useResourceRetract = false;
+
+        [KSPField]
+        public float deployResourceCost = 0f;
+
+        [KSPField]
+        public float retractResourceCost = 0f;
+
+        [KSPField]
+        public string deployResourceName = string.Empty;
+
+        [KSPField]
+        public string retractResourceName = string.Empty;
+
         #endregion ENDREGION - Standard Part Config File Fields
 
         #region REGION - Private Working Variables
@@ -218,12 +236,18 @@ namespace KSPWheel
                 switch (controller.wheelState)
                 {
                     case KSPWheelState.RETRACTED:
-                        changeWheelState(KSPWheelState.DEPLOYING, true);
-                        part.Effect(deployEffect, 1f);
+                        if (checkResourceUse(KSPWheelState.DEPLOYING))
+                        {
+                            changeWheelState(KSPWheelState.DEPLOYING, true);
+                            part.Effect(deployEffect, 1f);
+                        }
                         break;
                     case KSPWheelState.RETRACTING:
-                        changeWheelState(KSPWheelState.DEPLOYING, true);
-                        part.Effect(deployEffect, 1f);
+                        if (checkResourceUse(KSPWheelState.DEPLOYING))
+                        {
+                            changeWheelState(KSPWheelState.DEPLOYING, true);
+                            part.Effect(deployEffect, 1f);
+                        }
                         break;
                     default:
                         break;
@@ -234,12 +258,18 @@ namespace KSPWheel
                 switch (controller.wheelState)
                 {
                     case KSPWheelState.DEPLOYED:
-                        changeWheelState(KSPWheelState.RETRACTING, true);
-                        part.Effect(retractEffect, 1f);
+                        if (checkResourceUse(KSPWheelState.RETRACTING))
+                        {
+                            changeWheelState(KSPWheelState.RETRACTING, true);
+                            part.Effect(retractEffect, 1f);
+                        }
                         break;
                     case KSPWheelState.DEPLOYING:
-                        changeWheelState(KSPWheelState.RETRACTING, true);
-                        part.Effect(retractEffect, 1f);
+                        if (checkResourceUse(KSPWheelState.RETRACTING))
+                        {
+                            changeWheelState(KSPWheelState.RETRACTING, true);
+                            part.Effect(retractEffect, 1f);
+                        }
                         break;
                     default:
                         break;
@@ -255,20 +285,32 @@ namespace KSPWheel
                 switch (m.controller.wheelState)
                 {
                     case KSPWheelState.RETRACTED:
-                        m.changeWheelState(KSPWheelState.DEPLOYING, true);
-                        part.Effect(deployEffect, 1f);
+                        if (checkResourceUse(KSPWheelState.DEPLOYING))
+                        {
+                            m.changeWheelState(KSPWheelState.DEPLOYING, true);
+                            part.Effect(deployEffect, 1f);
+                        }
                         break;
                     case KSPWheelState.RETRACTING:
-                        m.changeWheelState(KSPWheelState.DEPLOYING, true);
-                        part.Effect(deployEffect, 1f);
+                        if (checkResourceUse(KSPWheelState.DEPLOYING))
+                        {
+                            m.changeWheelState(KSPWheelState.DEPLOYING, true);
+                            part.Effect(deployEffect, 1f);
+                        }
                         break;
                     case KSPWheelState.DEPLOYED:
-                        m.changeWheelState(KSPWheelState.RETRACTING, true);
-                        part.Effect(retractEffect, 1f);
+                        if (checkResourceUse(KSPWheelState.RETRACTING))
+                        {
+                            m.changeWheelState(KSPWheelState.RETRACTING, true);
+                            part.Effect(retractEffect, 1f);
+                        }
                         break;
                     case KSPWheelState.DEPLOYING:
-                        m.changeWheelState(KSPWheelState.RETRACTING, true);
-                        part.Effect(retractEffect, 1f);
+                        if (checkResourceUse(KSPWheelState.RETRACTING))
+                        {
+                            m.changeWheelState(KSPWheelState.RETRACTING, true);
+                            part.Effect(retractEffect, 1f);
+                        }
                         break;
                     case KSPWheelState.BROKEN:
                         break;
@@ -306,6 +348,36 @@ namespace KSPWheel
             {
                 m.wheelRotation = wheelRotation;
             });
+        }
+
+        /// <summary>
+        /// Checks for AND CONSUMES resources for change to the specified state.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        private bool checkResourceUse(KSPWheelState state)
+        {
+            if (state == KSPWheelState.DEPLOYING && useResourceDeploy && !string.IsNullOrEmpty(deployResourceName) && deployResourceCost > 0)
+            {
+                double used = part.RequestResource(deployResourceName, (double)deployResourceCost);
+                if (used < deployResourceCost)//if not sufficient, return it to the part
+                {
+                    part.RequestResource(deployResourceName, -used);
+                    return false;
+                }
+                return true;
+            }
+            else if (state == KSPWheelState.RETRACTING && useResourceRetract && !string.IsNullOrEmpty(retractResourceName) && retractResourceCost > 0)
+            {
+                double used = part.RequestResource(retractResourceName, (double)retractResourceCost);
+                if (used < retractResourceCost)//if not sufficient, return it to the part
+                {
+                    part.RequestResource(retractResourceName, -used);
+                    return false;
+                }
+                return true;
+            }
+            return true;
         }
 
         #endregion ENDREGION - GUI Methods

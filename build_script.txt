@@ -1,0 +1,13 @@
+//TexturesUnlimited build script
+//read by SSTUBuildTools.exe
+//currently only supported options are MS-DOS Command-Line options (CMD:) and Zip operations (ZIP:{})
+versionFile = GameData/KSPWheel/KSPWheel.version
+//simply zip it up and export it to the parent directory
+ZIP:KSPWheel-%version%.zip
+{
+    +d GameData/KSPWheel:GameData/KSPWheel
+	//TODO -- add source dirs for other plugins?
+	//TODO -- add installation instructions
+	//+f Build/Installation_Instructions.txt:Installation_Instructions.txt
+}
+CMD:move /y *.zip ..
