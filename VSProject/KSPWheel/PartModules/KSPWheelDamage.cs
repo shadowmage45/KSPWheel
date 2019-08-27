@@ -94,7 +94,7 @@ namespace KSPWheel
                         break;
                 }
                 changeWheelState(KSPWheelState.DEPLOYED);
-                updateWheelMeshes();
+                updateWheelMeshes(controller.wheelState);
                 updateDisplayState();
             }
         }
@@ -115,6 +115,21 @@ namespace KSPWheel
             {
                 defaultRollingResistance[i] = controller.wheelData[i].wheel.rollingResistance;
             }
+        }
+
+        public override void OnIconCreate()
+        {
+            base.OnIconCreate();
+            if (!String.IsNullOrEmpty(wheelName))
+            {
+                wheelMeshes = part.transform.FindChildren(wheelName);
+            }
+            if (!String.IsNullOrEmpty(bustedWheelName))
+            {
+                bustedWheelMeshes = part.transform.FindChildren(bustedWheelName);
+            }
+            //clear out broken wheel meshes from icon rendering
+            updateWheelMeshes(KSPWheelState.DEPLOYED);
         }
 
         internal override void onUIControlsUpdated(bool show)
@@ -140,7 +155,7 @@ namespace KSPWheel
             {
                 bustedWheelMeshes = part.transform.FindChildren(bustedWheelName);
             }
-            updateWheelMeshes();
+            updateWheelMeshes(controller.wheelState);
             updateDisplayState();
             onScaleUpdated();
             //TODO -- update stats for initial persistent wear setup
@@ -211,7 +226,7 @@ namespace KSPWheel
                 ScreenMessages.PostScreenMessage("<color=orange><b>[" + this.part + "]:</b> Broke from overstressing.</color>", 5f, ScreenMessageStyle.UPPER_LEFT);
                 changeWheelState(KSPWheelState.BROKEN);
                 stressTime = 0f;
-                updateWheelMeshes();
+                updateWheelMeshes(controller.wheelState);
                 updateDisplayState();
             }
             if (speed < maxSafeSpeed && load < maxSafeLoad)
@@ -283,9 +298,8 @@ namespace KSPWheel
             controller.wheelRepairTimer = 1f - suspensionWear;
         }
 
-        private void updateWheelMeshes()
+        private void updateWheelMeshes(KSPWheelState wheelState)
         {
-            KSPWheelState wheelState = controller.wheelState;
             if (wheelState == KSPWheelState.BROKEN)
             {
                 if (bustedWheelMeshes != null)
