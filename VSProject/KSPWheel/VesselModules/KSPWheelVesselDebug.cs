@@ -233,7 +233,7 @@ namespace KSPWheel
             debugLineRendererWheel.transform.localRotation = Quaternion.identity;
             wheel = debugLineRendererWheel.AddComponent<LineRenderer>();
 
-            Material lineRendererMaterial = new Material(Shader.Find("Particles/Additive"));
+            Material lineRendererMaterial = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
 
             fwd.useWorldSpace = false;
             fwd.SetPositions(new Vector3[] { Vector3.zero, Vector3.forward*5f });

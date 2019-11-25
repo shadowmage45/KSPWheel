@@ -183,7 +183,7 @@ namespace KSPWheel
             Texture2D dustParticleTexture = GameDatabase.Instance.GetTexture(this.dustParticleTexture, false);
             Texture2D waterParticleTexture = GameDatabase.Instance.GetTexture(this.waterParticleTexture, false);
 
-            Shader particleShader = Shader.Find("Particles/Additive (Soft)");
+            Shader particleShader = Shader.Find("Legacy Shaders/Particles/Additive (Soft)");
 
             Material dustMaterial = new Material(particleShader);
             dustMaterial.mainTexture = dustParticleTexture;

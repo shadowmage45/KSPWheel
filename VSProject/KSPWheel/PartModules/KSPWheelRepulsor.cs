@@ -141,7 +141,7 @@ namespace KSPWheel
                 particlesRoot.transform.Rotate(-90, 0, 0);
                 
                 Texture2D tex = GameDatabase.Instance.GetTexture(this.repulsorParticleTexture, false);
-                Shader particleShader = Shader.Find("Particles/Additive (Soft)");
+                Shader particleShader = Shader.Find("Legacy Shaders/Particles/Additive (Soft)");
 
                 Material material = new Material(particleShader);
                 material.mainTexture = tex;
