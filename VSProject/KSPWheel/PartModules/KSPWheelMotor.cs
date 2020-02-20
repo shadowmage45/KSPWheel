@@ -422,7 +422,7 @@ namespace KSPWheel
             float maxRPM = this.scaledMaxRPM;
             motorRPM = Mathf.Clamp(motorRPM, 0, maxRPM);
             float curveOut = torqueCurve.Evaluate(motorRPM / maxRPM);
-            float outputTorque = curveOut * maxMotorTorque * fI * controller.motorTorqueScalingFactor;
+            float outputTorque = curveOut * fI * controller.GetScaledMotorTorque(maxMotorTorque);
             return outputTorque;
         }
 
@@ -444,7 +444,7 @@ namespace KSPWheel
         internal void calcPowerStats()
         {
             //setup the scaled max values for torque and RPM based on the currently configured scale settings and current scale
-            scaledMaxTorque = maxMotorTorque * controller.motorTorqueScalingFactor;
+            scaledMaxTorque = controller.GetScaledMotorTorque(maxMotorTorque);
             scaledMaxRPM = maxRPM * controller.motorMaxRPMScalingFactor;
 
             float radius = wheelData.scaledRadius(part.rescaleFactor * controller.scale);

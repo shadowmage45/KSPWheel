@@ -195,6 +195,11 @@ namespace KSPWheel
             }
         }
 
+        internal override string getModuleInfo()
+        {
+            return "Deployable";
+        }
+
         private void setupAnimationController()
         {
             animationControl = new WheelAnimationHandler(this, animationName, animationSpeed, animationLayer, controller.wheelState, invertAnimation, WrapMode.Once);

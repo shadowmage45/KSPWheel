@@ -16,6 +16,9 @@ namespace KSPWheel
         public float animationSpeed = 1;
 
         [KSPField]
+        public float animationMaxWheelSpeed;
+
+        [KSPField]
         public int animationLayer = 1;
 
         [KSPField]
@@ -69,7 +72,7 @@ namespace KSPWheel
                     speed += Mathf.Abs(controller.wheelData[i].wheel.linearVelocity);
                 }
                 speed /= len;
-                speed /= controller.maxSpeed;
+                //speed /= controller.maxSpeed; //TODO -- WTF was this used for? why does max linear ground speed influence animation playback speed?
                 speed *= Mathf.Sign(wheel.rpm);
                 if (invertAnimation) { speed = -speed; }
                 animationControl.setAnimSpeedMult(speed);
@@ -90,6 +93,18 @@ namespace KSPWheel
         {
             base.postControllerSetup();
             setupAnimationController();
+            if (animationMaxWheelSpeed <= 0)
+            {
+                KSPWheelDamage dmg = controller.subModules.Find(m => m.wheelIndex == this.wheelIndex && m is KSPWheelDamage) as KSPWheelDamage;
+                if (dmg != null && dmg.maxSpeed > 0)
+                {
+                    animationMaxWheelSpeed = dmg.maxSpeed;
+                }
+                else
+                {
+                    animationMaxWheelSpeed = controller.GetDefaultMaxSpeed(400);
+                }
+            }
         }
 
         internal override void preWheelFrameUpdate()

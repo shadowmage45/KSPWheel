@@ -34,6 +34,9 @@ namespace KSPWheel
         public float latSlipPeakVelocity = 2f;
 
         [KSPField]
+        public float runningEffectMaxSpeed;
+
+        [KSPField]
         public string motorEffect = String.Empty;
 
         [KSPField]
@@ -45,6 +48,18 @@ namespace KSPWheel
         {
             base.postWheelCreated();
             motor = part.GetComponent<KSPWheelMotor>();
+            if (runningEffectMaxSpeed <= 0)
+            {
+                KSPWheelDamage dmg = controller.subModules.Find(m => m.wheelIndex == this.wheelIndex && m is KSPWheelDamage) as KSPWheelDamage;
+                if (dmg != null && dmg.maxSpeed > 0)
+                {
+                    runningEffectMaxSpeed = dmg.maxSpeed;
+                }
+                else
+                {
+                    runningEffectMaxSpeed = controller.GetDefaultMaxSpeed(400);
+                }
+            }
         }
 
         internal override void preWheelFrameUpdate()
@@ -59,13 +74,13 @@ namespace KSPWheel
                 if (!string.IsNullOrEmpty(runningEffect))
                 {
                     float velocity = Mathf.Abs(wheel.wheelLocalVelocity.z);
-                    float max = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
+                    float max = controller.GetScaledMaxSpeed(runningEffectMaxSpeed);
                     runPower = velocity > max ? 1 : velocity / max;
                 }
 
                 if (!string.IsNullOrEmpty(motorEffect) && motor != null)
                 {
-                    motorPower = Mathf.Abs(motor.torqueOut) / motor.gearRatio / motor.maxMotorTorque*controller.motorTorqueScalingFactor;
+                    motorPower = Mathf.Abs(motor.torqueOut) / motor.gearRatio / controller.GetScaledMotorTorque(motor.maxMotorTorque);
                 }
 
                 if (!string.IsNullOrEmpty(longSlipEffect))

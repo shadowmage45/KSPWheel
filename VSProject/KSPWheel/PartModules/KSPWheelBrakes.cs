@@ -82,7 +82,7 @@ namespace KSPWheel
             }
 
             brakeInput = bI;
-            torqueOutput = wheel.brakeTorque = maxBrakeTorque * brakeInput * controller.motorTorqueScalingFactor * (brakeLimit * 0.01f);
+            torqueOutput = wheel.brakeTorque = controller.GetScaledMotorTorque(maxBrakeTorque) * brakeInput * (brakeLimit * 0.01f);
         }
 
         internal override void preWheelFrameUpdate()

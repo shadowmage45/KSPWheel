@@ -7,41 +7,87 @@ namespace KSPWheel
 
     public class KSPWheelDamage : KSPWheelSubmodule
     {
-                
+
+        /// <summary>
+        /// The config specified max-load rating for the part.  This will be further adjusted by the current part scale, and the current game difficulty selection.
+        /// </summary>
+        [KSPField]
+        public float maxLoadRating;
+
+        /// <summary>
+        /// The config specified max-speed rating for the part.  This will be further adjusted by the current part scale, and the current game difficulty selection.
+        /// </summary>
+        [KSPField]
+        public float maxSpeed;
+
+        /// <summary>
+        /// Name of the non-broken wheel mesh.  When functional, this mesh will be active and displayed.  This mesh will be hidden when the wheel is non-functional.
+        /// </summary>
         [KSPField]
         public string wheelName = "wheel";
 
+        /// <summary>
+        /// Name of the broken wheel mesh.  When non-functional, this mesh will be active and displayed.  This mesh will be hidden when the wheel is functional.
+        /// </summary>
         [KSPField]
         public string bustedWheelName = "bustedWheel";
 
+        /// <summary>
+        /// The star-level of the kerbal required for repairs for this part.  Only enforced in career or science modes / ignored in sandbox mode.
+        /// </summary>
         [KSPField]
         public int repairLevel = 3;
 
+        /// <summary>
+        /// UI display value for the current (post-scaling/post-difficulty) max-speed rating.
+        /// </summary>
         [KSPField(guiName= "Max Safe Speed",guiActive = true, guiActiveEditor = true, guiUnits ="m/s", guiFormat = "F2")]
         public float maxSafeSpeed = 0f;
 
+        /// <summary>
+        /// UI display value for the current (post-scaling/post-difficulty) max-load rating.
+        /// </summary>
         [KSPField(guiName = "Max Safe Load", guiActive = true, guiActiveEditor = true, guiUnits = "t", guiFormat = "F2")]
         public float maxSafeLoad = 0f;
 
+        /// <summary>
+        /// The UI 'status' to be displayed.
+        /// </summary>
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Wheel Status: ")]
         public string displayStatus = "Operational";
 
+        /// <summary>
+        /// Decimal representation of the percentage of max load currently being experienced.
+        /// </summary>
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Wheel Stress", guiFormat = "F2"),
          UI_ProgressBar(minValue = 0, maxValue = 1.5f, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float loadStress = 0f;
 
+        /// <summary>
+        /// The duration and severity of overloading.
+        /// </summary>
         [KSPField(guiActive = true, guiActiveEditor = false, guiName = "Failure Time", guiFormat = "F2"),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float stressTime = 0f;
 
+        /// <summary>
+        /// The current accumulated wheel wear value.  Increased by wheel slip and sharp stresses.  As wear increases, rolling resistance
+        /// also increases.
+        /// </summary>
         [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Wheel Wear", guiFormat = "F2", isPersistant = true),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float wheelWear = 0f;
 
+        /// <summary>
+        /// The current accumulated motor wear value.  Increased by long-duration loading of the motor.  As wear increases, the efficiency of the motor decreases.
+        /// </summary>
         [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Motor Wear", guiFormat = "F2", isPersistant = true),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float motorWear = 0f;
 
+        /// <summary>
+        /// The current accumulated wear to the suspension components.  As wear increases, the maximum available force output decreases.
+        /// </summary>
         [KSPField(guiActive = false, guiActiveEditor = false, guiName = "Suspension Wear", guiFormat = "F2", isPersistant = true),
          UI_ProgressBar(minValue = 0, maxValue = 1, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
         public float suspensionWear = 0f;
@@ -117,6 +163,13 @@ namespace KSPWheel
             }
         }
 
+        internal override string getModuleInfo()
+        {
+            string val = "Max Speed: " + maxLoadRating + " m/s\n";
+            val = val + "Max Load : " + maxSpeed +" t";
+            return val;
+        }
+
         public override void OnIconCreate()
         {
             base.OnIconCreate();
@@ -140,13 +193,23 @@ namespace KSPWheel
         internal override void onScaleUpdated()
         {
             base.onScaleUpdated();
-            maxSafeSpeed = controller.maxSpeed * controller.wheelMaxSpeedScalingFactor;
-            maxSafeLoad = controller.maxLoadRating * controller.wheelMaxLoadScalingFactor;
+            maxSafeSpeed = controller.GetScaledMaxSpeed(maxSpeed);
+            maxSafeLoad = controller.GetScaledMaxLoad(maxLoadRating);
         }
 
         internal override void postControllerSetup()
         {
             base.postControllerSetup();
+            //attempt to parse the max load and max speed values from the config node from the controller
+            //providing any values specified in this module's config as the defaults.  Thus if no value
+            //is found in the controllers config, it will use the local value specified in this module.
+            ConfigNode node = ConfigNode.Parse(controller.configNodeData).nodes[0];
+            maxLoadRating = node.GetFloatValue("maxLoadRating", maxSafeLoad);
+            maxSpeed = node.GetFloatValue("maxSpeed");
+            if (maxSpeed <= 0)
+            {
+
+            }
             if (!String.IsNullOrEmpty(wheelName))
             {
                 wheelMeshes = part.transform.FindChildren(wheelName);
@@ -156,9 +219,19 @@ namespace KSPWheel
                 bustedWheelMeshes = part.transform.FindChildren(bustedWheelName);
             }
             updateWheelMeshes(controller.wheelState);
-            updateDisplayState();
+            if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
+            {
+                updateDisplayState();
+            }
             onScaleUpdated();
             //TODO -- update stats for initial persistent wear setup
+
+            //if no max speed was specified in the config, calculate a default value based on wheel radius and a constant max RPM value
+            if (maxSpeed <= 0)
+            {
+                maxSpeed = controller.GetDefaultMaxSpeed(400);
+            }
+
         }
 
         internal override void postWheelPhysicsUpdate()

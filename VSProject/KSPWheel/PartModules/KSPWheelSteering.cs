@@ -68,6 +68,9 @@ namespace KSPWheel
         public FloatCurve steeringCurve = new FloatCurve();
 
         [KSPField]
+        public float steeringCurveMaxSpeed;
+
+        [KSPField]
         public bool showGUISteerLock = true;
         [KSPField]
         public bool showGUISteerInvert = true;
@@ -170,6 +173,18 @@ namespace KSPWheel
                 steeringCurve.Add(0, 1f, -0.9f, -0.9f);
                 steeringCurve.Add(1, 0.1f, -0.9f, -0.9f);
             }
+            if (steeringCurveMaxSpeed <= 0)
+            {
+                KSPWheelDamage dmg = controller.subModules.Find(m => m.wheelIndex == this.wheelIndex && m is KSPWheelDamage) as KSPWheelDamage;
+                if (dmg != null && dmg.maxSpeed > 0)
+                {
+                    steeringCurveMaxSpeed = dmg.maxSpeed;
+                }
+                else
+                {
+                    steeringCurveMaxSpeed = controller.GetDefaultMaxSpeed(400);
+                }
+            }
         }
 
         internal override void preWheelPhysicsUpdate()
@@ -188,7 +203,7 @@ namespace KSPWheel
             }
             rI = Mathf.Clamp(rI, -1, 1);
             rotInput = Mathf.MoveTowards(rotInput, rI, steeringResponse);
-            float perc = Mathf.Clamp01(Mathf.Abs(wheel.wheelLocalVelocity.z) / (controller.maxSpeed * controller.wheelMaxSpeedScalingFactor));
+            float perc = Mathf.Clamp01(Mathf.Abs(wheel.wheelLocalVelocity.z) / controller.GetScaledMaxSpeed(steeringCurveMaxSpeed));
             float limit = ((1 - perc) * steeringLimit) + (perc * steeringLimitHigh);
             if (useSteeringCurve)
             {
