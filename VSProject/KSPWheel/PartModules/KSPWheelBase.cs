@@ -668,7 +668,7 @@ namespace KSPWheel
 
         public string GetPrimaryField()
         {
-            return "Primary Field(debug): " + wheelType;
+            return wheelType;
         }
 
         public Callback<Rect> GetDrawModulePanelCallback()

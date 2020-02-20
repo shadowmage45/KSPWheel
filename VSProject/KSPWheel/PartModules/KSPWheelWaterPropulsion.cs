@@ -18,6 +18,11 @@ namespace KSPWheel
         [KSPField]
         public float maxSubmerged = 0.5f;
 
+        internal override string getModuleInfo()
+        {
+            return "This part can provide propulsion in water.";
+        }
+
         internal override void postWheelPhysicsUpdate()
         {
             base.postWheelPhysicsUpdate();
