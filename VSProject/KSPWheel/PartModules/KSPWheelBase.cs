@@ -773,6 +773,7 @@ namespace KSPWheel
         private void initializeScaling()
         {
             if (initializedScaling) { return; }
+            prevScale = scale;
             initializedScaling = true;
             setScale(scale, false);
         }
